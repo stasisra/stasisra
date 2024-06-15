@@ -1,0 +1,10 @@
+# https://tea.xyz/what-is-this-file
+---
+version: 1.0.0
+codeOwners:
+  - '0x7B9825046af2913a0c0B91060933c18ddA95C974'
+  - '0x8C389639dcd47e968F79a50CfF74c8c6047361De'
+  - '0xBcbb0CcC0eCaBa4348314De8D4a0Aaa64eeaFf37'
+  - '0xF909078651cb39B0D531C2725c7C5B583A4C485E'
+quorum: 1
+0 comments on commit 8c448e9
