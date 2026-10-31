@@ -2149,6 +2149,407 @@
           page-break-after: auto;
         }
       }
+      .filterbar {
+        display: block;
+        margin-top: 15px;
+      }
+      .query-panel {
+        background: white;
+        border: 1px solid #dfe6f1;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .query-main-row {
+        display: grid;
+        grid-template-columns: 1.45fr 1fr 1fr 0.9fr;
+        gap: 12px;
+      }
+      .query-period-row {
+        display: grid;
+        grid-template-columns: 1.45fr 1fr 1fr auto;
+        gap: 12px;
+        margin-top: 13px;
+        align-items: end;
+      }
+      .query-field {
+        min-width: 0;
+      }
+      .query-field > label {
+        display: block;
+        font-size: 11px;
+        color: #647895;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .query-panel select,
+      .query-panel input:not([type="checkbox"]) {
+        width: 100%;
+        max-width: none;
+        font-size: 12px;
+        padding: 9px 10px;
+        color: #405878;
+      }
+      .query-buttons {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+      .query-buttons .btn {
+        padding: 9px 12px;
+      }
+      .query-date-hint {
+        font-size: 10px;
+        color: #8b98ad;
+        margin-top: 9px;
+        line-height: 1.5;
+      }
+      .query-presets {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 11px;
+      }
+      .query-presets span {
+        font-size: 10px;
+        color: #8898b1;
+      }
+      .query-presets button {
+        border: 1px solid #e1e8f4;
+        border-radius: 5px;
+        background: #f7faff;
+        font-size: 10px;
+        color: #5a7db3;
+        padding: 4px 8px;
+      }
+      .query-feedback {
+        font-size: 10px;
+        min-height: 0;
+        color: #6983a7;
+        margin-top: 7px;
+        line-height: 1.5;
+      }
+      .query-feedback:empty {
+        display: none;
+      }
+      .query-feedback.error {
+        color: #b66c51;
+      }
+      .query-view-options {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        margin: 12px 1px 0;
+        font-size: 11px;
+        color: #8190a7;
+      }
+      .query-view-options label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .query-view-options .view-switch {
+        margin-left: auto;
+      }
+      .query-view-options input {
+        accent-color: var(--accent);
+      }
+      .applied-query {
+        font-size: 11px;
+        color: #7b8ca5;
+        line-height: 1.7;
+      }
+      .applied-query strong {
+        font-weight: 600;
+        color: #526e98;
+      }
+      .query-theme-picker {
+        position: relative;
+        min-width: 0;
+      }
+      .query-theme-picker > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        border: 1px solid #dfe5ef;
+        border-radius: 8px;
+        padding: 9px 10px;
+        font-size: 12px;
+        color: #405878;
+        list-style: none;
+        background: #fff;
+      }
+      .query-theme-picker > summary::-webkit-details-marker {
+        display: none;
+      }
+      .theme-summary-label {
+        flex: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      .theme-picker-body {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        min-width: 280px;
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #dce5f2;
+        background: #fff;
+        border-radius: 9px;
+        box-shadow: 0 14px 35px #203c6926;
+        z-index: 12;
+      }
+      .theme-picker-body > p {
+        font-size: 10px;
+        color: #8796ad;
+        margin: 0 0 9px;
+      }
+      .theme-choices {
+        max-height: 225px;
+        overflow: auto;
+        margin: 10px -3px 4px;
+      }
+      .theme-choices label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        padding: 7px 6px;
+        color: #5c7291;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      .theme-choices label:hover {
+        background: #f0f5ff;
+      }
+      .theme-choices input {
+        accent-color: var(--accent);
+      }
+      .theme-picker-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #e8edf5;
+        padding-top: 9px;
+        margin-top: 7px;
+      }
+      .task-parent-path {
+        font-size: 9px;
+        line-height: 1.4;
+        color: #8093af;
+        display: block;
+        margin: 4px 0;
+      }
+      .query-output {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+      }
+      .query-output .query-main-row,
+      .query-output .query-period-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .query-output .query-main-row > .query-field:first-child {
+        grid-column: 1/-1;
+      }
+      .query-output .query-period-row > .query-field:first-child {
+        grid-column: 1/-1;
+      }
+      .query-output .query-buttons {
+        grid-column: 1/-1;
+      }
+      .query-output .query-buttons .primary {
+        flex: 1;
+        justify-content: center;
+      }
+      .query-output .query-field {
+        margin-bottom: 5px;
+      }
+      .query-output .query-theme-picker {
+        border: 0;
+        margin: 0;
+        padding: 0;
+      }
+      .query-output .query-theme-picker > summary {
+        font-size: 11px;
+        font-weight: 400;
+        color: #405878;
+        margin: 0;
+      }
+      .query-output .theme-picker-body {
+        position: static;
+        min-width: 0;
+        margin-top: 6px;
+        box-shadow: none;
+      }
+      .query-output .theme-choices {
+        max-height: 180px;
+      }
+      .query-output .query-presets {
+        gap: 5px;
+      }
+      .query-output .query-presets span {
+        display: none;
+      }
+      .query-output .query-presets button {
+        font-size: 9px;
+        padding: 4px 7px;
+      }
+      .output-format-switch,
+      .output-source-switch {
+        display: flex;
+        gap: 5px;
+        background: #f0f4fb;
+        padding: 4px;
+        border-radius: 7px;
+        margin: 0 0 16px;
+      }
+      .output-format-switch button,
+      .output-source-switch button {
+        flex: 1;
+        border: 0;
+        border-radius: 5px;
+        padding: 8px 5px;
+        background: transparent;
+        font-size: 11px;
+        color: #8292ab;
+      }
+      .output-format-switch button.active,
+      .output-source-switch button.active {
+        background: white;
+        color: #386bd2;
+        box-shadow: 0 1px 4px #24467512;
+        font-weight: 600;
+      }
+      .output-source-switch {
+        background: #f7f9fc;
+        margin-bottom: 12px;
+      }
+      .output-source-switch button {
+        padding: 6px 4px;
+        font-size: 10px;
+      }
+      .output-summary {
+        font-size: 10px;
+        color: #6982a5;
+        background: #f2f6fd;
+        border: 1px solid #e5edf9;
+        padding: 9px 10px;
+        margin: 11px 0;
+        border-radius: 6px;
+        line-height: 1.7;
+      }
+      .sheet-filter-summary {
+        font-size: 8pt;
+        color: #626e7f;
+        line-height: 1.6;
+        margin-top: 2mm;
+      }
+      .paper-page.ordinary .sheet-body {
+        gap: 0;
+      }
+      .sheet-table-head,
+      .sheet-table-cells {
+        display: grid;
+        grid-template-columns: var(--sheet-columns);
+        gap: 3mm;
+      }
+      .sheet-table-head {
+        font-size: 8pt;
+        color: #5d697b;
+        font-weight: 600;
+        margin-top: 4mm;
+        border-top: 1px solid #aeb5c0;
+        padding-top: 2mm;
+      }
+      .ordinary-row {
+        border-bottom: 1px solid #d7dce3;
+        padding: 2.8mm 0;
+      }
+      .sheet-table-cells {
+        font-size: var(--sheet-font);
+        line-height: 1.45;
+      }
+      .sheet-table-cells > div {
+        overflow-wrap: anywhere;
+        min-width: 0;
+      }
+      .sheet-table-cells .list-task-title {
+        font-weight: 600;
+      }
+      .sheet-table-cells .list-task-parent {
+        font-size: 8pt;
+        line-height: 1.5;
+        color: #758092;
+        margin-top: 1mm;
+      }
+      .ordinary-row .sheet-materials {
+        margin-top: 2mm;
+      }
+      .ordinary-row .sheet-part {
+        font-size: 0.9em;
+      }
+      .output-empty {
+        padding: 75px 35px;
+        background: white;
+        border: 1px solid #e1e7f0;
+        border-radius: 10px;
+        font-size: 13px;
+        text-align: center;
+        color: #8896ac;
+        width: 100%;
+        max-width: 650px;
+        margin: auto;
+        line-height: 1.7;
+      }
+      @media (max-width: 1200px) {
+        .query-main-row {
+          grid-template-columns: 1.2fr 1fr 1fr;
+        }
+        .query-main-row > .query-field:last-child {
+          grid-column: 3;
+          grid-row: 2;
+        }
+        .query-period-row {
+          grid-template-columns: 1.2fr 1fr 1fr;
+        }
+        .query-buttons {
+          grid-column: 1/-1;
+        }
+        .query-output .query-main-row > .query-field:last-child {
+          grid-row: auto;
+          grid-column: auto;
+        }
+      }
+      @media (max-width: 760px) {
+        .query-main-row,
+        .query-period-row {
+          grid-template-columns: 1fr 1fr;
+        }
+        .query-main-row > .query-field:last-child {
+          grid-column: auto;
+          grid-row: auto;
+        }
+        .query-main-row > .query-field:first-child {
+          grid-column: 1/-1;
+        }
+        .query-period-row > .query-field:first-child {
+          grid-column: 1/-1;
+        }
+        .theme-picker-body {
+          min-width: 0;
+        }
+        .meeting-actions {
+          flex-wrap: wrap;
+        }
+        .meeting-top {
+          align-items: flex-start;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2303,8 +2704,8 @@
           </div>
           <div class="head-actions">
             <button class="btn" data-action="meeting-open">
-              <svg class="icon small-icon"><use href="#i-printer" /></svg>Лист
-              на встречу
+              <svg class="icon small-icon"><use href="#i-printer" /></svg>Печать
+              / экспорт
             </button>
             <button class="btn optional" data-action="create-event">
               <svg class="icon small-icon"><use href="#i-calendar" /></svg
@@ -2777,6 +3178,11 @@
       }
       const ui = {
         project: "all",
+        projects: [],
+        from: "",
+        to: "",
+        dateMode: "overlap",
+        filterDraft: null,
         responsible: "",
         executor: "",
         status: "",
@@ -2793,10 +3199,6 @@
         uploads: 0,
         quick: null,
         noteDrafts: {},
-        deadlinePeriod: "7",
-        deadlineStart: TODAY,
-        deadlineEnd: "2026-11-06",
-        deadlineOverdue: true,
       };
       const save = () => {
         try {
@@ -2843,46 +3245,362 @@
         const names = ids.map((id) => person(id)?.name).filter(Boolean);
         return `<div class="executors" title="${E(names.join(", "))}">${E(names[0] || "Не назначен")}${names.length > 1 ? `<span class="second">+${names.length - 1}</span>` : ""}</div>`;
       }
-      function matches(t) {
-        if (!ui.done && t.status === "DONE" && ui.status !== "DONE")
+      function blankQuery() {
+        return {
+          projects: [],
+          executor: "",
+          responsible: "",
+          status: "",
+          from: "",
+          to: "",
+          dateMode: "overlap",
+          showDone: false,
+          text: "",
+          due: "",
+        };
+      }
+      const cloneQuery = (q) => ({
+        ...blankQuery(),
+        ...q,
+        projects: [...(q.projects || [])],
+      });
+      function queryFromUi() {
+        return {
+          projects: [...ui.projects],
+          executor: ui.executor,
+          responsible: ui.responsible,
+          status: ui.status,
+          from: ui.from,
+          to: ui.to,
+          dateMode: ui.dateMode,
+          showDone: ui.done,
+          text: ui.q,
+          due: ui.due,
+        };
+      }
+      function queryMatches(t, q) {
+        if (!q.showDone && t.status === "DONE" && q.status !== "DONE")
           return false;
-        if (
-          ui.project !== "all" &&
-          t.project !== (ui.project === "none" ? "" : ui.project)
-        )
+        if (q.projects.length && !q.projects.includes(t.project || "none"))
           return false;
-        if (ui.responsible && t.responsible !== ui.responsible) return false;
-        if (ui.executor && !t.executors.includes(ui.executor)) return false;
-        if (ui.status && t.status !== ui.status) return false;
+        if (q.executor && !t.executors.includes(q.executor)) return false;
+        if (q.responsible && t.responsible !== q.responsible) return false;
+        if (q.status && t.status !== q.status) return false;
         if (
-          ui.q &&
-          !`${t.title} ${t.description}`
+          q.text &&
+          !`${t.title} ${t.description} ${t.comments.map((c) => c.text).join(" ")}`
             .toLowerCase()
-            .includes(ui.q.toLowerCase())
+            .includes(q.text.trim().toLowerCase())
         )
           return false;
-        const d = Math.round((new Date(t.end) - new Date(TODAY)) / DAY);
-        if (ui.due === "late" && !(d < 0 && t.status !== "DONE")) return false;
-        if (ui.due === "week" && !(d >= 0 && d <= 7 && t.status !== "DONE"))
+        if (q.dateMode === "overlap") {
+          if (q.from && t.end < q.from) return false;
+          if (q.to && t.start > q.to) return false;
+        } else {
+          const date = q.dateMode === "start" ? t.start : t.end;
+          if (q.from && date < q.from) return false;
+          if (q.to && date > q.to) return false;
+        }
+        if (q.due === "late" && !(t.end < TODAY && t.status !== "DONE"))
+          return false;
+        if (
+          q.due === "week" &&
+          !(t.end >= TODAY && t.end <= addDays(TODAY, 6) && t.status !== "DONE")
+        )
           return false;
         return true;
       }
-      function filtered() {
-        const direct = model.tasks.filter(matches),
-          set = new Set(direct.map((t) => t.id)),
-          keep = new Set(set);
-        for (const t of direct) {
-          let p = t.parent;
-          const seen = new Set([t.id]);
-          while (p && !seen.has(p)) {
-            seen.add(p);
-            const parent = task(p);
-            if (!parent || parent.project !== t.project) break;
-            keep.add(p);
-            p = parent.parent;
+      function addDays(date, days) {
+        return new Date(new Date(date + "T00:00:00Z").getTime() + days * DAY)
+          .toISOString()
+          .slice(0, 10);
+      }
+      function queryError(q) {
+        return q.from && q.to && q.from > q.to
+          ? "Дата «По» должна быть не раньше даты «С»."
+          : "";
+      }
+      function activeQuery(q) {
+        return !!(
+          q.projects.length ||
+          q.executor ||
+          q.responsible ||
+          q.status ||
+          q.from ||
+          q.to ||
+          q.text ||
+          q.due
+        );
+      }
+      function themeName(id) {
+        return id === "none" ? "Без темы" : proj(id)?.name || "Тема удалена";
+      }
+      function querySummary(q) {
+        const parts = [
+          q.projects.length
+            ? "Темы: " + q.projects.map(themeName).join(", ")
+            : "Все темы",
+        ];
+        if (q.executor)
+          parts.push(
+            "Исполнитель: " + (person(q.executor)?.name || "не найден"),
+          );
+        if (q.responsible)
+          parts.push(
+            "Ответственный: " + (person(q.responsible)?.name || "не найден"),
+          );
+        if (q.status) parts.push("Статус: " + statuses[q.status]);
+        const dateLabel = {
+          overlap: "Задачи в периоде",
+          deadline: "Дедлайн",
+          start: "Начало",
+        }[q.dateMode];
+        const format = (d) =>
+          d ? new Date(d + "T12:00:00").toLocaleDateString("ru-RU") : "";
+        if (q.from || q.to)
+          parts.push(
+            `${dateLabel}: ${q.from ? "с " + format(q.from) : ""}${q.to ? " по " + format(q.to) : ""}`.trim(),
+          );
+        if (q.text) parts.push("Поиск: " + q.text);
+        if (q.showDone) parts.push("Включая завершённые");
+        if (q.due === "late") parts.push("Просроченные");
+        return parts.join(" · ");
+      }
+      function queryDraft(scope) {
+        if (scope === "output") return meeting.queryDraft;
+        if (!ui.filterDraft) ui.filterDraft = cloneQuery(queryFromUi());
+        return ui.filterDraft;
+      }
+      function themePicker(q, scope) {
+        const themes = [
+          ...model.projects.filter(
+            (p) => !p.archived || q.projects.includes(p.id),
+          ),
+          { id: "none", name: "Без темы" },
+        ];
+        return `<details class="query-theme-picker"><summary aria-label="Выбрать темы"><span class="theme-summary-label">${E(q.projects.length ? q.projects.map(themeName).join(", ") : "Все темы")}</span>${icon("chevron", true)}</summary><div class="theme-picker-body"><p>Отметьте одну или несколько тем. Без отметок — все темы.</p><input class="theme-search" placeholder="Найти тему…" aria-label="Поиск темы"><div class="theme-choices">${themes.map((p) => `<label data-theme-name="${E(p.name.toLowerCase())}"><input type="checkbox" data-query-theme="${E(p.id)}" ${q.projects.includes(p.id) ? "checked" : ""}><span>${E(p.name)}</span></label>`).join("")}</div><div class="theme-picker-foot"><button class="textbtn" data-action="query-all-themes" data-scope="${scope}">Все темы</button><button class="btn" data-action="query-themes-done">Готово</button></div></div></details>`;
+      }
+      function queryControls(q, scope) {
+        const contacts = model.contacts.filter(
+          (c) => !c.archived || q.executor === c.id || q.responsible === c.id,
+        );
+        const id = (key) =>
+          scope === "main"
+            ? {
+                executor: "executor-filter",
+                responsible: "responsible-filter",
+                status: "status-filter",
+                from: "filter-from",
+                to: "filter-to",
+                dateMode: "filter-date-mode",
+              }[key] || "query-" + key
+            : "output-" + key;
+        const field = (key, label, inner) =>
+          `<div class="query-field"><label for="${id(key)}">${label}</label>${inner}</div>`;
+        const select = (key, items, first) =>
+          `<select id="${id(key)}" data-query-key="${key}" aria-label="${E({ executor: "Исполнитель", responsible: "Ответственный", status: "Статус" }[key] || key)}">${options(items, q[key], first)}</select>`;
+        return `<section class="query-panel ${scope === "output" ? "query-output" : ""}" data-query-scope="${scope}"><div class="query-main-row"><div class="query-field"><label>Темы / проекты <span style="font-weight:400;color:#95a2b5">· выбор галочками</span></label>${themePicker(q, scope)}</div>${field("executor", "Исполнитель", select("executor", contacts, "Все исполнители"))}${field(
+          "responsible",
+          "Ответственный",
+          select(
+            "responsible",
+            contacts.filter((c) => c.responsible || c.id === q.responsible),
+            "Все ответственные",
+          ),
+        )}${field(
+          "status",
+          "Статус",
+          select(
+            "status",
+            Object.entries(statuses).map(([id, name]) => ({ id, name })),
+            "Все статусы",
+          ),
+        )}</div><div class="query-period-row">${field("dateMode", "Период — по какой дате", `<select id="${id("dateMode")}" data-query-key="dateMode" ${scope === "main" && ui.view === "deadlines" ? "disabled" : ""}><option value="overlap" ${q.dateMode === "overlap" ? "selected" : ""}>Задачи в периоде</option><option value="deadline" ${q.dateMode === "deadline" ? "selected" : ""}>Дедлайн</option><option value="start" ${q.dateMode === "start" ? "selected" : ""}>Начало задачи</option></select>`)}${field("from", "С", `<input id="${id("from")}" data-query-key="from" type="date" value="${E(q.from)}">`)}${field("to", "По включительно", `<input id="${id("to")}" data-query-key="to" type="date" value="${E(q.to)}">`)}<div class="query-buttons"><button class="btn primary" data-action="query-apply" data-scope="${scope}">Применить</button><button class="btn" data-action="query-reset" data-scope="${scope}">Сбросить</button></div></div><div class="query-date-hint">${q.dateMode === "overlap" ? "Задача попадёт в выборку, если хотя бы часть её срока пересекается с периодом." : q.dateMode === "deadline" ? "В выборку попадут задачи с дедлайном в выбранном диапазоне." : "В выборку попадут задачи, начинающиеся в выбранном диапазоне."}</div><div class="query-presets"><span>Быстрый период:</span>${[
+          ["today", "Сегодня"],
+          ["week", "7 дней"],
+          ["month", "30 дней"],
+          ["late", "Просроченные"],
+          ["any", "Без периода"],
+        ]
+          .map(
+            ([id, label]) =>
+              `<button data-action="query-period" data-id="${id}" data-scope="${scope}">${label}</button>`,
+          )
+          .join(
+            "",
+          )}</div>${scope === "output" ? `<div class="query-field"><label for="output-text">Поиск в задачах и записях</label><input id="output-text" data-query-key="text" value="${E(q.text)}" placeholder="Слова из названия или вопроса"></div><label class="meeting-option"><input type="checkbox" data-query-key="showDone" ${q.showDone ? "checked" : ""}>Включить завершённые</label>` : ""}<div class="query-feedback" id="query-feedback-${scope}" role="status"></div></section>`;
+      }
+      function queryPending(scope) {
+        const applied = scope === "output" ? meeting.query : queryFromUi();
+        return (
+          JSON.stringify(cloneQuery(queryDraft(scope))) !==
+          JSON.stringify(cloneQuery(applied))
+        );
+      }
+      function markQueryButtons(scope) {
+        if (scope === "output") {
+          for (const action of ["meeting-print", "output-csv", "output-xlsx"]) {
+            const button = $('#meeting-root [data-action="' + action + '"]');
+            if (button) button.disabled = !meeting.valid || queryPending(scope);
           }
+        } else {
+          const button = $('.head-actions [data-action="meeting-open"]');
+          if (button) button.disabled = queryPending(scope);
         }
-        return { direct, set, rows: model.tasks.filter((t) => keep.has(t.id)) };
+      }
+      function applyQuery(scope) {
+        const q = cloneQuery(queryDraft(scope)),
+          error = queryError(q),
+          feedback = $("#query-feedback-" + scope);
+        if (error) {
+          feedback.textContent = error;
+          feedback.classList.add("error");
+          return;
+        }
+        if (scope === "output") {
+          meeting.query = q;
+          meeting.queryDraft = cloneQuery(q);
+          refreshOutputCandidates();
+          renderMeetingTree();
+          renderMeetingPreview();
+        } else {
+          if (ui.view === "deadlines") q.dateMode = "deadline";
+          q.showDone = ui.done;
+          ui.projects = [...q.projects];
+          ui.project = q.projects.length === 1 ? q.projects[0] : "all";
+          for (const key of [
+            "executor",
+            "responsible",
+            "status",
+            "from",
+            "to",
+            "dateMode",
+            "due",
+          ])
+            ui[key] = q[key];
+          ui.q = q.text;
+          $("#search").value = ui.q;
+          ui.filterDraft = cloneQuery(q);
+          render();
+        }
+        document
+          .querySelectorAll(".query-theme-picker[open]")
+          .forEach((p) => (p.open = false));
+        const status = $("#query-feedback-" + scope);
+        if (status) {
+          status.textContent = "Фильтры применены";
+          status.classList.remove("error");
+        }
+      }
+      function resetQuery(scope) {
+        if (scope === "output") {
+          meeting.queryDraft = blankQuery();
+          meeting.queryDraft.dateMode = meeting.query.dateMode;
+          meeting.excluded.clear();
+        } else {
+          ui.filterDraft = blankQuery();
+          ui.filterDraft.showDone = ui.done;
+          if (ui.view === "deadlines") ui.filterDraft.dateMode = "deadline";
+        }
+        applyQuery(scope);
+        if (scope === "output") {
+          renderMeetingControls();
+          renderMeetingPreview();
+        }
+      }
+      function quickPeriod(scope, period) {
+        const q = queryDraft(scope);
+        q.due = "";
+        q.from = period === "any" ? "" : TODAY;
+        q.to =
+          period === "any"
+            ? ""
+            : period === "today"
+              ? TODAY
+              : period === "week"
+                ? addDays(TODAY, 6)
+                : addDays(TODAY, 29);
+        if (period === "late") {
+          q.from = "";
+          q.to = addDays(TODAY, -1);
+          q.dateMode = "deadline";
+        }
+        applyQuery(scope);
+        if (scope === "output") {
+          renderMeetingControls();
+          renderMeetingPreview();
+        }
+      }
+      function queryInput(event) {
+        const panel = event.target.closest("[data-query-scope]");
+        if (!panel) return;
+        const scope = panel.dataset.queryScope,
+          q = queryDraft(scope),
+          target = event.target;
+        if (target.classList.contains("theme-search")) {
+          const value = target.value.toLowerCase();
+          panel
+            .querySelectorAll("[data-theme-name]")
+            .forEach(
+              (row) => (row.hidden = !row.dataset.themeName.includes(value)),
+            );
+          return;
+        }
+        if (target.dataset.queryTheme) {
+          const id = target.dataset.queryTheme;
+          q.projects = target.checked
+            ? [...new Set([...q.projects, id])]
+            : q.projects.filter((p) => p !== id);
+          panel.querySelector(".theme-summary-label").textContent = q.projects
+            .length
+            ? q.projects.map(themeName).join(", ")
+            : "Все темы";
+        } else if (target.dataset.queryKey)
+          q[target.dataset.queryKey] =
+            target.type === "checkbox" ? target.checked : target.value;
+        else return;
+        const feedback = $("#query-feedback-" + scope);
+        feedback.textContent =
+          queryError(q) || "Изменения не применены — нажмите «Применить»";
+        feedback.classList.toggle("error", !!queryError(q));
+        markQueryButtons(scope);
+        if (target.dataset.queryKey === "dateMode")
+          panel.querySelector(".query-date-hint").textContent =
+            q.dateMode === "overlap"
+              ? "Задачи, чей срок пересекается с выбранным периодом."
+              : q.dateMode === "deadline"
+                ? "Задачи с дедлайном в диапазоне."
+                : "Задачи, начинающиеся в диапазоне.";
+      }
+      document.addEventListener("input", queryInput);
+      document.addEventListener("change", (event) => {
+        if (event.target.tagName === "SELECT") queryInput(event);
+      });
+      document.addEventListener("click", (event) => {
+        document.querySelectorAll(".query-theme-picker[open]").forEach((p) => {
+          if (!p.contains(event.target)) p.open = false;
+        });
+      });
+      function updateQuerySummary() {
+        const q = queryFromUi(),
+          count = model.tasks.filter((t) => queryMatches(t, q)).length;
+        $("#chips").innerHTML =
+          `<span class="applied-query"><strong>Найдено: ${count}</strong> · ${E(querySummary(q))}</span>${activeQuery(q) ? '<button class="textbtn" data-action="query-reset" data-scope="main">Сбросить выборку</button>' : ""}`;
+      }
+      function renderFilters() {
+        const draft = queryDraft("main");
+        $("#filters").innerHTML =
+          queryControls(draft, "main") +
+          `<div class="query-view-options"><label><input id="show-done" type="checkbox" ${ui.done ? "checked" : ""}>Показывать завершённые</label><label><input id="expand-all" type="checkbox" ${ui.expand ? "checked" : ""}>Раскрыть подзадачи</label><div class="view-switch"><button class="${ui.view === "table" ? "active" : ""}" data-action="view" data-id="table" title="Таблица">${icon("lines", true)}</button><button class="${ui.view === "gantt" ? "active" : ""}" data-action="view" data-id="gantt" title="Гант">${icon("gantt", true)}</button></div></div>`;
+        updateQuerySummary();
+        markQueryButtons("main");
+      }
+      function matches(t) {
+        return queryMatches(t, queryFromUi());
+      }
+      function filtered() {
+        const direct = model.tasks.filter(matches);
+        return { direct, set: new Set(direct.map((t) => t.id)), rows: direct };
       }
       function descendants(id) {
         const set = new Set([id]);
@@ -2919,13 +3637,16 @@
         const active = model.tasks.filter((t) => t.status !== "DONE");
         $("#all-count").textContent = active.length;
         $("#none-count").textContent = active.filter((t) => !t.project).length;
-        $("#all-link").classList.toggle("selected", ui.project === "all");
-        $("#none-link").classList.toggle("selected", ui.project === "none");
+        $("#all-link").classList.toggle("selected", ui.projects.length === 0);
+        $("#none-link").classList.toggle(
+          "selected",
+          ui.projects.includes("none"),
+        );
         $("#project-list").innerHTML = model.projects
           .filter((p) => !p.archived)
           .map(
             (p) =>
-              `<button class="side-item ${ui.project === p.id ? "selected" : ""}" data-action="project" data-id="${E(p.id)}" title="${E(p.name)}"><span class="dot" style="--dot:${E(p.color)}"></span><span class="label">${E(p.name)}</span><span class="num">${active.filter((t) => t.project === p.id).length}</span></button>`,
+              `<button class="side-item ${ui.projects.includes(p.id) ? "selected" : ""}" data-action="project" data-id="${E(p.id)}" title="${E(p.name)}"><span class="dot" style="--dot:${E(p.color)}"></span><span class="label">${E(p.name)}</span><span class="num">${active.filter((t) => t.project === p.id).length}</span></button>`,
           )
           .join("");
       }
@@ -2939,52 +3660,6 @@
             )
             .join("")
         );
-      }
-      function renderFilters() {
-        const contacts = model.contacts.filter((c) => !c.archived);
-        $("#filters").innerHTML =
-          `<select id="responsible-filter" aria-label="Фильтр по ответственному">${options(
-            contacts.filter((c) => c.responsible),
-            ui.responsible,
-            "Ответственный: все",
-          )}</select><select id="executor-filter" aria-label="Фильтр по исполнителю">${options(contacts, ui.executor, "Исполнитель: все")}</select><select id="status-filter" aria-label="Фильтр по статусу"><option value="">Все статусы</option>${Object.entries(
-            statuses,
-          )
-            .map(
-              ([k, v]) =>
-                `<option value="${k}" ${ui.status === k ? "selected" : ""}>${v}</option>`,
-            )
-            .join(
-              "",
-            )}</select><select id="due-filter" aria-label="Фильтр по сроку"><option value="">Любой срок</option><option value="late" ${ui.due === "late" ? "selected" : ""}>Просрочено</option><option value="week" ${ui.due === "week" ? "selected" : ""}>Ближайшие 7 дней</option></select><span class="spacer"></span><label class="label"><input type="checkbox" id="show-done" ${ui.done ? "checked" : ""}>Готовые</label><label class="label"><input type="checkbox" id="expand-all" ${ui.expand ? "checked" : ""}>Подзадачи</label><div class="view-switch"><button class="${ui.view === "table" ? "active" : ""}" data-action="view" data-id="table" title="Таблица">${icon("lines", true)}</button><button class="${ui.view === "gantt" ? "active" : ""}" data-action="view" data-id="gantt" title="Гант">${icon("gantt", true)}</button></div>`;
-        let chips = [];
-        for (const [key, label] of [
-          ["responsible", "Ответственный"],
-          ["executor", "Исполнитель"],
-          ["status", "Статус"],
-          ["due", "Срок"],
-        ])
-          if (ui[key]) {
-            let value =
-              key === "status"
-                ? statuses[ui[key]]
-                : key === "due"
-                  ? ui.due === "late"
-                    ? "Просрочено"
-                    : "Ближайшие 7 дней"
-                  : person(ui[key])?.name;
-            chips.push(
-              `<span class="chip">${label}: ${E(value)}<button data-action="clear-filter" data-id="${key}" aria-label="Убрать фильтр ${label}">×</button></span>`,
-            );
-          }
-        $("#chips").innerHTML =
-          chips.join("") +
-          (chips.length
-            ? '<button class="textbtn" data-action="reset-filters">Сбросить</button>'
-            : "") +
-          (ui.project !== "all" && (ui.responsible || ui.executor)
-            ? '<button class="textbtn" data-action="all-with-filters">Искать во всех темах →</button>'
-            : "");
       }
       const record = (id) =>
         task(id) || (ui.drawer?.data.id === id ? ui.drawer.data : null);
@@ -3405,20 +4080,6 @@
           ? "Участники / исполнители"
           : "Исполнители";
       }
-      function deadlineRange() {
-        const start = ui.deadlinePeriod === "custom" ? ui.deadlineStart : TODAY;
-        const days = Number(ui.deadlinePeriod);
-        const end =
-          ui.deadlinePeriod === "custom"
-            ? ui.deadlineEnd
-            : new Date(
-                new Date(TODAY + "T00:00:00Z").getTime() +
-                  ((days || 1) - 1) * DAY,
-              )
-                .toISOString()
-                .slice(0, 10);
-        return { start, end };
-      }
       function deadlineHeading(date) {
         if (date === TODAY) return "Сегодня · 31 октября";
         const delta = Math.round((new Date(date) - new Date(TODAY)) / DAY);
@@ -3428,62 +4089,34 @@
         return `<section class="section deadline-section"><div class="section-head"><span class="dot" style="--dot:${late ? "#d97174" : "#7ba0df"}"></span><h2>${E(label)}</h2><span class="count">${rows.length}</span></div><div class="table-head"><span>Задача / тема</span><span>Исполнитель</span><span>Ответственный</span><span>Дедлайн</span><span class="progress-col">Готовность</span><span>Статус</span><span></span></div>${rows.map((t) => renderTaskRow(t, 0, true, true)).join("")}</section>`;
       }
       function renderDeadlines() {
-        const range = deadlineRange();
+        const q = { ...queryFromUi(), dateMode: "deadline" },
+          all = model.tasks
+            .filter((t) => queryMatches(t, q))
+            .sort((a, b) => a.end.localeCompare(b.end));
+        const late = all.filter((t) => t.end < TODAY && t.status !== "DONE"),
+          upcoming = all.filter((t) => t.end >= TODAY || t.status === "DONE");
         $("#page-title").textContent = "Дедлайны";
         $("#breadcrumb").textContent = "Рабочее пространство / Дедлайны";
         $("#page-subtitle").textContent =
-          "Что нужно закончить — по датам, с учётом выбранных темы и людей";
-        const periods = [
-          ["1", "Сегодня"],
-          ["3", "3 дня"],
-          ["7", "7 дней"],
-          ["14", "14 дней"],
-          ["30", "30 дней"],
-          ["custom", "Свои даты"],
-        ];
-        let controls = `<section class="deadline-controls"><div class="deadline-controls-top"><strong>Период</strong><div class="period-options">${periods.map(([id, label]) => `<button class="${ui.deadlinePeriod === id ? "selected" : ""}" data-action="deadline-period" data-id="${id}">${label}</button>`).join("")}</div><label class="overdue-toggle"><input id="deadline-overdue" type="checkbox" ${ui.deadlineOverdue ? "checked" : ""}>Показывать просроченные</label></div>${ui.deadlinePeriod === "custom" ? `<div class="deadline-dates"><label>С <input type="date" id="deadline-start" value="${E(ui.deadlineStart)}"></label><label>По <input type="date" id="deadline-end" value="${E(ui.deadlineEnd)}"></label></div>` : ""}<div class="deadline-range">${range.start && range.end ? `${E(deadlineHeading(range.start))} — ${E(deadlineHeading(range.end))} · даты включительно` : "Укажите обе даты"}</div></section>`;
-        if (!range.start || !range.end || range.end < range.start) {
-          $("#task-content").innerHTML =
-            controls +
-            '<p class="form-error" role="alert">Выберите период: дата окончания должна быть не раньше даты начала.</p>';
-          $("#result-count").textContent = "Период не выбран";
-          return;
-        }
-        const base = model.tasks.filter(matches);
-        const late = base
-          .filter((t) => t.end < TODAY && t.status !== "DONE")
-          .sort((a, b) => a.end.localeCompare(b.end));
-        const upcoming = base
-          .filter(
-            (t) =>
-              t.end >= range.start &&
-              t.end <= range.end &&
-              (t.end >= TODAY || t.status === "DONE"),
-          )
-          .sort(
-            (a, b) =>
-              a.end.localeCompare(b.end) ||
-              (a.startTime || "").localeCompare(b.startTime || ""),
-          );
-        if (ui.deadlineOverdue && late.length)
-          controls += deadlineSection("Просрочено", late, true);
+          "Одна выборка для экрана, печати и экспорта. Период задаётся в фильтрах.";
+        let html = "";
+        if (late.length) html += deadlineSection("Просрочено", late, true);
         for (const date of [...new Set(upcoming.map((t) => t.end))])
-          controls += deadlineSection(
+          html += deadlineSection(
             deadlineHeading(date),
             upcoming.filter((t) => t.end === date),
           );
-        if (!upcoming.length)
-          controls +=
-            '<div class="section empty"><div class="empty-icon">' +
-            icon("calendar") +
-            "</div><h3>На выбранный период дедлайнов нет</h3><p>Выберите другой период или измените фильтры.</p></div>";
-        $("#task-content").innerHTML = controls;
+        if (!all.length)
+          html =
+            '<div class="section empty"><h3>В выбранном периоде дедлайнов нет</h3><p>Измените даты, темы или человека в фильтрах.</p></div>';
+        $("#task-content").innerHTML = html;
         $("#result-count").textContent =
-          `В периоде: ${upcoming.length} · Просрочено: ${late.length}`;
+          `Найдено: ${all.length} · Из них просрочено: ${late.length}`;
       }
+
       function renderTaskRow(t, level, matched, showProject = false) {
         const kids = model.tasks.filter((c) => c.parent === t.id).length;
-        return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
+        return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${t.parent && task(t.parent) && !matches(task(t.parent)) ? `<small class="task-parent-path">Внутри: ${E(task(t.parent).title)}</small>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
       }
       function section(p, rows, directSet) {
         const id = p?.id || "",
@@ -3523,6 +4156,7 @@
           .join("")}</div>`;
       }
       function renderContent() {
+        updateQuerySummary();
         $("#nav-deadlines").classList.toggle("active", ui.view === "deadlines");
         $("#nav-table").classList.toggle("active", ui.view === "table");
         $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
@@ -3532,11 +4166,13 @@
         }
         const { direct, set, rows } = filtered();
         $("#page-title").textContent =
-          ui.project === "all"
-            ? "Все темы"
-            : ui.project === "none"
-              ? "Без темы"
-              : proj(ui.project)?.name || "Тема";
+          ui.projects.length > 1
+            ? "Выбранные темы (" + ui.projects.length + ")"
+            : ui.project === "all"
+              ? "Все темы"
+              : ui.project === "none"
+                ? "Без темы"
+                : proj(ui.project)?.name || "Тема";
         $("#breadcrumb").textContent =
           ui.project === "all"
             ? "Рабочее пространство / Задачи"
@@ -3557,7 +4193,7 @@
         }
         $("#task-content").innerHTML =
           html ||
-          `<div class="section empty"><div class="empty-icon">${icon("folder")}</div><h3>${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Задач по этим условиям нет" : "В этой теме пока нет задач"}</h3><p>${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Попробуйте снять один из фильтров." : "Создайте первую задачу или мероприятие."}</p><button class="btn ${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "" : "primary"}" data-action="${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "reset-filters" : "create-task"}">${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Сбросить фильтры" : "+ Создать задачу"}</button></div>`;
+          `<div class="section empty"><div class="empty-icon">${icon("folder")}</div><h3>${activeQuery(queryFromUi()) ? "Задач по этим условиям нет" : "В этой теме пока нет задач"}</h3><p>${activeQuery(queryFromUi()) ? "Попробуйте снять один из фильтров." : "Создайте первую задачу или мероприятие."}</p><button class="btn ${activeQuery(queryFromUi()) ? "" : "primary"}" data-action="${activeQuery(queryFromUi()) ? "reset-filters" : "create-task"}">${activeQuery(queryFromUi()) ? "Сбросить фильтры" : "+ Создать задачу"}</button></div>`;
         $("#nav-table").classList.toggle("active", ui.view === "table");
         $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
       }
@@ -3657,9 +4293,9 @@
             .join(
               "",
             )}</select></div><div class="field" id="percent-field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>
-          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" data-action="meeting-open" data-id="${E(id)}" title="Подготовить лист на встречу">${icon("printer", true)}Лист</button><button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
+          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" data-action="meeting-open" data-id="${E(id)}" title="Печать и экспорт этой ветки">${icon("printer", true)}Вывод</button><button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
         updateEventFields();
-        setTimeout(() => $("#task-title")?.focus(), 30);
+        $("#task-title")?.focus();
       }
       function saveTask(form) {
         if (ui.uploads) {
@@ -3944,14 +4580,24 @@
         } else if (mode === "contacts") {
           model.contacts = model.contacts.filter((c) => c.id !== id);
         } else person(id).responsible = false;
+        if (mode === "projects") {
+          ui.projects = [
+            ...new Set(
+              ui.projects.map((value) =>
+                value === id ? replacement || "none" : value,
+              ),
+            ),
+          ];
+          ui.project = ui.projects.length === 1 ? ui.projects[0] : "all";
+        }
         if (ui.executor === id) ui.executor = "";
         if (ui.responsible === id) ui.responsible = "";
+        ui.filterDraft = null;
         save();
         render();
         manage(mode);
         toast("Запись убрана, задачи сохранены");
       }
-      const MEETING_SETTINGS = "taskgantt_meeting_sheet_v1";
       const meetingDefaults = {
         orientation: "portrait",
         font: 12,
@@ -3969,6 +4615,574 @@
       };
       let meeting = null,
         meetingTimer;
+      const OUTPUT_COLUMNS = {
+        title: "Задача",
+        project: "Тема",
+        executor: "Исполнитель",
+        responsible: "Ответственный",
+        start: "Начало",
+        end: "Дедлайн",
+        status: "Статус",
+        percent: "%",
+        parent: "Родительская задача",
+      };
+      const defaultOutputColumns = [
+        "title",
+        "project",
+        "executor",
+        "responsible",
+        "end",
+        "status",
+      ];
+      const OUTPUT_PROFILES = "taskgantt_output_profiles_v2";
+      function outputProfile(format) {
+        let value =
+          format === "meeting"
+            ? { ...meetingDefaults }
+            : {
+                ...meetingDefaults,
+                orientation: "landscape",
+                font: 11,
+                lines: 0,
+                questions: "none",
+                comments: "none",
+                finalNotes: false,
+                preset: "compact",
+              };
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem(OUTPUT_PROFILES) || "{}",
+          )[format];
+          if (saved) value = { ...value, ...saved };
+        } catch {}
+        return {
+          ...value,
+          format,
+          columns: [...(value.columns || defaultOutputColumns)],
+        };
+      }
+      function outputTitle() {
+        return meeting.format === "meeting"
+          ? task(meeting.root)?.title || "Лист на встречу"
+          : "Список задач";
+      }
+      function refreshOutputCandidates() {
+        const candidates =
+          meeting.sourceMode === "branch" && meeting.root
+            ? [meeting.root, ...branchOrder(meeting.root).map((r) => r.id)]
+            : model.tasks.map((t) => t.id);
+        meeting.order = candidates.filter((id) =>
+          queryMatches(task(id), meeting.query),
+        );
+        meeting.selected = new Set(
+          meeting.order.filter((id) => !meeting.excluded.has(id)),
+        );
+        meeting.showDone =
+          meeting.query.showDone || meeting.query.status === "DONE";
+      }
+      function setMeetingRoot(id) {
+        if (!task(id)) return;
+        meeting.root = id;
+        meeting.sourceMode = "branch";
+        meeting.excluded = new Set();
+        meeting.breaks = new Set();
+        meeting.title = outputTitle();
+        refreshOutputCandidates();
+      }
+      function openMeeting(id) {
+        const format = id ? "meeting" : "list",
+          query = cloneQuery(queryFromUi());
+        meeting = {
+          ...outputProfile(format),
+          root: id || null,
+          sourceMode: id ? "branch" : "filtered",
+          query,
+          queryDraft: cloneQuery(query),
+          excluded: new Set(),
+          selected: new Set(),
+          breaks: new Set(),
+          order: [],
+          date: "",
+          participants: "",
+          pages: 0,
+          previewZoom: "page",
+        };
+        meeting.title = outputTitle();
+        refreshOutputCandidates();
+        renderMeetingControls();
+        renderMeetingPreview();
+      }
+      function changeOutputFormat(format) {
+        Object.assign(meeting, outputProfile(format));
+        meeting.title = outputTitle();
+        renderMeetingControls();
+        renderMeetingPreview();
+      }
+      function outputSource(mode) {
+        meeting.sourceMode = mode;
+        meeting.excluded.clear();
+        meeting.breaks.clear();
+        if (mode === "branch" && !meeting.root) {
+          const roots = model.tasks.filter((t) =>
+            model.tasks.some((c) => c.parent === t.id),
+          );
+          meeting.root =
+            roots.find((t) =>
+              [t.id, ...descendants(t.id)].some((id) =>
+                queryMatches(task(id), meeting.query),
+              ),
+            )?.id ||
+            roots[0]?.id ||
+            model.tasks[0]?.id ||
+            null;
+        }
+        meeting.title = outputTitle();
+        refreshOutputCandidates();
+        renderMeetingControls();
+        renderMeetingPreview();
+      }
+      function renderMeetingControls() {
+        const roots = [...model.tasks].sort(
+          (a, b) =>
+            Number(model.tasks.some((t) => t.parent === b.id)) -
+            Number(model.tasks.some((t) => t.parent === a.id)),
+        );
+        const columns = Object.entries(OUTPUT_COLUMNS)
+          .map(
+            ([id, label]) =>
+              `<label class="meeting-option"><input type="checkbox" data-output-column="${id}" ${meeting.columns.includes(id) ? "checked" : ""} ${id === "title" ? "disabled" : ""}>${label}</label>`,
+          )
+          .join("");
+        $("#meeting-root").innerHTML =
+          `<section class="meeting-workspace" role="dialog" aria-modal="true" aria-label="Печать и экспорт"><header class="meeting-top"><div><h2>Печать и экспорт</h2><p>Выборка по темам, людям и периоду → формат вывода</p></div><div class="meeting-actions"><span class="meeting-count" id="meeting-count"></span><select id="meeting-zoom" aria-label="Масштаб предпросмотра" style="font-size:11px;padding:8px"><option value="page" ${meeting.previewZoom === "page" ? "selected" : ""}>Вся страница</option><option value="width" ${meeting.previewZoom === "width" ? "selected" : ""}>По ширине</option><option value="100" ${meeting.previewZoom === "100" ? "selected" : ""}>100%</option></select><button class="btn" data-action="output-csv">CSV</button><button class="btn" data-action="output-xlsx">XLSX</button><button class="btn primary" data-action="meeting-print">${icon("printer", true)}Печать / PDF</button><button class="btn" data-action="meeting-close" aria-label="Закрыть вывод">${icon("close", true)}</button></div></header><div class="meeting-layout"><aside class="meeting-settings"><div class="output-format-switch">${[
+            ["list", "Обычный список"],
+            ["meeting", "Для встречи"],
+          ]
+            .map(
+              ([id, label]) =>
+                `<button class="${meeting.format === id ? "active" : ""}" data-action="output-format" data-id="${id}">${label}</button>`,
+            )
+            .join("")}</div><div class="output-source-switch">${[
+            ["filtered", "По фильтрам"],
+            ["branch", "Ветка задачи"],
+          ]
+            .map(
+              ([id, label]) =>
+                `<button class="${meeting.sourceMode === id ? "active" : ""}" data-action="output-source" data-id="${id}">${label}</button>`,
+            )
+            .join("")}</div>${
+            meeting.sourceMode === "branch"
+              ? `<div class="field"><label for="meeting-source">Задача со всеми подзадачами</label><select id="meeting-source">${options(
+                  roots.map((t) => ({ id: t.id, name: t.title })),
+                  meeting.root,
+                  "Выберите ветку",
+                )}</select></div>`
+              : ""
+          }${queryControls(meeting.queryDraft, "output")}<div class="output-summary" id="output-summary"></div><details ${meeting.format === "list" ? "open" : ""}><summary>${meeting.format === "list" ? "Столбцы списка" : "Содержимое листа"}</summary>${meeting.format === "list" ? `<div class="meeting-checks">${columns}</div>` : ""}<div class="twocol"><div class="field"><label>Вопросы</label>${meetingSelect(
+            "questions",
+            [
+              ["open", "Открытые"],
+              ["all", "Все"],
+              ["none", "Не печатать"],
+            ],
+          )}</div><div class="field"><label>Комментарии</label>${meetingSelect(
+            "comments",
+            [
+              ["last", "Последний"],
+              ["all", "Все"],
+              ["none", "Не печатать"],
+            ],
+          )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("files", "Названия файлов")}${meeting.format === "meeting" ? meetingCheckbox("people", "Ответственные") + meetingCheckbox("dates", "Сроки / время") + meetingCheckbox("status", "Статусы") + meetingCheckbox("finalNotes", "Общие итоги") : ""}</div></details><details><summary>Лист и оформление</summary>${
+            meeting.format === "meeting"
+              ? `<div class="meeting-presets">${[
+                  ["compact", "Компактно"],
+                  ["meeting", "На встречу"],
+                  ["detailed", "Подробно"],
+                ]
+                  .map(
+                    ([id, label]) =>
+                      `<button data-action="meeting-preset" data-id="${id}" class="${meeting.preset === id ? "selected" : ""}">${label}</button>`,
+                  )
+                  .join("")}</div>`
+              : ""
+          }<div class="twocol"><div class="field"><label>Лист</label>${meetingSelect(
+            "orientation",
+            [
+              ["portrait", "A4 · книжный"],
+              ["landscape", "A4 · альбомный"],
+            ],
+          )}</div><div class="field"><label>Текст</label>${meetingSelect(
+            "font",
+            [
+              [11, "11 пт"],
+              [12, "12 пт"],
+              [14, "14 пт"],
+            ],
+          )}</div></div>${
+            meeting.format === "meeting"
+              ? `<div class="twocol"><div class="field"><label>Заметки</label>${meetingSelect(
+                  "noteLayout",
+                  [
+                    ["below", "Под пунктом"],
+                    ["right", "Справа"],
+                  ],
+                )}</div><div class="field"><label>Строк для записей</label>${meetingSelect(
+                  "lines",
+                  [
+                    [0, "Без строк"],
+                    [1, "1 строка"],
+                    [2, "2 строки"],
+                    [3, "3 строки"],
+                    [5, "5 строк"],
+                    [8, "8 строк"],
+                  ],
+                )}</div></div>`
+              : ""
+          }</details><details><summary>Выбранные задачи</summary><div class="meeting-tree-toolbar"><span id="meeting-selection-count"></span><span><button class="textbtn" data-action="meeting-select-all">Все</button> · <button class="textbtn" data-action="meeting-select-none">Снять</button></span></div><div class="meeting-tree" id="meeting-tree"></div></details><details><summary>Заголовок ${meeting.format === "meeting" ? "и участники" : ""}</summary><div class="field"><label for="meeting-title">Заголовок листа</label><input id="meeting-title" data-sheet-setting="title" value="${E(meeting.title)}" maxlength="500"></div>${meeting.format === "meeting" ? `<div class="field"><label for="meeting-date">Дата встречи</label><input id="meeting-date" type="date" data-sheet-setting="date" value="${E(meeting.date)}"></div><div class="field"><label for="meeting-participants">Участники / место</label><input id="meeting-participants" data-sheet-setting="participants" value="${E(meeting.participants)}" maxlength="300"></div>` : ""}</details><button class="btn" data-action="meeting-remember" style="margin-top:17px">Запомнить оформление</button></aside><div class="meeting-preview" id="meeting-preview"><div id="meeting-pages"></div></div></div></section>`;
+        renderMeetingTree();
+        updateOutputSummary();
+      }
+      function updateOutputSummary() {
+        if ($("#output-summary"))
+          $("#output-summary").textContent =
+            `Найдено: ${meeting.order.length} · Выбрано: ${meeting.selected.size}. ${querySummary(meeting.query)}${meeting.sourceMode === "branch" ? " · Ветка: " + task(meeting.root)?.title : ""}`;
+      }
+      function renderMeetingTree() {
+        const levels = new Map(
+          meeting.sourceMode === "branch"
+            ? [
+                [meeting.root, 0],
+                ...branchOrder(meeting.root).map((r) => [r.id, r.level + 1]),
+              ]
+            : [],
+        );
+        $("#meeting-selection-count").textContent =
+          `${meeting.selected.size} из ${meeting.order.length}`;
+        $("#meeting-tree").innerHTML =
+          meeting.order
+            .map((id) => {
+              const t = task(id),
+                siblings = meeting.order.filter(
+                  (s) => task(s).parent === t.parent,
+                ),
+                index = siblings.indexOf(id);
+              return `<div class="meeting-tree-row ${meeting.selected.has(id) ? "" : "off"}" style="margin-left:${Math.min(3, levels.get(id) || 0) * 8}px"><label class="meeting-tree-name"><input type="checkbox" data-meeting-task="${E(id)}" ${meeting.selected.has(id) ? "checked" : ""}><span>${E(t.title)}</span></label><div class="meeting-tree-tools"><button class="tinybtn" data-action="meeting-up" data-id="${E(id)}" ${index === 0 ? "disabled" : ""}>↑</button><button class="tinybtn" data-action="meeting-down" data-id="${E(id)}" ${index === siblings.length - 1 ? "disabled" : ""}>↓</button><button class="page-break-toggle ${meeting.breaks.has(id) ? "active" : ""}" data-action="meeting-break" data-id="${E(id)}">${meeting.breaks.has(id) ? "✓ " : ""}Новая страница</button></div></div>`;
+            })
+            .join("") ||
+          '<p class="activity-empty">По выбранным условиям задач нет.</p>';
+        updateOutputSummary();
+      }
+      function outputCell(t, key) {
+        if (key === "title") return t.title;
+        if (key === "project") return themeName(t.project || "none");
+        if (key === "executor")
+          return (
+            t.executors
+              .map((id) => person(id)?.name)
+              .filter(Boolean)
+              .join(", ") || "Не назначен"
+          );
+        if (key === "responsible")
+          return person(t.responsible)?.name || "Не назначен";
+        if (key === "status") return statuses[t.status];
+        if (key === "percent") return t.percent + "%";
+        if (key === "parent") return task(t.parent)?.title || "";
+        if (key === "start" || key === "end")
+          return new Date(t[key] + "T12:00:00").toLocaleDateString("ru-RU");
+        return "";
+      }
+      function meetingBlocks() {
+        if (meeting.format === "list")
+          return meeting.order
+            .filter((id) => meeting.selected.has(id))
+            .map((id) => ({
+              id,
+              title: task(id).title,
+              kind: "list",
+              parts: meetingParts(task(id)),
+              notes: false,
+              breakBefore: meeting.breaks.has(id),
+            }));
+        const root =
+            meeting.sourceMode === "branch" ? task(meeting.root) : null,
+          blocks = [];
+        if (root && meeting.selected.has(root.id)) {
+          const parts = meetingParts(root);
+          if (parts.length || meeting.order.length === 1)
+            blocks.push({
+              id: root.id,
+              title: "К обсуждению",
+              number: "",
+              parts,
+              notes: meeting.order.length === 1,
+            });
+        }
+        const include = new Set(meeting.selected);
+        for (const id of meeting.selected) {
+          let p = task(id)?.parent;
+          const seen = new Set([id]);
+          while (p && p !== root?.id && !seen.has(p)) {
+            seen.add(p);
+            if (meeting.order.includes(p)) include.add(p);
+            p = task(p)?.parent;
+          }
+        }
+        const counters = new Map(),
+          numbers = new Map();
+        for (const id of meeting.order) {
+          if (id === root?.id || !include.has(id)) continue;
+          const t = task(id),
+            context = !meeting.selected.has(id),
+            group = numbers.has(t.parent) ? t.parent : "__top",
+            n = (counters.get(group) || 0) + 1;
+          counters.set(group, n);
+          const number =
+            (numbers.get(t.parent) ? numbers.get(t.parent) + "." : "") + n;
+          numbers.set(id, number);
+          const metadata = [];
+          if (!context && meeting.people)
+            metadata.push(
+              "Ответственный: " +
+                (person(t.responsible)?.name || "не назначен"),
+            );
+          if (!context && meeting.dates)
+            metadata.push(
+              "Срок: " +
+                outputCell(t, "end") +
+                (t.kind === "event" && t.startTime
+                  ? " · " + t.startTime + (t.endTime ? "–" + t.endTime : "")
+                  : ""),
+            );
+          if (!context && meeting.status) metadata.push(statuses[t.status]);
+          blocks.push({
+            id,
+            title: t.title,
+            number,
+            parts: context ? [] : meetingParts(t),
+            notes: !context,
+            context,
+            metadata: metadata.join(" · "),
+            path:
+              t.parent && t.parent !== root?.id ? task(t.parent)?.title : "",
+            breakBefore: meeting.breaks.has(id),
+          });
+        }
+        if (meeting.finalNotes)
+          blocks.push({
+            id: "summary",
+            title: "Итоги встречи / следующие действия",
+            number: "",
+            parts: [],
+            notes: true,
+            summary: true,
+          });
+        return blocks;
+      }
+      function listMeetingEntry(block, parts, continued) {
+        const t = task(block.id),
+          node = document.createElement("article");
+        node.className = "meeting-entry ordinary-row";
+        node.dataset.sheetTask = block.id;
+        node.innerHTML = `<div class="sheet-table-cells">${meeting.columns.map((key) => `<div class="${key === "title" ? "list-task-title" : ""}">${E(outputCell(t, key))}${key === "title" && continued ? " · продолжение" : ""}${key === "title" && t.parent ? `<div class="list-task-parent">Внутри: ${E(task(t.parent)?.title || "")}</div>` : ""}</div>`).join("")}</div>${parts.length ? `<div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${E(p.text)}</div>`).join("")}</div>` : ""}`;
+        return node;
+      }
+      function meetingEntry(
+        block,
+        parts = block.parts,
+        notes = block.notes,
+        continued = false,
+      ) {
+        return block.kind === "list"
+          ? listMeetingEntry(block, parts, continued)
+          : meetingCardEntry(block, parts, notes, continued);
+      }
+      function meetingPage() {
+        const page = document.createElement("section");
+        page.className =
+          "paper-page" +
+          (meeting.orientation === "landscape" ? " landscape" : "") +
+          (meeting.format === "list" ? " ordinary" : "");
+        page.style.setProperty("--sheet-font", meeting.font + "pt");
+        page.style.setProperty(
+          "--sheet-columns",
+          meeting.columns
+            .map((key) =>
+              key === "title" ? "minmax(0,3fr)" : "minmax(0,1.2fr)",
+            )
+            .join(" "),
+        );
+        page.innerHTML = `<header class="sheet-heading"><div class="sheet-eyebrow">${meeting.format === "list" ? "Список задач" : "Лист на встречу"}</div><h1>${E(meeting.title)}</h1><div class="sheet-filter-summary">${E(querySummary(meeting.query))}${meeting.sourceMode === "branch" ? " · Ветка: " + E(task(meeting.root)?.title || "") : ""}</div>${meeting.format === "meeting" ? `<div class="sheet-meeting-meta" style="margin-top:3mm"><span>Дата: ${meeting.date ? E(new Date(meeting.date + "T12:00:00").toLocaleDateString("ru-RU")) : "________________"}</span><span>${meeting.participants ? E(meeting.participants) : "Участники: __________________________"}</span></div>` : `<div class="sheet-table-head">${meeting.columns.map((key) => `<span>${OUTPUT_COLUMNS[key]}</span>`).join("")}</div>`}</header><div class="sheet-body"></div><footer class="sheet-footer"><span>${meeting.format === "meeting" ? "Решения и вопросы к встрече" : "Список задач · " + meeting.selected.size + " записей"}</span><span class="sheet-page-number"></span></footer>`;
+        $("#meeting-pages").append(page);
+        return page;
+      }
+      function renderMeetingPreview() {
+        if (!meeting || !$("#meeting-pages")) return;
+        clearTimeout(meetingTimer);
+        updateOutputSummary();
+        if (!meeting.selected.size) {
+          $("#meeting-pages").style.zoom = "1";
+          $("#meeting-pages").innerHTML =
+            '<div class="output-empty">' +
+            (meeting.order.length
+              ? "Задачи найдены, но ни одна не отмечена для вывода."
+              : "По выбранным условиям задач нет. Измените темы, человека или период и нажмите «Применить».") +
+            "</div>";
+          meeting.pages = 0;
+          meeting.valid = false;
+          $("#meeting-count").textContent =
+            `Найдено: ${meeting.order.length} · Выбрано: 0`;
+        } else paginateOutput();
+        for (const action of ["meeting-print", "output-csv", "output-xlsx"])
+          $('#meeting-root [data-action="' + action + '"]').disabled =
+            !meeting.valid || queryPending("output");
+      }
+      function rememberMeeting() {
+        let profiles = {};
+        try {
+          profiles = JSON.parse(localStorage.getItem(OUTPUT_PROFILES) || "{}");
+        } catch {}
+        profiles[meeting.format] = {
+          ...Object.fromEntries(
+            Object.keys(meetingDefaults).map((key) => [key, meeting[key]]),
+          ),
+          columns: [...meeting.columns],
+        };
+        try {
+          localStorage.setItem(OUTPUT_PROFILES, JSON.stringify(profiles));
+          toast("Оформление этого шаблона сохранено");
+        } catch {
+          toast("Не удалось сохранить настройки");
+        }
+      }
+      function exportOutput(type) {
+        if (!meeting?.valid || queryPending("output")) return;
+        const extras = [
+          ...(meeting.description ? [["description", "Описание"]] : []),
+          ...(meeting.questions !== "none" ? [["question", "Вопросы"]] : []),
+          ...(meeting.comments !== "none" ? [["comment", "Комментарии"]] : []),
+          ...(meeting.files ? [["files", "Вложения"]] : []),
+        ];
+        const headers = [
+          ...meeting.columns.map((key) => OUTPUT_COLUMNS[key]),
+          ...extras.map((pair) => pair[1]),
+        ];
+        const rows = meeting.order
+          .filter((id) => meeting.selected.has(id))
+          .map((id) => {
+            const t = task(id),
+              parts = meetingParts(t);
+            return [
+              ...meeting.columns.map((key) => outputCell(t, key)),
+              ...extras.map(([type]) =>
+                parts
+                  .filter((p) => p.type === type)
+                  .map((p) => (p.label ? p.label + ": " : "") + p.text)
+                  .join("\n"),
+              ),
+            ];
+          });
+        let blob;
+        if (type === "csv") {
+          const cell = (value) => {
+            let text = String(value);
+            if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
+            return '"' + text.replace(/"/g, '""') + '"';
+          };
+          blob = new Blob(
+            [
+              "\ufeff" +
+                [headers, ...rows]
+                  .map((row) => row.map(cell).join(";"))
+                  .join("\r\n"),
+            ],
+            { type: "text/csv;charset=utf-8" },
+          );
+        } else {
+          const workbook = XLSX.utils.book_new(),
+            sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          sheet["!cols"] = [
+            ...meeting.columns.map((key) => ({
+              wch: key === "title" ? 55 : 25,
+            })),
+            ...extras.map(() => ({ wch: 60 })),
+          ];
+          XLSX.utils.book_append_sheet(workbook, sheet, "Задачи");
+          blob = new Blob(
+            [XLSX.write(workbook, { type: "array", bookType: "xlsx" })],
+            {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+          );
+        }
+        const url = URL.createObjectURL(blob),
+          link = document.createElement("a");
+        link.href = url;
+        link.download = "tasks-" + TODAY + "." + type;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      function meetingControl(event) {
+        if (
+          !meeting ||
+          !event.target.closest("#meeting-root") ||
+          event.target.closest("[data-query-scope]")
+        )
+          return;
+        const target = event.target,
+          key = target.dataset.sheetSetting;
+        if (target.id === "meeting-zoom") {
+          meeting.previewZoom = target.value;
+          fitMeetingPreview();
+          return;
+        }
+        if (target.id === "meeting-source") {
+          if (!target.value) {
+            target.value = meeting.root;
+            return;
+          }
+          setMeetingRoot(target.value);
+          renderMeetingControls();
+          renderMeetingPreview();
+          return;
+        }
+        if (target.dataset.meetingTask) {
+          const id = target.dataset.meetingTask;
+          if (target.checked) {
+            meeting.selected.add(id);
+            meeting.excluded.delete(id);
+          } else {
+            meeting.selected.delete(id);
+            meeting.excluded.add(id);
+          }
+          renderMeetingTree();
+          renderMeetingPreview();
+          return;
+        }
+        if (target.dataset.outputColumn) {
+          const id = target.dataset.outputColumn;
+          meeting.columns = Object.keys(OUTPUT_COLUMNS).filter(
+            (key) =>
+              key === "title" ||
+              (key === id ? target.checked : meeting.columns.includes(key)),
+          );
+          renderMeetingPreview();
+          return;
+        }
+        if (key) {
+          meeting[key] =
+            target.type === "checkbox"
+              ? target.checked
+              : ["font", "lines"].includes(key)
+                ? Number(target.value)
+                : target.value;
+          meeting.preset = "custom";
+          $("#meeting-root .meeting-presets .selected")?.classList.remove(
+            "selected",
+          );
+          clearTimeout(meetingTimer);
+          meetingTimer = setTimeout(renderMeetingPreview, 100);
+        }
+      }
       function branchOrder(rootId) {
         const result = [],
           seen = new Set([rootId]);
@@ -3983,50 +5197,6 @@
         visit(rootId, 0);
         return result;
       }
-      function setMeetingRoot(id) {
-        const root = task(id);
-        if (!root) return;
-        meeting.root = id;
-        meeting.title = root.title;
-        meeting.order = branchOrder(id).map((r) => r.id);
-        meeting.selected = new Set(
-          meeting.order.filter((id) => task(id).status !== "DONE"),
-        );
-        meeting.breaks = new Set();
-        meeting.showDone = false;
-      }
-      function openMeeting(id) {
-        let settings = { ...meetingDefaults };
-        try {
-          const saved = JSON.parse(
-            localStorage.getItem(MEETING_SETTINGS) || "null",
-          );
-          if (saved && saved.font && saved.orientation)
-            settings = { ...settings, ...saved };
-        } catch {}
-        const roots = [...model.tasks].sort(
-          (a, b) =>
-            Number(model.tasks.some((t) => t.parent === b.id)) -
-            Number(model.tasks.some((t) => t.parent === a.id)),
-        );
-        const root =
-          task(id) || roots.find((t) => t.project === ui.project) || roots[0];
-        if (!root) {
-          toast("Сначала создайте задачу или мероприятие");
-          return;
-        }
-        meeting = {
-          ...settings,
-          date: "",
-          participants: "",
-          pages: 0,
-          previewZoom: "page",
-        };
-        setMeetingRoot(root.id);
-        renderMeetingControls();
-        renderMeetingPreview();
-        setTimeout(() => $("#meeting-source")?.focus(), 30);
-      }
       function closeMeeting() {
         document.body.classList.remove("meeting-print");
         clearTimeout(meetingTimer);
@@ -4038,98 +5208,6 @@
       }
       function meetingSelect(key, items) {
         return `<select data-sheet-setting="${key}" aria-label="${E(key === "questions" ? "Печатать вопросы" : key === "comments" ? "Печатать комментарии" : key === "lines" ? "Строк для заметок" : key === "font" ? "Размер текста" : key === "orientation" ? "Ориентация листа" : "Расположение заметок")}">${items.map(([value, label]) => `<option value="${value}" ${String(meeting[key]) === String(value) ? "selected" : ""}>${label}</option>`).join("")}</select>`;
-      }
-      function renderMeetingControls() {
-        const roots = [...model.tasks].sort(
-          (a, b) =>
-            Number(model.tasks.some((t) => t.parent === b.id)) -
-            Number(model.tasks.some((t) => t.parent === a.id)),
-        );
-        $("#meeting-root").innerHTML =
-          `<section class="meeting-workspace" role="dialog" aria-modal="true" aria-label="Лист на встречу"><header class="meeting-top"><div><h2>Лист на встречу</h2><p>Повестка, вопросы и место для рукописных пометок</p></div><div class="meeting-actions"><span class="meeting-count" id="meeting-count"></span><select id="meeting-zoom" aria-label="Масштаб предпросмотра" style="font-size:11px;padding:8px"><option value="page" ${meeting.previewZoom === "page" ? "selected" : ""}>Вся страница</option><option value="width" ${meeting.previewZoom === "width" ? "selected" : ""}>По ширине</option><option value="100" ${meeting.previewZoom === "100" ? "selected" : ""}>100%</option></select><button class="btn primary" data-action="meeting-print">${icon("printer", true)}Печать / PDF</button><button class="btn" data-action="meeting-close">${icon("close", true)}<span class="meeting-close-label">Закрыть</span></button></div></header><div class="meeting-layout"><aside class="meeting-settings"><div class="field"><label for="meeting-source">Что берём на встречу</label><select id="meeting-source">${options(
-            roots.map((t) => ({ id: t.id, name: t.title })),
-            meeting.root,
-            "Выберите задачу / мероприятие",
-          )}</select></div><div class="meeting-presets">${[
-            ["compact", "Компактно"],
-            ["meeting", "На встречу"],
-            ["detailed", "Подробно"],
-          ]
-            .map(
-              ([id, label]) =>
-                `<button data-action="meeting-preset" data-id="${id}" class="${meeting.preset === id ? "selected" : ""}">${label}</button>`,
-            )
-            .join(
-              "",
-            )}</div><div class="twocol"><div class="field"><label>Лист</label>${meetingSelect(
-            "orientation",
-            [
-              ["portrait", "A4 · книжный"],
-              ["landscape", "A4 · альбомный"],
-            ],
-          )}</div><div class="field"><label>Текст</label>${meetingSelect(
-            "font",
-            [
-              [11, "11 пт"],
-              [12, "12 пт"],
-              [14, "14 пт"],
-            ],
-          )}</div></div><div class="twocol"><div class="field"><label>Заметки</label>${meetingSelect(
-            "noteLayout",
-            [
-              ["below", "Под каждым пунктом"],
-              ["right", "Справа от пункта"],
-            ],
-          )}</div><div class="field"><label>Строк для записей</label>${meetingSelect(
-            "lines",
-            [
-              [0, "Без строк"],
-              [1, "1 строка"],
-              [2, "2 строки"],
-              [3, "3 строки"],
-              [5, "5 строк"],
-              [8, "8 строк"],
-            ],
-          )}</div></div><details open><summary>Содержимое листа</summary><div class="twocol"><div class="field"><label>Вопросы</label>${meetingSelect(
-            "questions",
-            [
-              ["open", "Только открытые"],
-              ["all", "Все вопросы"],
-              ["none", "Не печатать"],
-            ],
-          )}</div><div class="field"><label>Комментарии</label>${meetingSelect(
-            "comments",
-            [
-              ["last", "Последний"],
-              ["all", "Все"],
-              ["none", "Не печатать"],
-            ],
-          )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("people", "Ответственные")}${meetingCheckbox("dates", "Сроки / время")}${meetingCheckbox("status", "Статусы")}${meetingCheckbox("files", "Названия файлов")}${meetingCheckbox("finalNotes", "Общие итоги")}</div></details><details open><summary>Пункты и подзадачи</summary><div class="meeting-tree-toolbar"><span id="meeting-selection-count"></span><span><button class="textbtn" data-action="meeting-select-all">Все</button> · <button class="textbtn" data-action="meeting-select-none">Снять</button></span></div><label class="meeting-option"><input type="checkbox" id="meeting-show-done" ${meeting.showDone ? "checked" : ""}>Показать завершённые для выбора</label><div class="meeting-tree" id="meeting-tree"></div></details><details><summary>Заголовок и участники встречи</summary><div class="field"><label for="meeting-title">Заголовок листа</label><input id="meeting-title" data-sheet-setting="title" value="${E(meeting.title)}" maxlength="500"></div><div class="field"><label for="meeting-date">Дата встречи</label><input id="meeting-date" type="date" data-sheet-setting="date" value="${E(meeting.date)}"></div><div class="field"><label for="meeting-participants">Участники / место</label><input id="meeting-participants" data-sheet-setting="participants" value="${E(meeting.participants)}" placeholder="Можно дописать от руки" maxlength="300"></div></details><div class="info-box">Каждый пункт с вопросами остаётся целиком, если помещается на странице. Кнопка «Новая страница» задаёт разрыв перед пунктом. Справа показан готовый лист.</div><button class="btn" data-action="meeting-remember">Запомнить настройки</button></aside><div class="meeting-preview" id="meeting-preview"><div id="meeting-pages"></div></div></div></section>`;
-        renderMeetingTree();
-      }
-      function renderMeetingTree() {
-        const levels = new Map(
-          branchOrder(meeting.root).map((r) => [r.id, r.level]),
-        );
-        const ids = meeting.order.filter(
-          (id) => meeting.showDone || task(id)?.status !== "DONE",
-        );
-        $("#meeting-selection-count").textContent =
-          `Выбрано ${meeting.selected.size} из ${meeting.order.length}`;
-        $("#meeting-tree").innerHTML =
-          ids
-            .map((id) => {
-              const t = task(id),
-                siblings = meeting.order.filter(
-                  (s) =>
-                    task(s).parent === t.parent &&
-                    (meeting.showDone || task(s).status !== "DONE"),
-                ),
-                index = siblings.indexOf(id);
-              return `<div class="meeting-tree-row ${meeting.selected.has(id) ? "" : "off"}" style="margin-left:${Math.min(3, levels.get(id) || 0) * 8}px"><label class="meeting-tree-name"><input type="checkbox" data-meeting-task="${E(id)}" ${meeting.selected.has(id) ? "checked" : ""}><span>${E(t.title)}${t.status === "DONE" ? '<small class="muted"> · Готово</small>' : ""}</span></label><div class="meeting-tree-tools"><button class="tinybtn" data-action="meeting-up" data-id="${E(id)}" ${index === 0 ? "disabled" : ""} aria-label="Выше: ${E(t.title)}" title="Переместить выше">↑</button><button class="tinybtn" data-action="meeting-down" data-id="${E(id)}" ${index === siblings.length - 1 ? "disabled" : ""} aria-label="Ниже: ${E(t.title)}" title="Переместить ниже">↓</button><button class="page-break-toggle ${meeting.breaks.has(id) ? "active" : ""}" data-action="meeting-break" data-id="${E(id)}" aria-pressed="${meeting.breaks.has(id)}">${meeting.breaks.has(id) ? "✓ " : ""}Новая страница</button></div></div>`;
-            })
-            .join("") ||
-          '<p class="activity-empty">Нет подзадач для выбора. На листе будут материалы самой записи.</p>';
       }
       function moveMeetingItem(id, direction) {
         const t = task(id),
@@ -4214,84 +5292,12 @@
           });
         return parts;
       }
-      function meetingBlocks() {
-        const root = task(meeting.root),
-          blocks = [],
-          own = meetingParts(root);
-        if (own.length || meeting.order.length === 0)
-          blocks.push({
-            id: root.id,
-            title: "К обсуждению",
-            number: "",
-            parts: own,
-            notes: meeting.order.length === 0,
-            depth: 0,
-          });
-        const include = new Set(meeting.selected);
-        for (const id of meeting.selected) {
-          let p = task(id)?.parent;
-          const seen = new Set([id]);
-          while (p && p !== root.id && !seen.has(p)) {
-            seen.add(p);
-            include.add(p);
-            p = task(p)?.parent;
-          }
-        }
-        const counts = new Map(),
-          numbers = new Map();
-        for (const id of meeting.order) {
-          if (!include.has(id)) continue;
-          const t = task(id),
-            context = !meeting.selected.has(id),
-            n = (counts.get(t.parent) || 0) + 1;
-          counts.set(t.parent, n);
-          const number =
-            (numbers.get(t.parent) ? numbers.get(t.parent) + "." : "") + n;
-          numbers.set(id, number);
-          const metadata = [];
-          if (!context && meeting.people)
-            metadata.push(
-              "Ответственный: " +
-                (person(t.responsible)?.name || "не назначен"),
-            );
-          if (!context && meeting.dates)
-            metadata.push(
-              "Срок: " +
-                new Date(t.end + "T12:00:00").toLocaleDateString("ru-RU") +
-                (t.kind === "event" && t.startTime
-                  ? " · " + t.startTime + (t.endTime ? "–" + t.endTime : "")
-                  : ""),
-            );
-          if (!context && meeting.status) metadata.push(statuses[t.status]);
-          blocks.push({
-            id,
-            title: t.title,
-            number,
-            parts: context ? [] : meetingParts(t),
-            notes: !context,
-            context,
-            metadata: metadata.join(" · "),
-            path: t.parent !== root.id ? task(t.parent)?.title : "",
-            breakBefore: meeting.breaks.has(id),
-          });
-        }
-        if (meeting.finalNotes)
-          blocks.push({
-            id: "summary",
-            title: "Итоги встречи / следующие действия",
-            number: "",
-            parts: [],
-            notes: true,
-            summary: true,
-          });
-        return blocks;
-      }
       function writeLines(lines, label = "Решение / ответственный / срок") {
         return lines
           ? `<div class="sheet-writing"><div class="sheet-write-title">${E(label)}</div>${'<div class="sheet-write-line"></div>'.repeat(lines)}</div>`
           : "";
       }
-      function meetingEntry(
+      function meetingCardEntry(
         block,
         parts = block.parts,
         notes = block.notes,
@@ -4306,17 +5312,6 @@
           : block.title;
         node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${E(p.text)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
         return node;
-      }
-      function meetingPage() {
-        const root = task(meeting.root),
-          page = document.createElement("section");
-        page.className =
-          "paper-page" +
-          (meeting.orientation === "landscape" ? " landscape" : "");
-        page.style.setProperty("--sheet-font", meeting.font + "pt");
-        page.innerHTML = `<header class="sheet-heading"><div class="sheet-eyebrow">Лист на встречу · ${E(proj(root.project)?.name || "Без темы")}</div><h1>${E(meeting.title || root.title)}</h1><div class="sheet-meeting-meta"><span>Дата: ${meeting.date ? E(new Date(meeting.date + "T12:00:00").toLocaleDateString("ru-RU")) : "________________"}</span><span>${meeting.participants ? E(meeting.participants) : "Участники: ______________________________"}</span></div></header><div class="sheet-body"></div><footer class="sheet-footer"><span>Решения и вопросы к встрече</span><span class="sheet-page-number"></span></footer>`;
-        $("#meeting-pages").append(page);
-        return page;
       }
       function shortMeetingParts(parts) {
         const out = [];
@@ -4359,7 +5354,7 @@
         }
         return out;
       }
-      function renderMeetingPreview() {
+      function paginateOutput() {
         if (!meeting || !$("#meeting-pages")) return;
         clearTimeout(meetingTimer);
         const pages = $("#meeting-pages");
@@ -4468,6 +5463,10 @@
         );
       }
       function printMeeting() {
+        if (queryPending("output")) {
+          toast("Примените фильтры перед выводом");
+          return;
+        }
         renderMeetingPreview();
         if (!meeting?.valid) return;
         $("#print-output").innerHTML = $("#meeting-pages").innerHTML;
@@ -4481,21 +5480,10 @@
         document.body.classList.add("meeting-print");
         window.print();
       }
-      function rememberMeeting() {
-        const settings = Object.fromEntries(
-          Object.keys(meetingDefaults).map((key) => [key, meeting[key]]),
-        );
-        try {
-          localStorage.setItem(MEETING_SETTINGS, JSON.stringify(settings));
-          toast("Настройки листа сохранены для следующей встречи");
-        } catch {
-          toast("Браузер не разрешил сохранить настройки");
-        }
-      }
       function popup(t, button) {
         const r = button.getBoundingClientRect();
         $("#popup-root").innerHTML =
-          `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 180)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button data-action="meeting-open" data-id="${E(t.id)}">Лист на встречу</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
+          `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 180)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button data-action="meeting-open" data-id="${E(t.id)}">Печать / экспорт</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
       }
       document.addEventListener("click", (event) => {
         const button = event.target.closest("[data-action]");
@@ -4507,6 +5495,45 @@
           id = button.dataset.id;
         $("#popup-root").innerHTML = "";
         switch (a) {
+          case "query-apply":
+            applyQuery(button.dataset.scope);
+            break;
+          case "query-reset":
+            resetQuery(button.dataset.scope);
+            break;
+          case "query-period":
+            quickPeriod(button.dataset.scope, id);
+            break;
+          case "query-all-themes": {
+            const q = queryDraft(button.dataset.scope);
+            q.projects = [];
+            button
+              .closest("[data-query-scope]")
+              .querySelectorAll("[data-query-theme]")
+              .forEach((box) => (box.checked = false));
+            button
+              .closest("[data-query-scope]")
+              .querySelector(".theme-summary-label").textContent = "Все темы";
+            $("#query-feedback-" + button.dataset.scope).textContent =
+              "Выбраны все темы — нажмите «Применить»";
+            markQueryButtons(button.dataset.scope);
+            break;
+          }
+          case "query-themes-done":
+            button.closest(".query-theme-picker").open = false;
+            break;
+          case "output-format":
+            changeOutputFormat(id);
+            break;
+          case "output-source":
+            outputSource(id);
+            break;
+          case "output-csv":
+            exportOutput("csv");
+            break;
+          case "output-xlsx":
+            exportOutput("xlsx");
+            break;
           case "meeting-open":
             openMeeting(id);
             break;
@@ -4523,16 +5550,14 @@
             rememberMeeting();
             break;
           case "meeting-select-all":
-            meeting.selected = new Set(
-              meeting.order.filter(
-                (id) => meeting.showDone || task(id).status !== "DONE",
-              ),
-            );
+            meeting.excluded.clear();
+            meeting.selected = new Set(meeting.order);
             renderMeetingTree();
             renderMeetingPreview();
             break;
           case "meeting-select-none":
             meeting.selected.clear();
+            meeting.excluded = new Set(meeting.order);
             renderMeetingTree();
             renderMeetingPreview();
             break;
@@ -4550,10 +5575,20 @@
             renderMeetingPreview();
             break;
           case "project":
+            ui.projects = id === "all" ? [] : [id];
+            ui.filterDraft = null;
             ui.project = id;
             render();
             break;
           case "view":
+            if (id === "deadlines") {
+              ui.dateMode = "deadline";
+              if (!ui.from && !ui.to) {
+                ui.from = TODAY;
+                ui.to = addDays(TODAY, 6);
+              }
+              ui.filterDraft = null;
+            }
             ui.view = id;
             render();
             break;
@@ -4562,12 +5597,19 @@
             render();
             break;
           case "reset-filters":
+            ui.projects = [];
+            ui.project = "all";
+            ui.from = ui.to = "";
+            ui.dateMode = ui.view === "deadlines" ? "deadline" : "overlap";
+            ui.filterDraft = null;
             ui.q = "";
             $("#search").value = "";
             ui.responsible = ui.executor = ui.status = ui.due = "";
             render();
             break;
           case "all-with-filters":
+            ui.projects = [];
+            ui.filterDraft = null;
             ui.project = "all";
             render();
             break;
@@ -4724,10 +5766,6 @@
             toast("Файл убран из задачи");
             break;
           }
-          case "deadline-period":
-            ui.deadlinePeriod = id;
-            renderContent();
-            break;
           case "reset-demo":
             modal(
               "Сбросить пример?",
@@ -4749,11 +5787,11 @@
               });
             ui.quick = null;
             ui.noteDrafts = {};
-            ui.deadlinePeriod = "7";
-            ui.deadlineStart = TODAY;
-            ui.deadlineEnd = "2026-11-06";
-            ui.deadlineOverdue = true;
             ui.project = "all";
+            ui.projects = [];
+            ui.from = ui.to = "";
+            ui.dateMode = "overlap";
+            ui.filterDraft = null;
             ui.responsible = ui.executor = ui.status = ui.due = ui.q = "";
             ui.done = false;
             ui.expand = true;
@@ -4773,55 +5811,6 @@
             break;
         }
       });
-      function meetingControl(event) {
-        if (!meeting || !event.target.closest("#meeting-root")) return;
-        const target = event.target,
-          key = target.dataset.sheetSetting;
-        if (target.id === "meeting-zoom") {
-          meeting.previewZoom = target.value;
-          fitMeetingPreview();
-          return;
-        }
-        if (target.id === "meeting-source") {
-          if (!target.value) return;
-          setMeetingRoot(target.value);
-          renderMeetingControls();
-          renderMeetingPreview();
-          return;
-        }
-        if (target.dataset.meetingTask) {
-          const id = target.dataset.meetingTask;
-          target.checked
-            ? meeting.selected.add(id)
-            : meeting.selected.delete(id);
-          renderMeetingTree();
-          renderMeetingPreview();
-          return;
-        }
-        if (target.id === "meeting-show-done") {
-          meeting.showDone = target.checked;
-          if (!target.checked)
-            for (const id of [...meeting.selected])
-              if (task(id).status === "DONE") meeting.selected.delete(id);
-          renderMeetingTree();
-          renderMeetingPreview();
-          return;
-        }
-        if (key) {
-          meeting[key] =
-            target.type === "checkbox"
-              ? target.checked
-              : ["font", "lines"].includes(key)
-                ? Number(target.value)
-                : target.value;
-          meeting.preset = "custom";
-          $("#meeting-root .meeting-presets .selected")?.classList.remove(
-            "selected",
-          );
-          clearTimeout(meetingTimer);
-          meetingTimer = setTimeout(renderMeetingPreview, 100);
-        }
-      }
       document.addEventListener("input", (event) => {
         if (event.target.closest("#meeting-root")) meetingControl(event);
       });
@@ -4860,32 +5849,11 @@
               text: composer.querySelector(".note-text").value,
             };
         if (event.target.id === "task-kind") updateEventFields();
-        if (event.target.id === "deadline-overdue") {
-          ui.deadlineOverdue = event.target.checked;
-          renderContent();
-        }
-        if (event.target.id === "deadline-start") {
-          ui.deadlineStart = event.target.value;
-          renderContent();
-        }
-        if (event.target.id === "deadline-end") {
-          ui.deadlineEnd = event.target.value;
-          renderContent();
-        }
         const id = event.target.id,
           value = event.target.value;
-        const map = {
-          "responsible-filter": "responsible",
-          "executor-filter": "executor",
-          "status-filter": "status",
-          "due-filter": "due",
-        };
-        if (map[id]) {
-          ui[map[id]] = value;
-          render();
-        }
         if (id === "show-done") {
           ui.done = event.target.checked;
+          if (ui.filterDraft) ui.filterDraft.showDone = ui.done;
           render();
         }
         if (id === "expand-all") {
@@ -4917,6 +5885,7 @@
       });
       $("#search").addEventListener("input", (event) => {
         ui.q = event.target.value;
+        if (ui.filterDraft) ui.filterDraft.text = ui.q;
         renderContent();
       });
       document.addEventListener("submit", (event) => {
