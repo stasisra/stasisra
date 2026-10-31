@@ -12,3 +12,5 @@ prisma/dev.db
 test-results/
 playwright-report/
 prisma/.prisma/
+
+schema-check.json
