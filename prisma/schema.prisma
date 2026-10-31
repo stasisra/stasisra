@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+  output = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(uuid())
+  name             String
+  email            String        @unique
+  passwordHash     String
+  role             String        @default("USER")
+  createdAt        DateTime      @default(now())
+  ownedTasks       Task[]        @relation("Owner")
+  responsibleTasks Task[]        @relation("Responsible")
+  executingTasks   Task[]        @relation("Executor")
+  comments         TaskComment[]
+}
+
+model Task {
+  id              String        @id @default(uuid())
+  title           String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  percentComplete Int           @default(0)
+  status          String        @default("PLANNED")
+  priority        String        @default("MEDIUM")
+  tags            String?
+  executorName    String?
+  responsibleName String?
+  executorId      String?
+  responsibleId   String?
+  parentTaskId    String?
+  ownerId         String?
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  owner           User?         @relation("Owner", fields: [ownerId], references: [id])
+  parentTask      Task?         @relation("TaskParent", fields: [parentTaskId], references: [id])
+  subtasks        Task[]        @relation("TaskParent")
+  responsible     User?         @relation("Responsible", fields: [responsibleId], references: [id])
+  executor        User?         @relation("Executor", fields: [executorId], references: [id])
+  comments        TaskComment[]
+  attachments     Attachment[]
+
+  @@index([startDate])
+  @@index([endDate])
+  @@index([executorId])
+  @@index([responsibleId])
+  @@index([parentTaskId])
+  @@index([executorName])
+  @@index([responsibleName])
+  @@index([ownerId])
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  body      String
+  createdAt DateTime @default(now())
+  taskId    String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
+}
+
+model NamePolicy {
+  id        String   @id @default(uuid())
+  scope     String
+  field     String
+  value     String
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scope, field, value])
+}
+
+model Attachment {
+  id String @id @default(uuid())
+  taskId String
+  name String
+  type String
+  size Int
+  data Bytes
+  createdAt DateTime @default(now())
+  task Task @relation(fields:[taskId],references:[id],onDelete:Cascade)
+  @@index([taskId])
+}

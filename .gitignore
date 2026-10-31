@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.env
+*.db
+prisma/dev.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.tsbuildinfo
+.env.*.local
+test-results/
+playwright-report/
+prisma/.prisma/
