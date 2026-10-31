@@ -1,0 +1,2640 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Темы и задачи — интерактивный макет</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --paper: #fff;
+        --text: #202b3b;
+        --muted: #7a8799;
+        --line: #e7ebf2;
+        --accent: #3569dc;
+        --soft: #edf3ff;
+        --green: #15936f;
+        --red: #d45459;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.45 "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #90b1ff;
+        outline-offset: 2px;
+      }
+      button {
+        color: inherit;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      input,
+      select,
+      textarea {
+        border: 1px solid #dfe5ef;
+        border-radius: 8px;
+        padding: 9px 11px;
+        background: #fff;
+        color: var(--text);
+        min-width: 0;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid #b6cdff;
+        border-color: var(--accent);
+      }
+      button svg {
+        pointer-events: none;
+      }
+      .icon {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        vertical-align: middle;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .small-icon {
+        width: 15px;
+        height: 15px;
+      }
+      .topbar {
+        height: 62px;
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        padding: 0 26px;
+        gap: 38px;
+      }
+      .brand {
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        white-space: nowrap;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 29px;
+        height: 29px;
+        border-radius: 8px;
+        color: white;
+        background: var(--accent);
+      }
+      .topnav {
+        display: flex;
+        gap: 25px;
+        height: 100%;
+        align-items: center;
+      }
+      .topnav button {
+        height: 100%;
+        border: 0;
+        background: none;
+        color: var(--muted);
+        position: relative;
+        padding: 0 2px;
+      }
+      .topnav button.active {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .topnav button.active:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent);
+        border-radius: 3px;
+      }
+      .top-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .avatar {
+        display: inline-grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        background: #e9efff;
+        color: #4a66a1;
+      }
+      .avatar.a1 {
+        background: #f0eafe;
+        color: #8d68ae;
+      }
+      .avatar.a2 {
+        background: #e2f3ec;
+        color: #3f8a70;
+      }
+      .avatar.a3 {
+        background: #fff0e1;
+        color: #a37b48;
+      }
+      .avatar.a4 {
+        background: #e5f1f7;
+        color: #477e9c;
+      }
+      .profile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      .demo-bar {
+        height: 34px;
+        background: #f0f4fb;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c7c94;
+        font-size: 11px;
+        gap: 12px;
+      }
+      .demo-bar button {
+        border: 0;
+        background: none;
+        color: #5879b0;
+        text-decoration: underline;
+        font-size: 11px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 244px minmax(0, 1fr);
+        height: calc(100vh - 96px);
+      }
+      aside.sidebar {
+        background: #fff;
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 14px 14px;
+        overflow: hidden;
+      }
+      .side-label {
+        padding: 0 12px;
+        margin-bottom: 10px;
+        color: #8b97a8;
+        font-size: 10px;
+        letter-spacing: 1.4px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .side-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 24px 12px 9px;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        color: #8b97a8;
+        font-weight: 700;
+      }
+      .side-scroll {
+        overflow: auto;
+        flex: 1;
+        margin-top: 2px;
+      }
+      .side-item {
+        border: 0;
+        background: none;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        text-align: left;
+        gap: 10px;
+        padding: 10px 12px;
+        margin: 2px 0;
+        border-radius: 8px;
+        font-size: 12px;
+        min-height: 39px;
+      }
+      .side-item:hover {
+        background: #f6f8fc;
+      }
+      .side-item.selected {
+        background: var(--soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .side-item .num {
+        margin-left: auto;
+        font-size: 11px;
+        color: #99a3b4;
+      }
+      .side-item.selected .num {
+        background: #dce8ff;
+        color: var(--accent);
+        padding: 1px 6px;
+        border-radius: 5px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 3px;
+        flex-shrink: 0;
+        background: var(--dot, #a1b2cb);
+      }
+      .side-item .label {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .side-foot {
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+        margin-top: 12px;
+      }
+      .side-foot .hint {
+        margin: 14px 12px 0;
+        font-size: 10px;
+        color: #a0aaba;
+      }
+      .tinybtn {
+        border: 0;
+        background: none;
+        border-radius: 5px;
+        padding: 2px 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8592a7;
+      }
+      .tinybtn:hover {
+        background: #edf2fb;
+        color: var(--accent);
+      }
+      main {
+        overflow: auto;
+        padding: 29px 30px 50px;
+      }
+      .breadcrumb {
+        font-size: 11px;
+        color: #93a0b2;
+        margin-bottom: 9px;
+      }
+      .page-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .page-head h1 {
+        margin: 0;
+        font-size: 25px;
+        letter-spacing: -0.7px;
+        font-weight: 650;
+        line-height: 1.3;
+      }
+      .subtitle {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 7px 0 0;
+      }
+      .head-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding-top: 3px;
+      }
+      .btn {
+        padding: 9px 13px;
+        border: 1px solid #dfe5ee;
+        background: #fff;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 500;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f6f8fc;
+      }
+      .btn.primary {
+        color: #fff;
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 2px 3px #295cc91a;
+      }
+      .btn.primary:hover {
+        background: #285bcb;
+      }
+      .btn.danger {
+        color: #c44f54;
+        border-color: #f1d6d7;
+      }
+      .btn.danger:hover {
+        background: #fff5f5;
+      }
+      .btn.soft {
+        border: 0;
+        background: #edf3ff;
+        color: var(--accent);
+      }
+      .search {
+        margin-top: 25px;
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+      .search .icon {
+        position: absolute;
+        left: 13px;
+        color: #8d9bb0;
+      }
+      .search input {
+        width: 100%;
+        padding: 11px 14px 11px 40px;
+        font-size: 12px;
+        background: #fff;
+        box-shadow: 0 1px 3px #17284103;
+      }
+      .search .key {
+        position: absolute;
+        right: 11px;
+        font-size: 10px;
+        color: #a1abba;
+        border: 1px solid #e6eaf2;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .filterbar {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 14px 0 12px;
+      }
+      .filterbar select {
+        font-size: 11px;
+        padding: 7px 28px 7px 10px;
+        max-width: 220px;
+        color: #536177;
+      }
+      .filterbar .label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #6f7e93;
+        margin-left: 4px;
+      }
+      .filterbar input[type="checkbox"] {
+        width: 13px;
+        height: 13px;
+        accent-color: var(--accent);
+      }
+      .filterbar .spacer {
+        margin-left: auto;
+      }
+      .view-switch {
+        display: flex;
+        border: 1px solid #dfe5ed;
+        padding: 2px;
+        border-radius: 7px;
+        background: #fff;
+      }
+      .view-switch button {
+        padding: 5px 8px;
+        border: 0;
+        background: none;
+        color: #8a96a8;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+      .view-switch button.active {
+        background: #edf2fb;
+        color: #4e6da3;
+      }
+      .chips {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        min-height: 4px;
+        margin-bottom: 12px;
+      }
+      .chip {
+        background: #eaf1ff;
+        border: 1px solid #dce8ff;
+        padding: 4px 8px;
+        border-radius: 5px;
+        color: #4169ad;
+      }
+      .chip button {
+        border: 0;
+        background: none;
+        color: #6b88bc;
+        margin-left: 7px;
+        padding: 0;
+      }
+      .textbtn {
+        border: 0;
+        background: none;
+        color: var(--accent);
+        padding: 3px 1px;
+        font-size: 11px;
+      }
+      .section {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px #24375702;
+        overflow: hidden;
+      }
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        background: #fcfdff;
+      }
+      .section-head h2 {
+        font-size: 13px;
+        margin: 0;
+        font-weight: 650;
+      }
+      .section-head .count {
+        font-size: 10px;
+        color: #8794a8;
+        padding: 1px 6px;
+        border: 1px solid #e6ebf4;
+        border-radius: 5px;
+        background: #fff;
+      }
+      .section-head .section-hint {
+        font-size: 10px;
+        color: #9aa5b5;
+      }
+      .section-head .add {
+        margin-left: auto;
+      }
+      .collapse {
+        border: 0;
+        background: none;
+        color: #8493aa;
+        padding: 0;
+        display: inline-grid;
+        place-items: center;
+      }
+      .collapse .icon {
+        width: 13px;
+        height: 13px;
+        transition: transform 0.15s;
+      }
+      .collapse.shut .icon {
+        transform: rotate(-90deg);
+      }
+      .table-head,
+      .task-row {
+        display: grid;
+        grid-template-columns:
+          minmax(235px, 1fr)
+          144px 142px 109px 94px 112px 30px;
+        align-items: center;
+        column-gap: 10px;
+        padding: 0 15px;
+      }
+      .table-head {
+        font-size: 10px;
+        color: #96a1b2;
+        height: 33px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+      .task-row {
+        min-height: 55px;
+        border-bottom: 1px solid #f0f2f7;
+        font-size: 11px;
+      }
+      .task-row:last-child {
+        border: 0;
+      }
+      .task-row:hover {
+        background: #f9fbff;
+      }
+      .task-row.context {
+        background: #fcfdff;
+      }
+      .task-cell {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        min-width: 0;
+        padding: 10px 0;
+      }
+      .task-cell .task-icon {
+        color: #a7b3c6;
+        padding-top: 2px;
+        flex-shrink: 0;
+      }
+      .task-cell .task-icon.event {
+        color: #a58cc9;
+      }
+      .task-cell .arrow-holder {
+        width: 16px;
+        min-width: 16px;
+        padding-top: 3px;
+      }
+      .task-label {
+        min-width: 0;
+      }
+      .task-title {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 1.4;
+        border: 0;
+        background: none;
+        padding: 0;
+        text-align: left;
+        color: #34435b;
+        max-width: 100%;
+      }
+      .task-title:hover {
+        color: var(--accent);
+      }
+      .task-row.parent .task-title {
+        font-weight: 650;
+      }
+      .task-row.context .task-title {
+        color: #8c9ab0;
+      }
+      .task-desc {
+        display: block;
+        color: #99a4b6;
+        font-size: 10px;
+        margin-top: 3px;
+        max-width: 290px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .child-count {
+        font-size: 9px;
+        color: #8b9bb6;
+        background: #f0f3f8;
+        border-radius: 4px;
+        padding: 1px 4px;
+        margin-left: 6px;
+      }
+      .person {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        color: #64728a;
+        font-size: 10.5px;
+      }
+      .person .name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .person .avatar {
+        width: 23px;
+        height: 23px;
+        font-size: 9px;
+      }
+      .executors {
+        font-size: 10.5px;
+        color: #728097;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .executors .second {
+        display: inline-block;
+        padding: 0 4px;
+        font-size: 9px;
+        color: #8c9ab3;
+        border: 1px solid #e6ebf4;
+        border-radius: 4px;
+        margin-left: 3px;
+      }
+      .date {
+        font-size: 11px;
+        color: #6c7a91;
+      }
+      .date.overdue {
+        color: var(--red);
+      }
+      .date small {
+        font-size: 9px;
+        display: block;
+        margin-top: 2px;
+      }
+      .progress-wrap {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #7b899e;
+        font-size: 10px;
+      }
+      .track {
+        height: 4px;
+        width: 49px;
+        background: #eef1f7;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .track > i {
+        display: block;
+        height: 100%;
+        background: #7fa6ee;
+        border-radius: 4px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 5px;
+        padding: 3px 6px;
+        font-size: 9px;
+        white-space: nowrap;
+        background: #f0f3f8;
+        color: #7d8aa0;
+      }
+      .status i {
+        display: block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .status.IN_PROGRESS {
+        background: #edf3ff;
+        color: #4f7bd2;
+      }
+      .status.PAUSED {
+        background: #fff5e7;
+        color: #b49154;
+      }
+      .status.DONE {
+        background: #e9f6ef;
+        color: #4d9a79;
+      }
+      .rowmore {
+        border: 0;
+        background: none;
+        color: #a0adbe;
+        letter-spacing: 1px;
+        padding: 8px 0;
+        font-size: 15px;
+      }
+      .empty {
+        text-align: center;
+        padding: 58px 20px;
+        color: #8a97ac;
+      }
+      .empty h3 {
+        font-size: 16px;
+        font-weight: 500;
+        color: #64768e;
+        margin: 12px 0 6px;
+      }
+      .empty p {
+        font-size: 12px;
+        margin: 0 0 18px;
+      }
+      .empty-icon {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        margin: auto;
+        background: #eef3fc;
+        color: #88a0c8;
+        border-radius: 14px;
+      }
+      .bottom-line {
+        color: #9ca7b8;
+        font-size: 10px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin-top: 15px;
+      }
+      .bottom-line span:last-child {
+        margin-left: auto;
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: #192b4429;
+        z-index: 20;
+      }
+      .drawer {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 480px;
+        background: #fff;
+        box-shadow: -12px 0 50px #1d35591a;
+        z-index: 21;
+        display: flex;
+        flex-direction: column;
+      }
+      .drawer-head {
+        padding: 24px 25px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .drawer-head .eyebrow {
+        color: #8c9ab1;
+        font-size: 10px;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .drawer h2 {
+        font-size: 18px;
+        line-height: 1.5;
+        font-weight: 600;
+        margin: 0;
+      }
+      .drawer-body {
+        padding: 22px 25px;
+        overflow: auto;
+        flex: 1;
+      }
+      .drawer-footer {
+        border-top: 1px solid var(--line);
+        padding: 16px 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: white;
+      }
+      .drawer-footer .danger {
+        margin-left: auto;
+      }
+      .field {
+        margin-bottom: 17px;
+      }
+      .field > label,
+      .field-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6c7c92;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        font-size: 12px;
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 90px;
+        line-height: 1.6;
+      }
+      .field small {
+        display: block;
+        font-size: 10px;
+        color: #98a4b7;
+        margin-top: 5px;
+      }
+      .twocol {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .form-error {
+        padding: 10px;
+        background: #fff0f0;
+        color: #bd4d53;
+        font-size: 12px;
+        border-radius: 6px;
+        margin-bottom: 14px;
+      }
+      .field .multi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 9px;
+        border: 1px solid #dfe5ef;
+        border-radius: 8px;
+      }
+      .multi label {
+        display: flex;
+        align-items: center;
+        font-size: 10px;
+        gap: 4px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        background: #f5f7fc;
+        color: #64768f;
+        cursor: pointer;
+      }
+      .multi input {
+        width: 12px;
+        height: 12px;
+        accent-color: var(--accent);
+      }
+      .mini-separator {
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        margin-top: 20px;
+      }
+      .comment {
+        padding: 11px 12px;
+        background: #f7f9fd;
+        font-size: 11px;
+        color: #78869c;
+        border-radius: 7px;
+        margin: 8px 0;
+      }
+      .comment strong {
+        display: block;
+        color: #61728b;
+        font-size: 10px;
+        margin-bottom: 4px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: #192b4450;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+      }
+      .modal {
+        width: 820px;
+        max-width: 96vw;
+        max-height: 90vh;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 22px 90px #1a2c4930;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .modal.small {
+        width: 460px;
+      }
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 25px;
+        border-bottom: 1px solid var(--line);
+      }
+      .modal-head h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+      }
+      .modal-head p {
+        margin: 5px 0 0;
+        color: #8c99ad;
+        font-size: 11px;
+      }
+      .modal-body {
+        padding: 22px 25px;
+        overflow: auto;
+      }
+      .modal-foot {
+        padding: 16px 25px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+      .tabs {
+        display: flex;
+        gap: 24px;
+        border-bottom: 1px solid var(--line);
+        padding: 0 25px;
+      }
+      .tabs button {
+        border: 0;
+        background: none;
+        padding: 15px 0 12px;
+        color: #8b98ac;
+        font-size: 12px;
+        border-bottom: 2px solid transparent;
+      }
+      .tabs button.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+        font-weight: 600;
+      }
+      .manage-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .manage-top .hint {
+        font-size: 11px;
+        color: #9aa6b8;
+      }
+      .dir-head,
+      .dir-row {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) 180px 65px 120px;
+        gap: 15px;
+        align-items: center;
+      }
+      .dir-head {
+        padding: 0 0 10px;
+        font-size: 10px;
+        color: #93a0b3;
+      }
+      .dir-row {
+        padding: 13px 0;
+        border-top: 1px solid #eef1f6;
+        font-size: 12px;
+      }
+      .dir-row .roles {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        font-size: 9px;
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: #f0f4fb;
+        color: #7f91ac;
+      }
+      .badge.role {
+        background: #eaf4ef;
+        color: #5c8a73;
+      }
+      .dir-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+      .muted {
+        color: #97a3b6;
+      }
+      .toast {
+        position: fixed;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #25374f;
+        color: white;
+        border-radius: 9px;
+        box-shadow: 0 5px 24px #24365224;
+        padding: 12px 18px;
+        font-size: 12px;
+        z-index: 60;
+        display: none;
+      }
+      .popup {
+        position: fixed;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        box-shadow: 0 8px 35px #23354f20;
+        padding: 5px;
+        z-index: 25;
+        min-width: 185px;
+      }
+      .popup button {
+        display: block;
+        width: 100%;
+        padding: 9px 11px;
+        border: 0;
+        background: none;
+        text-align: left;
+        font-size: 11px;
+        border-radius: 5px;
+      }
+      .popup button:hover {
+        background: #f3f6fc;
+      }
+      .popup button.danger {
+        color: #c05d63;
+      }
+      .gantt-scroll {
+        overflow: auto;
+        border-top: 1px solid var(--line);
+      }
+      .gantt-row {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-width: 950px;
+        border-bottom: 1px solid #edf1f7;
+        min-height: 45px;
+      }
+      .gantt-label {
+        padding: 13px 16px;
+        font-size: 11px;
+        border-right: 1px solid var(--line);
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 2;
+      }
+      .gantt-days {
+        display: grid;
+        grid-template-columns: repeat(21, 1fr);
+        position: relative;
+      }
+      .gantt-days .day {
+        border-left: 1px solid #f0f3f8;
+        font-size: 9px;
+        color: #a5b0c1;
+        text-align: center;
+        padding-top: 9px;
+      }
+      .gantt-days .today {
+        background: #fff8e8;
+      }
+      .bar {
+        position: absolute;
+        top: 14px;
+        height: 16px;
+        border-radius: 4px;
+        background: #dce8ff;
+        border: 1px solid #bad0f8;
+        color: #5d7eb4;
+        font-size: 8px;
+        overflow: hidden;
+        padding: 0 5px;
+        cursor: pointer;
+      }
+      .bar span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        background: #bfd4f8;
+        z-index: 0;
+      }
+      .bar b {
+        position: relative;
+        font-weight: 400;
+        z-index: 1;
+      }
+      .off-range {
+        position: absolute;
+        left: 12px;
+        top: 14px;
+        font-size: 10px;
+        color: #a5afbf;
+      }
+      .mobile-menu {
+        display: none;
+      }
+      .info-box {
+        padding: 13px;
+        background: #f3f6fc;
+        border-radius: 8px;
+        font-size: 11px;
+        color: #7a8aa3;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 1250px) {
+        main {
+          padding: 24px 20px;
+        }
+        .layout {
+          grid-template-columns: 214px minmax(0, 1fr);
+        }
+        .table-head,
+        .task-row {
+          grid-template-columns:
+            minmax(200px, 1fr)
+            116px 120px 90px 80px 102px 22px;
+          column-gap: 7px;
+        }
+        .person .avatar {
+          display: none;
+        }
+        .section-head .section-hint {
+          display: none;
+        }
+      }
+      @media (max-width: 1000px) {
+        .table-head,
+        .task-row {
+          grid-template-columns: minmax(200px, 1fr) 110px 110px 90px 102px 20px;
+        }
+        .progress-col {
+          display: none;
+        }
+        .layout {
+          grid-template-columns: 185px minmax(0, 1fr);
+        }
+        .topbar {
+          gap: 25px;
+          padding: 0 18px;
+        }
+        .top-right .profile span:last-child {
+          display: none;
+        }
+        .filterbar select {
+          max-width: 160px;
+        }
+      }
+      @media (max-width: 760px) {
+        .layout {
+          display: block;
+        }
+        .sidebar {
+          display: none !important;
+        }
+        .topbar {
+          gap: 15px;
+        }
+        .topnav {
+          gap: 12px;
+        }
+        .profile {
+          display: none;
+        }
+        .top-right {
+          display: none;
+        }
+        main {
+          padding: 20px 12px;
+        }
+        .page-head h1 {
+          font-size: 22px;
+        }
+        .head-actions .optional {
+          display: none;
+        }
+        .section {
+          overflow: auto;
+        }
+        .table-head,
+        .task-row {
+          min-width: 740px;
+        }
+        .drawer {
+          width: min(480px, 100vw);
+        }
+        .demo-bar {
+          font-size: 10px;
+        }
+        .dir-head,
+        .dir-row {
+          grid-template-columns: minmax(140px, 1fr) 90px 40px 90px;
+          gap: 6px;
+        }
+        .modal-backdrop {
+          padding: 10px;
+        }
+        .modal-body {
+          padding: 15px;
+        }
+        .modal-head {
+          padding: 17px;
+        }
+        .tabs {
+          gap: 18px;
+          padding: 0 17px;
+        }
+        .tabs button {
+          font-size: 11px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z" />
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24">
+        <path d="m7 10 5 5 5-5" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10" cy="10" r="6" />
+        <path d="m15 15 5 5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <path d="M4 7h16M4 17h16" />
+        <circle cx="9" cy="7" r="3" fill="white" />
+        <circle cx="15" cy="17" r="3" fill="white" />
+      </symbol>
+      <symbol id="i-task" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M7 3v4M17 3v4M3 11h18" />
+      </symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="m15 4 5 5M4 20l5-1L20 8l-4-4L5 15z" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+      </symbol>
+      <symbol id="i-lines" viewBox="0 0 24 24">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+      </symbol>
+      <symbol id="i-gantt" viewBox="0 0 24 24">
+        <path d="M3 3v18h18M7 7h8M10 12h10M7 17h6" />
+      </symbol>
+    </svg>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"
+          ><svg class="icon"><use href="#i-grid" /></svg></span
+        >Task &amp; Gantt
+      </div>
+      <nav class="topnav">
+        <button
+          class="active"
+          data-action="view"
+          data-id="table"
+          id="nav-table"
+        >
+          Задачи</button
+        ><button data-action="view" data-id="gantt" id="nav-gantt">Гант</button
+        ><button data-action="manage">Справочники</button>
+      </nav>
+      <div class="top-right">
+        <span style="font-size: 11px; color: #9ba6b6">31 октября</span>
+        <div class="profile">
+          <span class="avatar">А</span><span>Администратор</span>
+        </div>
+      </div>
+    </header>
+    <div class="demo-bar">
+      <span>Интерактивный макет · демонстрационные данные</span
+      ><button data-action="reset-demo">Сбросить пример</button>
+    </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-label">Рабочее пространство</div>
+        <button
+          class="side-item"
+          data-action="project"
+          data-id="all"
+          id="all-link"
+        >
+          <svg class="icon small-icon"><use href="#i-grid" /></svg
+          ><span class="label">Все темы</span
+          ><span class="num" id="all-count"></span></button
+        ><button
+          class="side-item"
+          data-action="project"
+          data-id="none"
+          id="none-link"
+        >
+          <svg class="icon small-icon"><use href="#i-folder" /></svg
+          ><span class="label">Без темы</span
+          ><span class="num" id="none-count"></span>
+        </button>
+        <div class="side-title">
+          Темы / проекты
+          <button
+            class="tinybtn"
+            data-action="new-project"
+            aria-label="Добавить тему"
+          >
+            <svg class="icon small-icon"><use href="#i-plus" /></svg>
+          </button>
+        </div>
+        <div class="side-scroll" id="project-list"></div>
+        <div class="side-foot">
+          <button class="side-item" data-action="manage">
+            <svg class="icon small-icon"><use href="#i-settings" /></svg
+            >Справочники<span class="num">↗</span>
+          </button>
+          <div class="hint">Темы · контрагенты · ответственные</div>
+        </div>
+      </aside>
+      <main id="main-scroll">
+        <div class="breadcrumb" id="breadcrumb">
+          Рабочее пространство / Задачи
+        </div>
+        <div class="page-head">
+          <div>
+            <h1 id="page-title">Все темы</h1>
+            <p class="subtitle" id="page-subtitle"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn optional" data-action="create-event">
+              <svg class="icon small-icon"><use href="#i-calendar" /></svg
+              >Мероприятие</button
+            ><button class="btn primary" data-action="create-task">
+              <svg class="icon small-icon"><use href="#i-plus" /></svg>Задача
+            </button>
+          </div>
+        </div>
+        <div class="search">
+          <svg class="icon small-icon"><use href="#i-search" /></svg
+          ><input
+            id="search"
+            placeholder="Найти задачу или описание…"
+            aria-label="Поиск задач"
+          /><span class="key">/</span>
+        </div>
+        <div class="filterbar" id="filters"></div>
+        <div class="chips" id="chips"></div>
+        <div id="task-content"></div>
+        <div class="bottom-line">
+          <span id="result-count"></span
+          ><span>Нажмите на задачу, чтобы открыть карточку</span>
+        </div>
+      </main>
+    </div>
+    <div id="drawer-root"></div>
+    <div id="modal-root"></div>
+    <div id="popup-root"></div>
+    <div id="toast" class="toast" role="status"></div>
+    <script>
+      "use strict";
+      const $ = (s) => document.querySelector(s),
+        $$ = (s) => [...document.querySelectorAll(s)];
+      const E = (v) =>
+        String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      const icon = (name, small = false) =>
+        `<svg class="icon ${small ? "small-icon" : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+      const TODAY = "2026-10-31",
+        DAY = 86400000,
+        STORAGE = "taskgantt_ux_prototype_v1";
+      const statuses = {
+        PLANNED: "Запланировано",
+        IN_PROGRESS: "В работе",
+        PAUSED: "Ожидание",
+        DONE: "Готово",
+      };
+      const projectSeed = [
+        ["sp", "SP — строительное разрешение", "#7ba0df"],
+        ["vnz", "ВНЖ", "#9a8ed4"],
+        ["web", "web", "#71b6b1"],
+        ["sales", "Продажи", "#dfb27d"],
+        ["new", "Новые проекты", "#a8b3c9"],
+        ["personal", "Разное личное", "#b397ba"],
+        ["rd", "RD", "#9da1c9"],
+        ["bel", "Беларусь", "#8eb9a8"],
+        ["il", "Израиль", "#e3ba7d"],
+        ["ua", "Украинка", "#88a9cd"],
+        ["electric", "Электричество VN", "#d5b978"],
+        ["home", "Общага", "#97bba9"],
+        ["trees", "Вырубка деревьев", "#a2b78a"],
+        ["marketing", "Маркетинг", "#bc9ac8"],
+        ["brand", "Брендинг", "#d0a898"],
+        ["tour", "Туризм", "#87b9cd"],
+      ];
+      const contactSeed = [
+        ["patrick", "Патрик", "Человек", true],
+        ["mel", "Меликантова", "Человек", true],
+        ["ark", "Аркадий", "Человек", true],
+        ["nat", "Наташа архитектор", "Человек", true],
+        ["juraj", "Юрай", "Человек", true],
+        ["arch", "Архитекторы", "Группа", false],
+        ["alk", "Алкур", "Организация", false],
+        ["invest", "Словакия-инвест", "Организация", false],
+        ["law", "Юрист", "Человек", false],
+        ["book", "Бух Словакия", "Организация", false],
+        ["beeli", "Beeli", "Организация", false],
+        ["stas", "Стас", "Человек", false],
+      ];
+      const makeTask = (
+        id,
+        title,
+        p,
+        parent,
+        r,
+        ex,
+        start,
+        end,
+        pct,
+        status = "PLANNED",
+        kind = "task",
+        description = "",
+      ) => ({
+        id,
+        title,
+        project: p,
+        parent: parent || null,
+        responsible: r || "",
+        executors: ex,
+        start,
+        end,
+        percent: pct,
+        status,
+        kind,
+        description,
+        comments: [],
+      });
+      const seed = {
+        projects: projectSeed.map(([id, name, color]) => ({
+          id,
+          name,
+          color,
+          archived: false,
+        })),
+        contacts: contactSeed.map(([id, name, type, responsible]) => ({
+          id,
+          name,
+          type,
+          responsible,
+          archived: false,
+        })),
+        tasks: [
+          makeTask(
+            "s0",
+            "Встречи 1–10 ноября",
+            "sp",
+            null,
+            "patrick",
+            ["arch"],
+            "2026-11-01",
+            "2026-11-10",
+            35,
+            "IN_PROGRESS",
+            "event",
+            "Организовать встречи с участниками проекта и зафиксировать договорённости.",
+          ),
+          makeTask(
+            "s1",
+            "Назначить встречу с архитекторами",
+            "sp",
+            "s0",
+            "patrick",
+            ["arch"],
+            "2026-10-28",
+            "2026-10-30",
+            65,
+            "IN_PROGRESS",
+            "task",
+            "Согласовать дату встречи и список вопросов.",
+          ),
+          makeTask(
+            "s2",
+            "Встреча с Меликантовой",
+            "sp",
+            "s0",
+            "mel",
+            ["mel"],
+            "2026-11-02",
+            "2026-11-03",
+            0,
+            "PLANNED",
+            "event",
+          ),
+          makeTask(
+            "s3",
+            "Встреча с дендрологом",
+            "sp",
+            "s0",
+            "ark",
+            ["ark"],
+            "2026-11-02",
+            "2026-11-02",
+            0,
+            "PLANNED",
+            "event",
+          ),
+          makeTask(
+            "s4",
+            "Согласовать планировочные решения",
+            "sp",
+            null,
+            "nat",
+            ["nat", "arch"],
+            "2026-10-26",
+            "2026-11-04",
+            45,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "s5",
+            "Получить ответ по условиям разрешения",
+            "sp",
+            null,
+            "juraj",
+            ["law"],
+            "2026-10-25",
+            "2026-11-06",
+            20,
+            "PAUSED",
+          ),
+          makeTask(
+            "v0",
+            "Подготовить пакет документов",
+            "vnz",
+            null,
+            "juraj",
+            ["law"],
+            "2026-10-27",
+            "2026-11-05",
+            40,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "v1",
+            "Проверить документы для подачи",
+            "vnz",
+            "v0",
+            "juraj",
+            ["law"],
+            "2026-10-28",
+            "2026-11-02",
+            70,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "v2",
+            "Записаться на подачу",
+            "vnz",
+            "v0",
+            "patrick",
+            ["patrick"],
+            "2026-11-01",
+            "2026-11-05",
+            0,
+          ),
+          makeTask(
+            "w0",
+            "ТЗ сайт",
+            "web",
+            null,
+            "nat",
+            ["beeli"],
+            "2026-10-20",
+            "2026-11-10",
+            30,
+            "IN_PROGRESS",
+            "task",
+            "Собрать единое техническое задание. Ниже — связанные задачи и материалы.",
+          ),
+          makeTask(
+            "w1",
+            "Согласовать структуру страниц",
+            "web",
+            "w0",
+            "nat",
+            ["beeli"],
+            "2026-10-28",
+            "2026-11-02",
+            70,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "w2",
+            "Подготовить тексты разделов",
+            "web",
+            "w0",
+            "patrick",
+            ["patrick"],
+            "2026-10-29",
+            "2026-11-04",
+            25,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "w3",
+            "Уточнить форму заявки",
+            "web",
+            "w0",
+            "juraj",
+            ["beeli"],
+            "2026-11-01",
+            "2026-11-03",
+            0,
+          ),
+          makeTask(
+            "w4",
+            "Утвердить первый экран",
+            "web",
+            "w0",
+            "nat",
+            ["nat", "beeli"],
+            "2026-11-02",
+            "2026-11-05",
+            10,
+          ),
+          makeTask(
+            "w5",
+            "Подготовить версии для телефона",
+            "web",
+            "w0",
+            "nat",
+            ["beeli"],
+            "2026-11-03",
+            "2026-11-08",
+            0,
+          ),
+          makeTask(
+            "w6",
+            "Собрать примеры и материалы",
+            "web",
+            "w0",
+            "patrick",
+            ["patrick"],
+            "2026-10-20",
+            "2026-10-29",
+            100,
+            "DONE",
+          ),
+          makeTask(
+            "w7",
+            "Передать ТЗ исполнителю",
+            "web",
+            "w0",
+            "nat",
+            ["beeli"],
+            "2026-11-08",
+            "2026-11-10",
+            0,
+          ),
+          makeTask(
+            "a0",
+            "Согласовать условия продажи",
+            "sales",
+            null,
+            "patrick",
+            ["invest"],
+            "2026-10-30",
+            "2026-11-06",
+            15,
+            "IN_PROGRESS",
+          ),
+          makeTask(
+            "n0",
+            "Проверить входящие документы",
+            "",
+            null,
+            "",
+            ["book"],
+            "2026-10-31",
+            "2026-11-04",
+            0,
+          ),
+        ],
+      };
+      seed.tasks.find((t) => t.id === "w0").comments = [
+        {
+          text: "Сначала согласуем структуру, затем объединим материалы в один документ.",
+          date: "30 октября, 15:20",
+        },
+      ];
+      let model = structuredClone(seed);
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE) || "null");
+        if (
+          data &&
+          Array.isArray(data.projects) &&
+          Array.isArray(data.contacts) &&
+          Array.isArray(data.tasks)
+        )
+          model = data;
+      } catch {}
+      const ui = {
+        project: "all",
+        responsible: "",
+        executor: "",
+        status: "",
+        due: "",
+        q: "",
+        done: false,
+        expand: true,
+        view: "table",
+        collapsed: new Set(),
+        closedProjects: new Set(),
+        manager: "projects",
+        managerArchived: false,
+        drawer: null,
+      };
+      const save = () => {
+        try {
+          localStorage.setItem(STORAGE, JSON.stringify(model));
+        } catch {}
+      };
+      const uid = () =>
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const person = (id) => model.contacts.find((c) => c.id === id),
+        proj = (id) => model.projects.find((p) => p.id === id),
+        task = (id) => model.tasks.find((t) => t.id === id);
+      const initials = (name) =>
+        name
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((x) => x[0] || "")
+          .join("")
+          .toUpperCase();
+      function toast(text) {
+        $("#toast").textContent = text;
+        $("#toast").style.display = "block";
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(
+          () => ($("#toast").style.display = "none"),
+          2800,
+        );
+      }
+      function dateInfo(t) {
+        const delta = Math.round((new Date(t.end) - new Date(TODAY)) / DAY);
+        const label = new Date(t.end + "T12:00:00")
+          .toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
+          .replace(".", "");
+        return `<div class="date ${delta < 0 && t.status !== "DONE" ? "overdue" : ""}">${E(label)}${delta < 0 && t.status !== "DONE" ? "<small>Просрочено</small>" : delta === 0 ? "<small>Сегодня</small>" : ""}</div>`;
+      }
+      function responsibleHtml(id) {
+        const c = person(id);
+        if (!c) return '<span class="muted">Не назначен</span>';
+        const n = model.contacts.indexOf(c) % 5;
+        return `<div class="person"><span class="avatar a${n}">${E(initials(c.name))}</span><span class="name" title="${E(c.name)}">${E(c.name)}</span></div>`;
+      }
+      function executorHtml(ids) {
+        const names = ids.map((id) => person(id)?.name).filter(Boolean);
+        return `<div class="executors" title="${E(names.join(", "))}">${E(names[0] || "Не назначен")}${names.length > 1 ? `<span class="second">+${names.length - 1}</span>` : ""}</div>`;
+      }
+      function matches(t) {
+        if (!ui.done && t.status === "DONE" && ui.status !== "DONE")
+          return false;
+        if (
+          ui.project !== "all" &&
+          t.project !== (ui.project === "none" ? "" : ui.project)
+        )
+          return false;
+        if (ui.responsible && t.responsible !== ui.responsible) return false;
+        if (ui.executor && !t.executors.includes(ui.executor)) return false;
+        if (ui.status && t.status !== ui.status) return false;
+        if (
+          ui.q &&
+          !`${t.title} ${t.description}`
+            .toLowerCase()
+            .includes(ui.q.toLowerCase())
+        )
+          return false;
+        const d = Math.round((new Date(t.end) - new Date(TODAY)) / DAY);
+        if (ui.due === "late" && !(d < 0 && t.status !== "DONE")) return false;
+        if (ui.due === "week" && !(d >= 0 && d <= 7 && t.status !== "DONE"))
+          return false;
+        return true;
+      }
+      function filtered() {
+        const direct = model.tasks.filter(matches),
+          set = new Set(direct.map((t) => t.id)),
+          keep = new Set(set);
+        for (const t of direct) {
+          let p = t.parent;
+          const seen = new Set([t.id]);
+          while (p && !seen.has(p)) {
+            seen.add(p);
+            const parent = task(p);
+            if (!parent || parent.project !== t.project) break;
+            keep.add(p);
+            p = parent.parent;
+          }
+        }
+        return { direct, set, rows: model.tasks.filter((t) => keep.has(t.id)) };
+      }
+      function descendants(id) {
+        const set = new Set([id]);
+        let added = true;
+        while (added) {
+          added = false;
+          for (const t of model.tasks)
+            if (t.parent && set.has(t.parent) && !set.has(t.id)) {
+              set.add(t.id);
+              added = true;
+            }
+        }
+        return set;
+      }
+      function treeRows(items) {
+        const ids = new Set(items.map((t) => t.id)),
+          out = [],
+          seen = new Set();
+        function visit(t, level) {
+          if (seen.has(t.id)) return;
+          seen.add(t.id);
+          out.push({ t, level });
+          if (ui.expand && !ui.collapsed.has(t.id))
+            for (const c of items.filter((c) => c.parent === t.id))
+              visit(c, level + 1);
+        }
+        for (const t of items.filter((t) => !t.parent || !ids.has(t.parent)))
+          visit(t, 0);
+        for (const t of items)
+          if (!seen.has(t.id) && (!t.parent || !ids.has(t.parent))) visit(t, 0);
+        return out;
+      }
+      function renderSide() {
+        const active = model.tasks.filter((t) => t.status !== "DONE");
+        $("#all-count").textContent = active.length;
+        $("#none-count").textContent = active.filter((t) => !t.project).length;
+        $("#all-link").classList.toggle("selected", ui.project === "all");
+        $("#none-link").classList.toggle("selected", ui.project === "none");
+        $("#project-list").innerHTML = model.projects
+          .filter((p) => !p.archived)
+          .map(
+            (p) =>
+              `<button class="side-item ${ui.project === p.id ? "selected" : ""}" data-action="project" data-id="${E(p.id)}" title="${E(p.name)}"><span class="dot" style="--dot:${E(p.color)}"></span><span class="label">${E(p.name)}</span><span class="num">${active.filter((t) => t.project === p.id).length}</span></button>`,
+          )
+          .join("");
+      }
+      function options(items, selected, first) {
+        return (
+          `<option value="">${E(first)}</option>` +
+          items
+            .map(
+              (x) =>
+                `<option value="${E(x.id)}" ${x.id === selected ? "selected" : ""}>${E(x.name)}</option>`,
+            )
+            .join("")
+        );
+      }
+      function renderFilters() {
+        const contacts = model.contacts.filter((c) => !c.archived);
+        $("#filters").innerHTML =
+          `<select id="responsible-filter" aria-label="Фильтр по ответственному">${options(
+            contacts.filter((c) => c.responsible),
+            ui.responsible,
+            "Ответственный: все",
+          )}</select><select id="executor-filter" aria-label="Фильтр по исполнителю">${options(contacts, ui.executor, "Исполнитель: все")}</select><select id="status-filter" aria-label="Фильтр по статусу"><option value="">Все статусы</option>${Object.entries(
+            statuses,
+          )
+            .map(
+              ([k, v]) =>
+                `<option value="${k}" ${ui.status === k ? "selected" : ""}>${v}</option>`,
+            )
+            .join(
+              "",
+            )}</select><select id="due-filter" aria-label="Фильтр по сроку"><option value="">Любой срок</option><option value="late" ${ui.due === "late" ? "selected" : ""}>Просрочено</option><option value="week" ${ui.due === "week" ? "selected" : ""}>Ближайшие 7 дней</option></select><span class="spacer"></span><label class="label"><input type="checkbox" id="show-done" ${ui.done ? "checked" : ""}>Готовые</label><label class="label"><input type="checkbox" id="expand-all" ${ui.expand ? "checked" : ""}>Подзадачи</label><div class="view-switch"><button class="${ui.view === "table" ? "active" : ""}" data-action="view" data-id="table" title="Таблица">${icon("lines", true)}</button><button class="${ui.view === "gantt" ? "active" : ""}" data-action="view" data-id="gantt" title="Гант">${icon("gantt", true)}</button></div>`;
+        let chips = [];
+        for (const [key, label] of [
+          ["responsible", "Ответственный"],
+          ["executor", "Исполнитель"],
+          ["status", "Статус"],
+          ["due", "Срок"],
+        ])
+          if (ui[key]) {
+            let value =
+              key === "status"
+                ? statuses[ui[key]]
+                : key === "due"
+                  ? ui.due === "late"
+                    ? "Просрочено"
+                    : "Ближайшие 7 дней"
+                  : person(ui[key])?.name;
+            chips.push(
+              `<span class="chip">${label}: ${E(value)}<button data-action="clear-filter" data-id="${key}" aria-label="Убрать фильтр ${label}">×</button></span>`,
+            );
+          }
+        $("#chips").innerHTML =
+          chips.join("") +
+          (chips.length
+            ? '<button class="textbtn" data-action="reset-filters">Сбросить</button>'
+            : "") +
+          (ui.project !== "all" && (ui.responsible || ui.executor)
+            ? '<button class="textbtn" data-action="all-with-filters">Искать во всех темах →</button>'
+            : "");
+      }
+      function renderTaskRow(t, level, matched) {
+        const kids = model.tasks.filter((c) => c.parent === t.id).length;
+        return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col"><span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button></div>`;
+      }
+      function section(p, rows, directSet) {
+        const id = p?.id || "",
+          name = p?.name || "Без темы",
+          color = p?.color || "#b7c0ce",
+          closed = ui.closedProjects.has(id),
+          matched = rows.filter((t) => directSet.has(t.id)).length;
+        const header = `<div class="section-head"><button class="collapse ${closed ? "shut" : ""}" data-action="toggle-project" data-id="${E(id)}" aria-label="Свернуть тему">${icon("chevron")}</button><span class="dot" style="--dot:${E(color)}"></span><h2>${E(name)}</h2><span class="count">${matched}</span><span class="section-hint">${p?.archived ? "Скрытая тема" : id === "web" ? "Задачи и подзадачи сайта" : ""}</span><button class="textbtn add" data-action="add-to-project" data-id="${E(id)}">+ Задача</button></div>`;
+        if (closed) return `<section class="section">${header}</section>`;
+        let content;
+        if (ui.view === "gantt") content = gantt(rows);
+        else
+          content = `<div class="table-head"><span>Задача</span><span>Исполнитель</span><span>Ответственный</span><span>Срок</span><span class="progress-col">Готовность</span><span>Статус</span><span></span></div>${treeRows(
+            rows,
+          )
+            .map(({ t, level }) => renderTaskRow(t, level, directSet.has(t.id)))
+            .join("")}`;
+        return `<section class="section">${header}${content}</section>`;
+      }
+      function gantt(rows) {
+        const start = new Date(TODAY);
+        start.setUTCDate(start.getUTCDate() - 4);
+        let days = "";
+        for (let i = 0; i < 21; i++) {
+          const d = new Date(+start + i * DAY);
+          days += `<span class="day ${i === 4 ? "today" : ""}">${d.getUTCDate()}</span>`;
+        }
+        return `<div class="gantt-scroll"><div class="gantt-row"><div class="gantt-label muted">Октябрь / ноябрь 2026</div><div class="gantt-days">${days}</div></div>${treeRows(
+          rows,
+        )
+          .map(({ t, level }) => {
+            const from = Math.round((new Date(t.start) - start) / DAY),
+              to = Math.round((new Date(t.end) - start) / DAY),
+              visible = to >= 0 && from < 21;
+            return `<div class="gantt-row"><div class="gantt-label" style="padding-left:${16 + level * 18}px"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button></div><div class="gantt-days">${'<span class="day"></span>'.repeat(21)}${visible ? `<button class="bar" style="left:${(Math.max(0, from) / 21) * 100}%;width:${((Math.min(20, to) - Math.max(0, from) + 1) / 21) * 100}%" data-action="edit-task" data-id="${E(t.id)}" aria-label="${E(t.title)}"><span style="width:${t.percent}%"></span><b>${t.percent}%</b></button>` : '<span class="off-range">Вне диапазона</span>'}</div></div>`;
+          })
+          .join("")}</div>`;
+      }
+      function renderContent() {
+        const { direct, set, rows } = filtered();
+        $("#page-title").textContent =
+          ui.project === "all"
+            ? "Все темы"
+            : ui.project === "none"
+              ? "Без темы"
+              : proj(ui.project)?.name || "Тема";
+        $("#breadcrumb").textContent =
+          ui.project === "all"
+            ? "Рабочее пространство / Задачи"
+            : "Темы / " + $("#page-title").textContent;
+        $("#page-subtitle").textContent =
+          ui.project === "all"
+            ? "Задачи и мероприятия, сгруппированные по темам"
+            : "Задачи, подзадачи и мероприятия этой темы";
+        $("#result-count").textContent =
+          `В выборке: ${direct.length} · Из них просрочено: ${direct.filter((t) => t.end < TODAY && t.status !== "DONE").length}`;
+        let html = "";
+        for (const p of [
+          ...model.projects,
+          { id: "", name: "Без темы", color: "#b7c0ce" },
+        ]) {
+          const group = rows.filter((t) => t.project === p.id);
+          if (group.length) html += section(p, group, set);
+        }
+        $("#task-content").innerHTML =
+          html ||
+          `<div class="section empty"><div class="empty-icon">${icon("folder")}</div><h3>${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Задач по этим условиям нет" : "В этой теме пока нет задач"}</h3><p>${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Попробуйте снять один из фильтров." : "Создайте первую задачу или мероприятие."}</p><button class="btn ${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "" : "primary"}" data-action="${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "reset-filters" : "create-task"}">${ui.q || ui.responsible || ui.executor || ui.status || ui.due ? "Сбросить фильтры" : "+ Создать задачу"}</button></div>`;
+        $("#nav-table").classList.toggle("active", ui.view === "table");
+        $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
+      }
+      function render() {
+        renderSide();
+        renderFilters();
+        renderContent();
+      }
+      function closeDrawer() {
+        ui.drawer = null;
+        $("#drawer-root").innerHTML = "";
+      }
+      function closeModal() {
+        $("#modal-root").innerHTML = "";
+      }
+      function modal(title, body, footer = "", small = false) {
+        $("#modal-root").innerHTML =
+          `<div class="modal-backdrop"><section class="modal ${small ? "small" : ""}" role="dialog" aria-modal="true" aria-label="${E(title)}"><div class="modal-head"><h2>${E(title)}</h2><button class="tinybtn" data-action="close-modal" aria-label="Закрыть">${icon("close")}</button></div><div class="modal-body">${body}</div>${footer ? `<div class="modal-foot">${footer}</div>` : ""}</section></div>`;
+      }
+      function openTask(
+        id = null,
+        parent = null,
+        project = null,
+        kind = "task",
+      ) {
+        const original = id ? task(id) : null;
+        if (id && !original) return;
+        const data = original
+          ? structuredClone(original)
+          : makeTask(
+              "",
+              "",
+              parent
+                ? task(parent).project
+                : (project ??
+                    (ui.project === "all" || ui.project === "none"
+                      ? ""
+                      : ui.project)),
+              parent,
+              ui.responsible,
+              [],
+              TODAY,
+              "2026-11-05",
+              0,
+              "PLANNED",
+              kind,
+            );
+        ui.drawer = { id, parent, project, kind };
+        const exclude = id ? descendants(id) : new Set();
+        const available = model.tasks.filter(
+          (t) => t.project === data.project && !exclude.has(t.id),
+        );
+        const contacts = model.contacts.filter(
+          (c) => !c.archived || data.executors.includes(c.id),
+        );
+        const responsible = model.contacts.filter(
+          (c) => (c.responsible && !c.archived) || c.id === data.responsible,
+        );
+        $("#drawer-root").innerHTML =
+          `<div class="backdrop" data-action="close-drawer"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="${id ? "Карточка задачи" : "Новая задача"}"><div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${data.kind === "event" ? "МЕРОПРИЯТИЕ" : "ЗАДАЧА"}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : parent ? "Новая подзадача" : kind === "event" ? "Новое мероприятие" : "Новая задача")}</h2></div><form id="task-form" class="drawer-body"><div id="task-error"></div><div class="field"><label for="task-title">Название</label><input id="task-title" name="title" required maxlength="1000" placeholder="Что нужно сделать?" value="${E(data.title)}"></div><div class="twocol"><div class="field"><label for="task-project">Тема / проект</label><select id="task-project" name="project" ${data.parent ? "disabled" : ""}><option value="">Без темы</option>${model.projects
+            .filter((p) => !p.archived || p.id === data.project)
+            .map(
+              (p) =>
+                `<option value="${E(p.id)}" ${p.id === data.project ? "selected" : ""}>${E(p.name)}</option>`,
+            )
+            .join(
+              "",
+            )}</select>${data.parent ? "<small>Наследуется от родительской задачи</small>" : ""}</div><div class="field"><label for="task-kind">Тип</label><select id="task-kind" name="kind"><option value="task" ${data.kind === "task" ? "selected" : ""}>Задача</option><option value="event" ${data.kind === "event" ? "selected" : ""}>Мероприятие</option></select></div></div><div class="field"><label for="task-parent">Родительская задача</label><select id="task-parent" name="parent"><option value="">Самостоятельная задача</option>${available.map((t) => `<option value="${E(t.id)}" ${t.id === data.parent ? "selected" : ""}>${E(t.title)}</option>`).join("")}</select></div><div class="field"><label for="task-description">Описание</label><textarea id="task-description" name="description" placeholder="Детали, договорённости, ожидаемый результат">${E(data.description)}</textarea></div><div class="field"><span class="field-label">Исполнители</span><div class="multi">${contacts.map((c) => `<label><input type="checkbox" name="executors" value="${E(c.id)}" ${data.executors.includes(c.id) ? "checked" : ""}>${E(c.name)}</label>`).join("")}</div><small>Можно выбрать несколько людей или организаций</small></div><div class="field"><label for="task-responsible">Ответственный</label><select id="task-responsible" name="responsible">${options(responsible, data.responsible, "Не назначен")}</select></div><div class="twocol"><div class="field"><label for="task-start">Начало</label><input id="task-start" type="date" name="start" value="${E(data.start)}" required></div><div class="field"><label for="task-end">Окончание</label><input id="task-end" type="date" name="end" value="${E(data.end)}" required></div></div><div class="twocol"><div class="field"><label for="task-status">Статус</label><select id="task-status" name="status">${Object.entries(
+            statuses,
+          )
+            .map(
+              ([k, v]) =>
+                `<option value="${k}" ${data.status === k ? "selected" : ""}>${v}</option>`,
+            )
+            .join(
+              "",
+            )}</select></div><div class="field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>${id ? `<div class="mini-separator"><div class="field-label">Обсуждение</div><div id="comment-list">${data.comments.map((c) => `<div class="comment"><strong>Вы · ${E(c.date)}</strong>${E(c.text)}</div>`).join("")}</div><div style="display:flex;gap:7px;margin-top:10px"><input id="comment-text" placeholder="Добавить комментарий…" aria-label="Комментарий" style="flex:1;font-size:11px"><button class="btn" type="button" data-action="add-comment" data-id="${E(id)}">Добавить</button></div></div>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
+        setTimeout(() => $("#task-title")?.focus(), 30);
+      }
+      function saveTask(form) {
+        const values = new FormData(form),
+          id = ui.drawer.id,
+          old = id ? task(id) : null;
+        let project = $("#task-project").value,
+          parent = String(values.get("parent") || "");
+        const start = String(values.get("start")),
+          end = String(values.get("end"));
+        if (end < start) {
+          $("#task-error").innerHTML =
+            '<div class="form-error" role="alert">Дата окончания раньше даты начала</div>';
+          return;
+        }
+        if (parent) {
+          const p = task(parent);
+          if (!p || p.id === id || (id && descendants(id).has(p.id))) {
+            $("#task-error").innerHTML =
+              '<div class="form-error">Выберите другую родительскую задачу</div>';
+            return;
+          }
+          project = p.project;
+        }
+        const data = {
+          id: id || uid(),
+          title: String(values.get("title")).trim(),
+          description: String(values.get("description") || "").trim(),
+          project,
+          parent: parent || null,
+          executors: values.getAll("executors").map(String),
+          responsible: String(values.get("responsible") || ""),
+          start,
+          end,
+          percent: Number(values.get("percent")),
+          status: String(values.get("status")),
+          kind: String(values.get("kind")),
+          comments: old?.comments || [],
+        };
+        if (!data.title) {
+          $("#task-error").innerHTML =
+            '<div class="form-error" role="alert">Введите название задачи</div>';
+          return;
+        }
+        if (old) {
+          if (old.project !== project) {
+            for (const child of model.tasks.filter((t) =>
+              descendants(id).has(t.id),
+            ))
+              child.project = project;
+          }
+          Object.assign(old, data);
+        } else model.tasks.push(data);
+        save();
+        closeDrawer();
+        render();
+        toast("Сохранено в макете");
+      }
+      function deleteTask(id) {
+        const t = task(id),
+          count = model.tasks.filter((c) => c.parent === id).length;
+        modal(
+          "Удалить задачу?",
+          `<p style="font-size:13px">${E(t.title)}</p><p class="muted" style="font-size:12px">${count ? `Подзадач: ${count}. Они останутся в теме и сохранят свои назначения.` : "Будет удалена только эта задача из макета."}</p>`,
+          `<button class="btn" data-action="close-modal">Отмена</button><button class="btn danger" data-action="confirm-task-delete" data-id="${E(id)}">Удалить задачу</button>`,
+          true,
+        );
+      }
+      function manage(tab = ui.manager) {
+        ui.manager = tab;
+        $("#modal-root").innerHTML =
+          `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-label="Справочники"><div class="modal-head"><div><h2>Справочники</h2><p>Одно имя — одна карточка. Роли и связи сохраняются при переименовании.</p></div><button class="tinybtn" data-action="close-modal" aria-label="Закрыть">${icon("close")}</button></div><div class="tabs">${[
+            ["projects", "Темы / проекты"],
+            ["contacts", "Контрагенты"],
+            ["responsibles", "Ответственные"],
+          ]
+            .map(
+              ([id, label]) =>
+                `<button data-action="manage-tab" data-id="${id}" class="${tab === id ? "active" : ""}">${label}</button>`,
+            )
+            .join(
+              "",
+            )}</div><div class="modal-body"><div class="manage-top"><label style="display:flex;gap:7px;font-size:11px;color:#8b9aaf;align-items:center"><input id="manager-archived" type="checkbox" ${ui.managerArchived ? "checked" : ""}>Показывать скрытые</label><button class="btn primary" data-action="directory-add">${icon("plus", true)}${tab === "projects" ? "Тема" : tab === "responsibles" ? "Ответственный" : "Контрагент"}</button></div><div id="directory-list"></div></div><div class="modal-foot"><button class="btn" data-action="close-modal">Готово</button></div></section></div>`;
+        renderDirectory();
+      }
+      function renderDirectory() {
+        const mode = ui.manager;
+        let items =
+          mode === "projects"
+            ? model.projects
+            : model.contacts.filter(
+                (c) => mode !== "responsibles" || c.responsible,
+              );
+        items = items.filter((item) => !item.archived || ui.managerArchived);
+        $("#directory-list").innerHTML =
+          `<div class="dir-head"><span>Название</span><span>${mode === "projects" ? "Состояние" : "Роли"}</span><span>Задач</span><span style="text-align:right">Действия</span></div>${
+            items
+              .map((item) => {
+                const count = model.tasks.filter((t) =>
+                  mode === "projects"
+                    ? t.project === item.id
+                    : mode === "responsibles"
+                      ? t.responsible === item.id
+                      : t.executors.includes(item.id) ||
+                        t.responsible === item.id,
+                ).length;
+                return `<div class="dir-row"><div style="display:flex;gap:9px;align-items:center" class="${item.archived ? "muted" : ""}">${mode === "projects" ? `<span class="dot" style="--dot:${item.color}"></span>` : `<span class="avatar">${E(initials(item.name))}</span>`}<span>${E(item.name)}</span></div><div class="roles">${mode === "projects" ? `<span class="badge">${item.archived ? "Скрыта" : "Активна"}</span>` : `<span class="badge">${E(item.type)}</span>${item.responsible ? '<span class="badge role">Ответственный</span>' : ""}${item.archived ? '<span class="badge">Скрыт</span>' : ""}`}</div><span class="muted" style="font-size:11px">${count}</span><div class="dir-actions"><button class="tinybtn" data-action="directory-edit" data-id="${E(item.id)}" title="Переименовать" aria-label="Переименовать ${E(item.name)}">${icon("edit", true)}</button><button class="tinybtn" data-action="directory-hide" data-id="${E(item.id)}" title="${item.archived ? "Вернуть в выбор" : "Скрыть из выбора"}" aria-label="${item.archived ? "Вернуть" : "Скрыть"} ${E(item.name)}">${icon("eye", true)}</button><button class="tinybtn" data-action="directory-delete" data-id="${E(item.id)}" title="${mode === "responsibles" ? "Убрать из ответственных" : "Удалить"}" aria-label="Удалить ${E(item.name)}">${icon("trash", true)}</button></div></div>`;
+              })
+              .join("") || '<div class="empty">Записей нет</div>'
+          }`;
+      }
+      let directoryContext = null;
+      function directoryEdit(id = null, forceProject = false) {
+        const mode = forceProject ? "projects" : ui.manager,
+          item = id ? (mode === "projects" ? proj(id) : person(id)) : null;
+        directoryContext = { mode, id };
+        if (mode === "responsibles" && !id) {
+          const available = model.contacts.filter(
+            (c) => !c.responsible && !c.archived && c.type === "Человек",
+          );
+          modal(
+            "Добавить ответственного",
+            `<div class="field"><label for="existing-contact">Выбрать человека из справочника</label><select id="existing-contact">${options(available, "", "Создать новую карточку")}</select></div><div class="field"><label for="directory-name">Имя нового человека</label><input id="directory-name" placeholder="Имя и фамилия"></div><div id="directory-error"></div>`,
+            `<button class="btn" data-action="manage">Назад</button><button class="btn primary" data-action="directory-save">Добавить</button>`,
+            true,
+          );
+        } else
+          modal(
+            item
+              ? "Редактировать запись"
+              : mode === "projects"
+                ? "Новая тема"
+                : "Новый контрагент",
+            `<div class="field"><label for="directory-name">${mode === "projects" ? "Название темы" : "Название / имя"}</label><input id="directory-name" value="${E(item?.name || "")}" placeholder="Введите название" maxlength="100"></div>${mode !== "projects" ? `<div class="field"><label for="contact-type">Тип</label><select id="contact-type">${["Человек", "Организация", "Группа"].map((type) => `<option ${item?.type === type ? "selected" : ""}>${type}</option>`).join("")}</select></div><label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="contact-responsible" ${item?.responsible ? "checked" : ""}>Доступен в списке ответственных</label>` : '<div class="info-box">Тема объединяет задачи и мероприятия. Людей назначают на конкретные задачи.</div>'}<div id="directory-error"></div>`,
+            `<button class="btn" data-action="manage">Отмена</button><button class="btn primary" data-action="directory-save">Сохранить</button>`,
+            true,
+          );
+        setTimeout(() => $("#directory-name")?.focus(), 30);
+      }
+      function saveDirectory() {
+        const { mode, id } = directoryContext,
+          name = $("#directory-name").value.replace(/\s+/g, " ").trim(),
+          existing = $("#existing-contact")?.value;
+        const collection =
+          mode === "projects" ? model.projects : model.contacts;
+        if (existing) {
+          person(existing).responsible = true;
+        } else {
+          if (!name) {
+            $("#directory-error").innerHTML =
+              '<div class="form-error" style="margin-top:12px">Введите название</div>';
+            return;
+          }
+          if (
+            collection.some(
+              (c) => c.id !== id && c.name.toLowerCase() === name.toLowerCase(),
+            )
+          ) {
+            $("#directory-error").innerHTML =
+              '<div class="form-error" style="margin-top:12px">Такая запись уже есть. Выберите существующую карточку.</div>';
+            return;
+          }
+          if (id) {
+            const item = collection.find((c) => c.id === id);
+            if (mode !== "projects") {
+              const responsible = $("#contact-responsible").checked;
+              if (
+                !responsible &&
+                model.tasks.some((t) => t.responsible === id)
+              ) {
+                $("#directory-error").innerHTML =
+                  '<div class="form-error" style="margin-top:12px">Этот человек назначен ответственным. Сначала снимите назначения или выберите замену через удаление из списка.</div>';
+                return;
+              }
+              item.type = $("#contact-type").value;
+              item.responsible = responsible;
+            }
+            item.name = name;
+          } else if (mode === "projects") {
+            collection.push({
+              id: uid(),
+              name,
+              color: "#8fadd4",
+              archived: false,
+            });
+          } else {
+            collection.push({
+              id: uid(),
+              name,
+              type:
+                mode === "responsibles" ? "Человек" : $("#contact-type").value,
+              responsible:
+                mode === "responsibles" || $("#contact-responsible").checked,
+              archived: false,
+            });
+          }
+        }
+        save();
+        render();
+        manage(mode);
+        toast("Справочник обновлён");
+      }
+      let deleteContext = null;
+      function directoryDelete(id) {
+        const mode = ui.manager,
+          item = mode === "projects" ? proj(id) : person(id),
+          affected = model.tasks.filter((t) =>
+            mode === "projects"
+              ? t.project === id
+              : mode === "responsibles"
+                ? t.responsible === id
+                : t.executors.includes(id) || t.responsible === id,
+          );
+        deleteContext = { mode, id };
+        const choices =
+          mode === "projects"
+            ? model.projects.filter((p) => p.id !== id && !p.archived)
+            : model.contacts.filter(
+                (c) =>
+                  c.id !== id &&
+                  !c.archived &&
+                  (!(
+                    mode === "responsibles" ||
+                    affected.some((t) => t.responsible === id)
+                  ) ||
+                    c.responsible),
+              );
+        modal(
+          mode === "responsibles"
+            ? "Убрать из ответственных?"
+            : "Удалить запись?",
+          `<p style="font-size:14px;margin-top:0">${E(item.name)}</p><div class="info-box">${affected.length ? `Связанных задач: <strong>${affected.length}</strong>. ` : ""}Сами задачи сохранятся.${mode === "responsibles" ? " Карточка останется среди контрагентов." : ""}</div>${affected.length ? `<div class="field"><label for="replacement">${mode === "projects" ? "Куда перенести задачи" : "Заменить назначение на"}</label><select id="replacement">${options(choices, "", mode === "projects" ? "Без темы" : "Снять назначение")}</select></div>` : ""}`,
+          `<button class="btn" data-action="manage">Отмена</button><button class="btn danger" data-action="confirm-directory-delete">${mode === "responsibles" ? "Убрать из списка" : "Удалить запись"}</button>`,
+          true,
+        );
+      }
+      function confirmDirectoryDelete() {
+        const { mode, id } = deleteContext,
+          replacement = $("#replacement")?.value || "";
+        for (const t of model.tasks) {
+          if (mode === "projects" && t.project === id) t.project = replacement;
+          if (mode === "contacts") {
+            if (t.executors.includes(id))
+              t.executors = [
+                ...new Set(
+                  t.executors
+                    .map((value) => (value === id ? replacement : value))
+                    .filter(Boolean),
+                ),
+              ];
+            if (t.responsible === id)
+              t.responsible = person(replacement)?.responsible
+                ? replacement
+                : "";
+          }
+          if (mode === "responsibles" && t.responsible === id)
+            t.responsible = replacement;
+        }
+        if (mode === "projects") {
+          model.projects = model.projects.filter((p) => p.id !== id);
+          if (ui.project === id) ui.project = replacement || "all";
+        } else if (mode === "contacts") {
+          model.contacts = model.contacts.filter((c) => c.id !== id);
+        } else person(id).responsible = false;
+        if (ui.executor === id) ui.executor = "";
+        if (ui.responsible === id) ui.responsible = "";
+        save();
+        render();
+        manage(mode);
+        toast("Запись убрана, задачи сохранены");
+      }
+      function popup(t, button) {
+        const r = button.getBoundingClientRect();
+        $("#popup-root").innerHTML =
+          `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 135)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
+      }
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button) {
+          if (!event.target.closest(".popup")) $("#popup-root").innerHTML = "";
+          return;
+        }
+        const a = button.dataset.action,
+          id = button.dataset.id;
+        $("#popup-root").innerHTML = "";
+        switch (a) {
+          case "project":
+            ui.project = id;
+            render();
+            break;
+          case "view":
+            ui.view = id;
+            render();
+            break;
+          case "clear-filter":
+            ui[id] = "";
+            render();
+            break;
+          case "reset-filters":
+            ui.q = "";
+            $("#search").value = "";
+            ui.responsible = ui.executor = ui.status = ui.due = "";
+            render();
+            break;
+          case "all-with-filters":
+            ui.project = "all";
+            render();
+            break;
+          case "toggle-task":
+            ui.collapsed.has(id)
+              ? ui.collapsed.delete(id)
+              : ui.collapsed.add(id);
+            renderContent();
+            break;
+          case "toggle-project":
+            ui.closedProjects.has(id)
+              ? ui.closedProjects.delete(id)
+              : ui.closedProjects.add(id);
+            renderContent();
+            break;
+          case "create-task":
+            openTask();
+            break;
+          case "create-event":
+            openTask(null, null, null, "event");
+            break;
+          case "add-to-project":
+            openTask(null, null, id);
+            break;
+          case "edit-task":
+            openTask(id);
+            break;
+          case "add-child":
+            openTask(null, id);
+            break;
+          case "close-drawer":
+            closeDrawer();
+            break;
+          case "delete-task":
+            deleteTask(id);
+            break;
+          case "confirm-task-delete": {
+            const t = task(id);
+            for (const child of model.tasks.filter((c) => c.parent === id))
+              child.parent = t.parent;
+            model.tasks = model.tasks.filter((t) => t.id !== id);
+            save();
+            closeModal();
+            closeDrawer();
+            render();
+            toast("Задача удалена, подзадачи сохранены");
+            break;
+          }
+          case "task-menu":
+            popup(task(id), button);
+            break;
+          case "manage":
+            manage();
+            break;
+          case "manage-tab":
+            manage(id);
+            break;
+          case "new-project":
+            directoryEdit(null, true);
+            break;
+          case "directory-add":
+            directoryEdit();
+            break;
+          case "directory-edit":
+            directoryEdit(id);
+            break;
+          case "directory-save":
+            saveDirectory();
+            break;
+          case "directory-hide": {
+            const item = ui.manager === "projects" ? proj(id) : person(id);
+            item.archived = !item.archived;
+            save();
+            render();
+            manage();
+            toast(
+              item.archived
+                ? "Скрыто из выбора. Связи сохранены."
+                : "Снова доступно для выбора",
+            );
+            break;
+          }
+          case "directory-delete":
+            directoryDelete(id);
+            break;
+          case "confirm-directory-delete":
+            confirmDirectoryDelete();
+            break;
+          case "close-modal":
+            closeModal();
+            break;
+          case "add-comment": {
+            const text = $("#comment-text").value.trim();
+            if (!text) return;
+            task(id).comments.push({ text, date: "Сейчас" });
+            save();
+            $("#comment-list").insertAdjacentHTML(
+              "beforeend",
+              `<div class="comment"><strong>Вы · Сейчас</strong>${E(text)}</div>`,
+            );
+            $("#comment-text").value = "";
+            toast("Комментарий добавлен в макет");
+            break;
+          }
+          case "reset-demo":
+            modal(
+              "Сбросить пример?",
+              '<p style="font-size:12px;color:#7d8ca3">Изменения в этом макете будут заменены исходными демонстрационными данными.</p>',
+              '<button class="btn" data-action="close-modal">Отмена</button><button class="btn primary" data-action="confirm-reset">Сбросить пример</button>',
+              true,
+            );
+            break;
+          case "confirm-reset":
+            model = structuredClone(seed);
+            ui.project = "all";
+            ui.responsible = ui.executor = ui.status = ui.due = ui.q = "";
+            ui.done = false;
+            ui.expand = true;
+            ui.view = "table";
+            ui.manager = "projects";
+            ui.managerArchived = false;
+            ui.collapsed.clear();
+            ui.closedProjects.clear();
+            $("#search").value = "";
+            save();
+            closeModal();
+            closeDrawer();
+            render();
+            $("#project-list").scrollTop = 0;
+            $("#main-scroll").scrollTop = 0;
+            toast("Пример восстановлен");
+            break;
+        }
+      });
+      document.addEventListener("change", (event) => {
+        const id = event.target.id,
+          value = event.target.value;
+        const map = {
+          "responsible-filter": "responsible",
+          "executor-filter": "executor",
+          "status-filter": "status",
+          "due-filter": "due",
+        };
+        if (map[id]) {
+          ui[map[id]] = value;
+          render();
+        }
+        if (id === "show-done") {
+          ui.done = event.target.checked;
+          render();
+        }
+        if (id === "expand-all") {
+          ui.expand = event.target.checked;
+          ui.collapsed.clear();
+          render();
+        }
+        if (id === "manager-archived") {
+          ui.managerArchived = event.target.checked;
+          renderDirectory();
+        }
+        if (id === "task-parent") {
+          const parent = task(value);
+          $("#task-project").disabled = !!parent;
+          if (parent) $("#task-project").value = parent.project;
+        }
+        if (id === "task-project") {
+          const selected = ui.drawer.id ? descendants(ui.drawer.id) : new Set();
+          $("#task-parent").innerHTML =
+            '<option value="">Самостоятельная задача</option>' +
+            model.tasks
+              .filter((t) => t.project === value && !selected.has(t.id))
+              .map((t) => `<option value="${E(t.id)}">${E(t.title)}</option>`)
+              .join("");
+        }
+        if (id === "existing-contact") {
+          $("#directory-name").disabled = !!value;
+        }
+      });
+      $("#search").addEventListener("input", (event) => {
+        ui.q = event.target.value;
+        renderContent();
+      });
+      document.addEventListener("submit", (event) => {
+        if (event.target.id === "task-form") {
+          event.preventDefault();
+          saveTask(event.target);
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          if ($("#modal-root").children.length) closeModal();
+          else closeDrawer();
+          $("#popup-root").innerHTML = "";
+        }
+        if (
+          event.key === "/" &&
+          !["INPUT", "TEXTAREA", "SELECT"].includes(
+            document.activeElement.tagName,
+          )
+        ) {
+          event.preventDefault();
+          $("#search").focus();
+        }
+        if (event.key === "Tab") {
+          const container =
+            $("#modal-root .modal") || $("#drawer-root .drawer");
+          if (container) {
+            const inputs = [
+              ...container.querySelectorAll("button,input,select,textarea"),
+            ].filter((e) => !e.disabled && e.offsetParent !== null);
+            const first = inputs[0],
+              last = inputs.at(-1);
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first?.focus();
+            }
+          }
+        }
+      });
+      render();
+    </script>
+  </body>
+</html>
