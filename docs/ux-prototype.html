@@ -1702,6 +1702,453 @@
         font-size: 10px;
         padding: 6px 8px;
       }
+      #meeting-root:empty {
+        display: none;
+      }
+      .meeting-workspace {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: #eef1f6;
+        display: flex;
+        flex-direction: column;
+      }
+      .meeting-top {
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        padding: 18px 26px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .meeting-top h2 {
+        margin: 0 0 3px;
+        font-size: 19px;
+        letter-spacing: -0.3px;
+      }
+      .meeting-top p {
+        margin: 0;
+        color: #8795a9;
+        font-size: 11px;
+      }
+      .meeting-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-left: auto;
+      }
+      .meeting-count {
+        font-size: 11px;
+        color: #7586a1;
+        margin-right: 10px;
+      }
+      .meeting-layout {
+        display: grid;
+        grid-template-columns: 354px minmax(0, 1fr);
+        flex: 1;
+        min-height: 0;
+      }
+      .meeting-settings {
+        background: #fff;
+        border-right: 1px solid #dfe5ef;
+        overflow: auto;
+        padding: 20px 22px 30px;
+      }
+      .meeting-settings .field {
+        margin-bottom: 14px;
+      }
+      .meeting-settings input:not([type="checkbox"]),
+      .meeting-settings select {
+        font-size: 11px;
+        width: 100%;
+        padding: 8px 9px;
+      }
+      .meeting-settings label {
+        font-size: 11px;
+      }
+      .meeting-settings details {
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+        margin-top: 15px;
+      }
+      .meeting-settings summary {
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 13px;
+        color: #526987;
+      }
+      .meeting-settings .twocol {
+        gap: 10px;
+      }
+      .meeting-presets {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 15px;
+      }
+      .meeting-presets button {
+        border: 1px solid #dfe6f2;
+        border-radius: 6px;
+        background: white;
+        padding: 7px 9px;
+        font-size: 10px;
+        color: #6f81a0;
+      }
+      .meeting-presets button.selected {
+        background: #edf3ff;
+        border-color: #abc1ef;
+        color: #3569dc;
+      }
+      .meeting-option {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        color: #72829b;
+        margin: 8px 0;
+      }
+      .meeting-option input {
+        accent-color: var(--accent);
+      }
+      .meeting-checks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 7px;
+      }
+      .meeting-tree {
+        margin: 8px 0;
+      }
+      .meeting-tree-row {
+        border: 1px solid #e4eaf3;
+        border-radius: 7px;
+        padding: 9px 10px;
+        margin: 7px 0;
+        background: #fcfdff;
+      }
+      .meeting-tree-row.off {
+        opacity: 0.65;
+      }
+      .meeting-tree-name {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      .meeting-tree-name input {
+        margin-top: 3px;
+        flex-shrink: 0;
+        accent-color: var(--accent);
+      }
+      .meeting-tree-tools {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin: 6px 0 0 20px;
+      }
+      .meeting-tree-tools .tinybtn {
+        font-size: 11px;
+        padding: 0 4px;
+      }
+      .meeting-tree-tools .page-break-toggle {
+        font-size: 9px;
+        border: 0;
+        background: none;
+        color: #8a99af;
+        padding: 2px 4px;
+        margin-left: auto;
+        cursor: pointer;
+      }
+      .meeting-tree-tools .page-break-toggle.active {
+        background: #edf3ff;
+        color: var(--accent);
+        border-radius: 4px;
+      }
+      .meeting-tree-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .meeting-tree-toolbar span {
+        font-size: 10px;
+        color: #8b9ab0;
+      }
+      .meeting-settings .info-box {
+        font-size: 10px;
+        margin-top: 14px;
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+      .meeting-preview {
+        overflow: auto;
+        padding: 24px 24px 45px;
+        background: #edf0f5;
+      }
+      #meeting-pages {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        align-items: center;
+        transform-origin: top center;
+        min-width: 0;
+      }
+      .paper-page {
+        background: white;
+        color: #222;
+        width: 210mm;
+        height: 297mm;
+        padding: 12mm;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        box-shadow: 0 3px 18px #263e5e18;
+        font-family: "Segoe UI", Arial, sans-serif;
+        --sheet-font: 12pt;
+        font-size: var(--sheet-font);
+        line-height: 1.45;
+        overflow: hidden;
+      }
+      .paper-page.landscape {
+        width: 297mm;
+        height: 210mm;
+      }
+      .sheet-heading {
+        flex-shrink: 0;
+        border-bottom: 1px solid #9aa1ab;
+        padding-bottom: 4mm;
+        margin-bottom: 5mm;
+      }
+      .sheet-eyebrow {
+        font-size: 8pt;
+        letter-spacing: 1.3px;
+        text-transform: uppercase;
+        color: #69717d;
+        margin-bottom: 2mm;
+      }
+      .sheet-heading h1 {
+        font-size: 20pt;
+        line-height: 1.25;
+        letter-spacing: -0.4px;
+        margin: 0 0 3mm;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+      .sheet-meeting-meta {
+        font-size: 9pt;
+        color: #59616d;
+        display: flex;
+        gap: 2mm 7mm;
+        flex-wrap: wrap;
+      }
+      .sheet-meeting-meta span {
+        overflow-wrap: anywhere;
+        max-width: 100%;
+      }
+      .sheet-body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4mm;
+      }
+      .meeting-entry {
+        flex-shrink: 0;
+        min-width: 0;
+        break-inside: avoid;
+      }
+      .meeting-entry h2 {
+        font-size: 1em;
+        line-height: 1.45;
+        margin: 0 0 2mm;
+        display: flex;
+        gap: 2.5mm;
+        align-items: flex-start;
+        color: #222;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+      .sheet-check {
+        display: inline-block;
+        width: 3mm;
+        height: 3mm;
+        border: 1px solid #626872;
+        flex-shrink: 0;
+        margin-top: 1.1mm;
+      }
+      .sheet-item-number {
+        flex-shrink: 0;
+        font-weight: 600;
+      }
+      .sheet-context h2 {
+        color: #737a85;
+        font-size: 0.92em;
+      }
+      .sheet-context {
+        border-left: 1px solid #c8cdd5;
+        padding-left: 3mm;
+      }
+      .sheet-path {
+        font-size: 8pt;
+        color: #777;
+        margin: 0 0 1mm;
+      }
+      .sheet-item-meta {
+        font-size: 8.5pt;
+        color: #555;
+        margin: 0 0 2mm;
+        line-height: 1.6;
+      }
+      .sheet-entry-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2mm;
+      }
+      .sheet-entry-grid.notes-right {
+        grid-template-columns: minmax(0, 1fr) 58mm;
+        gap: 6mm;
+      }
+      .sheet-materials {
+        min-width: 0;
+      }
+      .sheet-part {
+        font-size: 1em;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+        margin: 0 0 2mm;
+      }
+      .sheet-part strong {
+        font-size: 0.94em;
+        display: block;
+        margin-bottom: 0.6mm;
+        color: #333;
+      }
+      .sheet-part.question {
+        border-left: 2px solid #777;
+        padding-left: 2.5mm;
+      }
+      .sheet-part.comment {
+        color: #4e5561;
+      }
+      .sheet-part.files {
+        font-size: 0.76em;
+        color: #5d6572;
+      }
+      .sheet-write-title {
+        font-size: 8pt;
+        color: #6d747f;
+        margin: 2mm 0 0;
+      }
+      .sheet-write-line {
+        height: 8mm;
+        border-bottom: 1px solid #cbd0d8;
+        box-sizing: border-box;
+      }
+      .sheet-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 6mm;
+        font-size: 8pt;
+        color: #7c838e;
+        flex-shrink: 0;
+        border-top: 1px solid #c7ccd3;
+        padding-top: 2mm;
+        margin-top: 5mm;
+      }
+      .meeting-preview-error {
+        background: #fff5ef;
+        color: #9b6650;
+        border: 1px solid #eed8c7;
+        border-radius: 8px;
+        padding: 18px;
+        font-size: 13px;
+        max-width: 700px;
+        margin: auto;
+      }
+      #print-output {
+        display: none;
+      }
+      @media (max-width: 1000px) {
+        .meeting-layout {
+          grid-template-columns: 310px minmax(0, 1fr);
+        }
+        .meeting-settings {
+          padding: 16px;
+        }
+        .meeting-top {
+          padding: 14px 20px;
+        }
+        .meeting-count {
+          display: none;
+        }
+      }
+      @media (max-width: 700px) {
+        .meeting-layout {
+          display: block;
+          overflow: auto;
+        }
+        .meeting-settings {
+          max-height: 42vh;
+          overflow: auto;
+          border-right: 0;
+          border-bottom: 1px solid #dfe5ef;
+        }
+        .meeting-preview {
+          overflow: auto;
+        }
+        .meeting-workspace .meeting-top p {
+          display: none;
+        }
+        .meeting-top {
+          gap: 10px;
+          padding: 12px;
+        }
+        .meeting-top h2 {
+          font-size: 15px;
+        }
+        .meeting-actions {
+          gap: 6px;
+        }
+        .meeting-top .btn {
+          font-size: 10px;
+          padding: 8px;
+        }
+        .meeting-top .meeting-close-label {
+          display: none;
+        }
+      }
+      @media print {
+        body.meeting-print {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        body.meeting-print > * {
+          display: none !important;
+        }
+        body.meeting-print > #print-output {
+          display: block !important;
+          position: static !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #print-output .paper-page {
+          margin: 0 !important;
+          box-shadow: none !important;
+          break-after: page;
+          page-break-after: always;
+          zoom: 1 !important;
+        }
+        #print-output .paper-page:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1769,6 +2216,9 @@
       </symbol>
       <symbol id="i-download" viewBox="0 0 24 24">
         <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </symbol>
+      <symbol id="i-printer" viewBox="0 0 24 24">
+        <path d="M6 8V3h12v5M6 17H3V8h18v9h-3M6 14h12v7H6zM17 11h.01" />
       </symbol>
     </svg>
     <header class="topbar">
@@ -1852,6 +2302,10 @@
             <p class="subtitle" id="page-subtitle"></p>
           </div>
           <div class="head-actions">
+            <button class="btn" data-action="meeting-open">
+              <svg class="icon small-icon"><use href="#i-printer" /></svg>Лист
+              на встречу
+            </button>
             <button class="btn optional" data-action="create-event">
               <svg class="icon small-icon"><use href="#i-calendar" /></svg
               >Мероприятие</button
@@ -1880,6 +2334,8 @@
     <div id="drawer-root"></div>
     <div id="modal-root"></div>
     <div id="popup-root"></div>
+    <div id="meeting-root"></div>
+    <div id="print-output"></div>
     <div id="toast" class="toast" role="status"></div>
     <script src="ux-vendor/mammoth.browser.min.js"></script>
     <script src="ux-vendor/purify.min.js"></script>
@@ -3201,7 +3657,7 @@
             .join(
               "",
             )}</select></div><div class="field" id="percent-field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>
-          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
+          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" data-action="meeting-open" data-id="${E(id)}" title="Подготовить лист на встречу">${icon("printer", true)}Лист</button><button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
         updateEventFields();
         setTimeout(() => $("#task-title")?.focus(), 30);
       }
@@ -3495,10 +3951,551 @@
         manage(mode);
         toast("Запись убрана, задачи сохранены");
       }
+      const MEETING_SETTINGS = "taskgantt_meeting_sheet_v1";
+      const meetingDefaults = {
+        orientation: "portrait",
+        font: 12,
+        lines: 3,
+        noteLayout: "below",
+        questions: "open",
+        comments: "last",
+        description: false,
+        people: true,
+        dates: true,
+        status: false,
+        files: false,
+        finalNotes: true,
+        preset: "meeting",
+      };
+      let meeting = null,
+        meetingTimer;
+      function branchOrder(rootId) {
+        const result = [],
+          seen = new Set([rootId]);
+        function visit(parent, level) {
+          for (const t of model.tasks.filter((t) => t.parent === parent))
+            if (!seen.has(t.id)) {
+              seen.add(t.id);
+              result.push({ id: t.id, level });
+              visit(t.id, level + 1);
+            }
+        }
+        visit(rootId, 0);
+        return result;
+      }
+      function setMeetingRoot(id) {
+        const root = task(id);
+        if (!root) return;
+        meeting.root = id;
+        meeting.title = root.title;
+        meeting.order = branchOrder(id).map((r) => r.id);
+        meeting.selected = new Set(
+          meeting.order.filter((id) => task(id).status !== "DONE"),
+        );
+        meeting.breaks = new Set();
+        meeting.showDone = false;
+      }
+      function openMeeting(id) {
+        let settings = { ...meetingDefaults };
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem(MEETING_SETTINGS) || "null",
+          );
+          if (saved && saved.font && saved.orientation)
+            settings = { ...settings, ...saved };
+        } catch {}
+        const roots = [...model.tasks].sort(
+          (a, b) =>
+            Number(model.tasks.some((t) => t.parent === b.id)) -
+            Number(model.tasks.some((t) => t.parent === a.id)),
+        );
+        const root =
+          task(id) || roots.find((t) => t.project === ui.project) || roots[0];
+        if (!root) {
+          toast("Сначала создайте задачу или мероприятие");
+          return;
+        }
+        meeting = {
+          ...settings,
+          date: "",
+          participants: "",
+          pages: 0,
+          previewZoom: "page",
+        };
+        setMeetingRoot(root.id);
+        renderMeetingControls();
+        renderMeetingPreview();
+        setTimeout(() => $("#meeting-source")?.focus(), 30);
+      }
+      function closeMeeting() {
+        document.body.classList.remove("meeting-print");
+        clearTimeout(meetingTimer);
+        meeting = null;
+        $("#meeting-root").innerHTML = "";
+      }
+      function meetingCheckbox(key, label) {
+        return `<label class="meeting-option"><input type="checkbox" data-sheet-setting="${key}" ${meeting[key] ? "checked" : ""}>${label}</label>`;
+      }
+      function meetingSelect(key, items) {
+        return `<select data-sheet-setting="${key}" aria-label="${E(key === "questions" ? "Печатать вопросы" : key === "comments" ? "Печатать комментарии" : key === "lines" ? "Строк для заметок" : key === "font" ? "Размер текста" : key === "orientation" ? "Ориентация листа" : "Расположение заметок")}">${items.map(([value, label]) => `<option value="${value}" ${String(meeting[key]) === String(value) ? "selected" : ""}>${label}</option>`).join("")}</select>`;
+      }
+      function renderMeetingControls() {
+        const roots = [...model.tasks].sort(
+          (a, b) =>
+            Number(model.tasks.some((t) => t.parent === b.id)) -
+            Number(model.tasks.some((t) => t.parent === a.id)),
+        );
+        $("#meeting-root").innerHTML =
+          `<section class="meeting-workspace" role="dialog" aria-modal="true" aria-label="Лист на встречу"><header class="meeting-top"><div><h2>Лист на встречу</h2><p>Повестка, вопросы и место для рукописных пометок</p></div><div class="meeting-actions"><span class="meeting-count" id="meeting-count"></span><select id="meeting-zoom" aria-label="Масштаб предпросмотра" style="font-size:11px;padding:8px"><option value="page" ${meeting.previewZoom === "page" ? "selected" : ""}>Вся страница</option><option value="width" ${meeting.previewZoom === "width" ? "selected" : ""}>По ширине</option><option value="100" ${meeting.previewZoom === "100" ? "selected" : ""}>100%</option></select><button class="btn primary" data-action="meeting-print">${icon("printer", true)}Печать / PDF</button><button class="btn" data-action="meeting-close">${icon("close", true)}<span class="meeting-close-label">Закрыть</span></button></div></header><div class="meeting-layout"><aside class="meeting-settings"><div class="field"><label for="meeting-source">Что берём на встречу</label><select id="meeting-source">${options(
+            roots.map((t) => ({ id: t.id, name: t.title })),
+            meeting.root,
+            "Выберите задачу / мероприятие",
+          )}</select></div><div class="meeting-presets">${[
+            ["compact", "Компактно"],
+            ["meeting", "На встречу"],
+            ["detailed", "Подробно"],
+          ]
+            .map(
+              ([id, label]) =>
+                `<button data-action="meeting-preset" data-id="${id}" class="${meeting.preset === id ? "selected" : ""}">${label}</button>`,
+            )
+            .join(
+              "",
+            )}</div><div class="twocol"><div class="field"><label>Лист</label>${meetingSelect(
+            "orientation",
+            [
+              ["portrait", "A4 · книжный"],
+              ["landscape", "A4 · альбомный"],
+            ],
+          )}</div><div class="field"><label>Текст</label>${meetingSelect(
+            "font",
+            [
+              [11, "11 пт"],
+              [12, "12 пт"],
+              [14, "14 пт"],
+            ],
+          )}</div></div><div class="twocol"><div class="field"><label>Заметки</label>${meetingSelect(
+            "noteLayout",
+            [
+              ["below", "Под каждым пунктом"],
+              ["right", "Справа от пункта"],
+            ],
+          )}</div><div class="field"><label>Строк для записей</label>${meetingSelect(
+            "lines",
+            [
+              [0, "Без строк"],
+              [1, "1 строка"],
+              [2, "2 строки"],
+              [3, "3 строки"],
+              [5, "5 строк"],
+              [8, "8 строк"],
+            ],
+          )}</div></div><details open><summary>Содержимое листа</summary><div class="twocol"><div class="field"><label>Вопросы</label>${meetingSelect(
+            "questions",
+            [
+              ["open", "Только открытые"],
+              ["all", "Все вопросы"],
+              ["none", "Не печатать"],
+            ],
+          )}</div><div class="field"><label>Комментарии</label>${meetingSelect(
+            "comments",
+            [
+              ["last", "Последний"],
+              ["all", "Все"],
+              ["none", "Не печатать"],
+            ],
+          )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("people", "Ответственные")}${meetingCheckbox("dates", "Сроки / время")}${meetingCheckbox("status", "Статусы")}${meetingCheckbox("files", "Названия файлов")}${meetingCheckbox("finalNotes", "Общие итоги")}</div></details><details open><summary>Пункты и подзадачи</summary><div class="meeting-tree-toolbar"><span id="meeting-selection-count"></span><span><button class="textbtn" data-action="meeting-select-all">Все</button> · <button class="textbtn" data-action="meeting-select-none">Снять</button></span></div><label class="meeting-option"><input type="checkbox" id="meeting-show-done" ${meeting.showDone ? "checked" : ""}>Показать завершённые для выбора</label><div class="meeting-tree" id="meeting-tree"></div></details><details><summary>Заголовок и участники встречи</summary><div class="field"><label for="meeting-title">Заголовок листа</label><input id="meeting-title" data-sheet-setting="title" value="${E(meeting.title)}" maxlength="500"></div><div class="field"><label for="meeting-date">Дата встречи</label><input id="meeting-date" type="date" data-sheet-setting="date" value="${E(meeting.date)}"></div><div class="field"><label for="meeting-participants">Участники / место</label><input id="meeting-participants" data-sheet-setting="participants" value="${E(meeting.participants)}" placeholder="Можно дописать от руки" maxlength="300"></div></details><div class="info-box">Каждый пункт с вопросами остаётся целиком, если помещается на странице. Кнопка «Новая страница» задаёт разрыв перед пунктом. Справа показан готовый лист.</div><button class="btn" data-action="meeting-remember">Запомнить настройки</button></aside><div class="meeting-preview" id="meeting-preview"><div id="meeting-pages"></div></div></div></section>`;
+        renderMeetingTree();
+      }
+      function renderMeetingTree() {
+        const levels = new Map(
+          branchOrder(meeting.root).map((r) => [r.id, r.level]),
+        );
+        const ids = meeting.order.filter(
+          (id) => meeting.showDone || task(id)?.status !== "DONE",
+        );
+        $("#meeting-selection-count").textContent =
+          `Выбрано ${meeting.selected.size} из ${meeting.order.length}`;
+        $("#meeting-tree").innerHTML =
+          ids
+            .map((id) => {
+              const t = task(id),
+                siblings = meeting.order.filter(
+                  (s) =>
+                    task(s).parent === t.parent &&
+                    (meeting.showDone || task(s).status !== "DONE"),
+                ),
+                index = siblings.indexOf(id);
+              return `<div class="meeting-tree-row ${meeting.selected.has(id) ? "" : "off"}" style="margin-left:${Math.min(3, levels.get(id) || 0) * 8}px"><label class="meeting-tree-name"><input type="checkbox" data-meeting-task="${E(id)}" ${meeting.selected.has(id) ? "checked" : ""}><span>${E(t.title)}${t.status === "DONE" ? '<small class="muted"> · Готово</small>' : ""}</span></label><div class="meeting-tree-tools"><button class="tinybtn" data-action="meeting-up" data-id="${E(id)}" ${index === 0 ? "disabled" : ""} aria-label="Выше: ${E(t.title)}" title="Переместить выше">↑</button><button class="tinybtn" data-action="meeting-down" data-id="${E(id)}" ${index === siblings.length - 1 ? "disabled" : ""} aria-label="Ниже: ${E(t.title)}" title="Переместить ниже">↓</button><button class="page-break-toggle ${meeting.breaks.has(id) ? "active" : ""}" data-action="meeting-break" data-id="${E(id)}" aria-pressed="${meeting.breaks.has(id)}">${meeting.breaks.has(id) ? "✓ " : ""}Новая страница</button></div></div>`;
+            })
+            .join("") ||
+          '<p class="activity-empty">Нет подзадач для выбора. На листе будут материалы самой записи.</p>';
+      }
+      function moveMeetingItem(id, direction) {
+        const t = task(id),
+          siblings = meeting.order.filter(
+            (s) =>
+              task(s).parent === t.parent &&
+              (meeting.showDone || task(s).status !== "DONE"),
+          ),
+          next = siblings[siblings.indexOf(id) + direction];
+        if (!next) return;
+        const group = descendants(id),
+          target = descendants(next),
+          block = meeting.order.filter((s) => group.has(s));
+        meeting.order = meeting.order.filter((s) => !group.has(s));
+        const at =
+          direction < 0
+            ? meeting.order.indexOf(next)
+            : Math.max(
+                ...meeting.order.map((s, index) =>
+                  target.has(s) ? index : -1,
+                ),
+              ) + 1;
+        meeting.order.splice(at, 0, ...block);
+        renderMeetingTree();
+        renderMeetingPreview();
+      }
+      function applyMeetingPreset(name) {
+        const preset =
+          name === "compact"
+            ? {
+                font: 11,
+                lines: 1,
+                description: false,
+                comments: "none",
+                questions: "open",
+                finalNotes: false,
+                noteLayout: "below",
+              }
+            : name === "detailed"
+              ? {
+                  font: 12,
+                  lines: 5,
+                  description: true,
+                  comments: "all",
+                  questions: "all",
+                  finalNotes: true,
+                  noteLayout: "below",
+                }
+              : meetingDefaults;
+        Object.assign(meeting, preset, { preset: name });
+        renderMeetingControls();
+        renderMeetingPreview();
+      }
+      function meetingParts(t) {
+        const parts = [];
+        if (meeting.description && t.description)
+          parts.push({ type: "description", text: t.description });
+        const questions = t.comments.filter(
+          (c) =>
+            c.kind === "question" &&
+            (meeting.questions === "all" ||
+              (meeting.questions === "open" && !c.resolved)),
+        );
+        for (const c of questions)
+          parts.push({
+            type: "question",
+            label: c.resolved ? "Вопрос · решён" : "Вопрос к обсуждению",
+            text: c.text,
+          });
+        const comments = t.comments.filter((c) => c.kind !== "question");
+        for (const c of meeting.comments === "all"
+          ? comments
+          : meeting.comments === "last"
+            ? comments.slice(-1)
+            : [])
+          parts.push({ type: "comment", label: "Комментарий", text: c.text });
+        if (meeting.files && t.attachments.length)
+          parts.push({
+            type: "files",
+            label: "Материалы",
+            text: t.attachments.map((f) => f.name).join(" · "),
+          });
+        return parts;
+      }
+      function meetingBlocks() {
+        const root = task(meeting.root),
+          blocks = [],
+          own = meetingParts(root);
+        if (own.length || meeting.order.length === 0)
+          blocks.push({
+            id: root.id,
+            title: "К обсуждению",
+            number: "",
+            parts: own,
+            notes: meeting.order.length === 0,
+            depth: 0,
+          });
+        const include = new Set(meeting.selected);
+        for (const id of meeting.selected) {
+          let p = task(id)?.parent;
+          const seen = new Set([id]);
+          while (p && p !== root.id && !seen.has(p)) {
+            seen.add(p);
+            include.add(p);
+            p = task(p)?.parent;
+          }
+        }
+        const counts = new Map(),
+          numbers = new Map();
+        for (const id of meeting.order) {
+          if (!include.has(id)) continue;
+          const t = task(id),
+            context = !meeting.selected.has(id),
+            n = (counts.get(t.parent) || 0) + 1;
+          counts.set(t.parent, n);
+          const number =
+            (numbers.get(t.parent) ? numbers.get(t.parent) + "." : "") + n;
+          numbers.set(id, number);
+          const metadata = [];
+          if (!context && meeting.people)
+            metadata.push(
+              "Ответственный: " +
+                (person(t.responsible)?.name || "не назначен"),
+            );
+          if (!context && meeting.dates)
+            metadata.push(
+              "Срок: " +
+                new Date(t.end + "T12:00:00").toLocaleDateString("ru-RU") +
+                (t.kind === "event" && t.startTime
+                  ? " · " + t.startTime + (t.endTime ? "–" + t.endTime : "")
+                  : ""),
+            );
+          if (!context && meeting.status) metadata.push(statuses[t.status]);
+          blocks.push({
+            id,
+            title: t.title,
+            number,
+            parts: context ? [] : meetingParts(t),
+            notes: !context,
+            context,
+            metadata: metadata.join(" · "),
+            path: t.parent !== root.id ? task(t.parent)?.title : "",
+            breakBefore: meeting.breaks.has(id),
+          });
+        }
+        if (meeting.finalNotes)
+          blocks.push({
+            id: "summary",
+            title: "Итоги встречи / следующие действия",
+            number: "",
+            parts: [],
+            notes: true,
+            summary: true,
+          });
+        return blocks;
+      }
+      function writeLines(lines, label = "Решение / ответственный / срок") {
+        return lines
+          ? `<div class="sheet-writing"><div class="sheet-write-title">${E(label)}</div>${'<div class="sheet-write-line"></div>'.repeat(lines)}</div>`
+          : "";
+      }
+      function meetingEntry(
+        block,
+        parts = block.parts,
+        notes = block.notes,
+        continued = false,
+      ) {
+        const node = document.createElement("article");
+        node.className =
+          "meeting-entry" + (block.context ? " sheet-context" : "");
+        node.dataset.sheetTask = block.id;
+        const title = continued
+          ? block.title.slice(0, 120) + " · продолжение"
+          : block.title;
+        node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${E(p.text)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
+        return node;
+      }
+      function meetingPage() {
+        const root = task(meeting.root),
+          page = document.createElement("section");
+        page.className =
+          "paper-page" +
+          (meeting.orientation === "landscape" ? " landscape" : "");
+        page.style.setProperty("--sheet-font", meeting.font + "pt");
+        page.innerHTML = `<header class="sheet-heading"><div class="sheet-eyebrow">Лист на встречу · ${E(proj(root.project)?.name || "Без темы")}</div><h1>${E(meeting.title || root.title)}</h1><div class="sheet-meeting-meta"><span>Дата: ${meeting.date ? E(new Date(meeting.date + "T12:00:00").toLocaleDateString("ru-RU")) : "________________"}</span><span>${meeting.participants ? E(meeting.participants) : "Участники: ______________________________"}</span></div></header><div class="sheet-body"></div><footer class="sheet-footer"><span>Решения и вопросы к встрече</span><span class="sheet-page-number"></span></footer>`;
+        $("#meeting-pages").append(page);
+        return page;
+      }
+      function shortMeetingParts(parts) {
+        const out = [];
+        for (const part of parts) {
+          if (part.text.length <= 420) {
+            out.push(part);
+            continue;
+          }
+          const tokens = part.text.match(/\S+\s*|\s+/g) || [part.text];
+          let chunk = "",
+            continuation = false;
+          for (const token of tokens) {
+            const chars = Array.from(token);
+            for (let offset = 0; offset < chars.length; offset += 420) {
+              const piece = chars.slice(offset, offset + 420).join("");
+              if (chunk.length + piece.length > 420 && chunk) {
+                out.push({
+                  ...part,
+                  label:
+                    continuation && part.label
+                      ? part.label + " · продолжение"
+                      : part.label,
+                  text: chunk,
+                });
+                continuation = true;
+                chunk = "";
+              }
+              chunk += piece;
+            }
+          }
+          if (chunk)
+            out.push({
+              ...part,
+              label:
+                continuation && part.label
+                  ? part.label + " · продолжение"
+                  : part.label,
+              text: chunk,
+            });
+        }
+        return out;
+      }
+      function renderMeetingPreview() {
+        if (!meeting || !$("#meeting-pages")) return;
+        clearTimeout(meetingTimer);
+        const pages = $("#meeting-pages");
+        pages.style.zoom = "1";
+        pages.innerHTML = "";
+        let page = meetingPage(),
+          body = page.querySelector(".sheet-body"),
+          error = "";
+        const fits = () =>
+          body.clientHeight > 60 && body.scrollHeight <= body.clientHeight + 1;
+        const next = () => {
+          page = meetingPage();
+          body = page.querySelector(".sheet-body");
+        };
+        const append = (node) => {
+          body.append(node);
+          return fits();
+        };
+        for (const block of meetingBlocks()) {
+          if (block.breakBefore && body.children.length) next();
+          let node = meetingEntry(block);
+          if (append(node)) continue;
+          node.remove();
+          if (body.children.length) next();
+          node = meetingEntry(block);
+          if (append(node)) continue;
+          node.remove();
+          // Long items continue with their title repeated; ordinary items stay together.
+          const parts = shortMeetingParts(block.parts);
+          let current = [],
+            continued = false;
+          for (const part of parts) {
+            node = meetingEntry(block, [...current, part], false, continued);
+            if (append(node)) {
+              node.remove();
+              current.push(part);
+              continue;
+            }
+            node.remove();
+            if (current.length) {
+              body.append(meetingEntry(block, current, false, continued));
+              next();
+              continued = true;
+              current = [];
+            }
+            node = meetingEntry(block, [part], false, continued);
+            if (!append(node)) {
+              node.remove();
+              error =
+                "Заголовок занимает слишком много места. Сократите заголовок листа или выберите меньший размер текста.";
+              break;
+            }
+            node.remove();
+            current.push(part);
+          }
+          if (error) break;
+          node = meetingEntry(block, current, block.notes, continued);
+          if (!append(node)) {
+            node.remove();
+            if (current.length)
+              body.append(meetingEntry(block, current, false, continued));
+            if (body.children.length) next();
+            node = meetingEntry(block, [], block.notes, true);
+            if (!append(node)) {
+              node.remove();
+              error =
+                "Уменьшите число строк для заметок или выберите книжную ориентацию.";
+              break;
+            }
+          }
+        }
+        const all = [...pages.querySelectorAll(".paper-page")];
+        for (let i = 0; i < all.length; i++)
+          all[i].querySelector(".sheet-page-number").textContent =
+            `${i + 1} / ${all.length}`;
+        meeting.pages = all.length;
+        meeting.valid = !error;
+        $("#meeting-count").textContent =
+          `Страниц: ${all.length} · Выбрано пунктов: ${meeting.selected.size}`;
+        $('#meeting-root [data-action="meeting-print"]').disabled = !!error;
+        if (error)
+          pages.insertAdjacentHTML(
+            "afterbegin",
+            `<p class="meeting-preview-error" role="alert">${E(error)}</p>`,
+          );
+        fitMeetingPreview();
+      }
+      function fitMeetingPreview() {
+        const paper = $("#meeting-pages .paper-page"),
+          pane = $("#meeting-preview");
+        if (!paper || !pane) return;
+        const width = Math.max(
+          0.2,
+          (pane.clientWidth - 48) / paper.offsetWidth,
+        );
+        const height = Math.max(
+          0.2,
+          (pane.clientHeight - 48) / paper.offsetHeight,
+        );
+        $("#meeting-pages").style.zoom = String(
+          meeting.previewZoom === "100"
+            ? 1
+            : meeting.previewZoom === "width"
+              ? Math.min(1, width)
+              : Math.min(1, width, height),
+        );
+      }
+      function printMeeting() {
+        renderMeetingPreview();
+        if (!meeting?.valid) return;
+        $("#print-output").innerHTML = $("#meeting-pages").innerHTML;
+        let style = $("#meeting-page-style");
+        if (!style) {
+          style = document.createElement("style");
+          style.id = "meeting-page-style";
+          document.head.append(style);
+        }
+        style.textContent = `@page {size:A4 ${meeting.orientation};margin:0;}`;
+        document.body.classList.add("meeting-print");
+        window.print();
+      }
+      function rememberMeeting() {
+        const settings = Object.fromEntries(
+          Object.keys(meetingDefaults).map((key) => [key, meeting[key]]),
+        );
+        try {
+          localStorage.setItem(MEETING_SETTINGS, JSON.stringify(settings));
+          toast("Настройки листа сохранены для следующей встречи");
+        } catch {
+          toast("Браузер не разрешил сохранить настройки");
+        }
+      }
       function popup(t, button) {
         const r = button.getBoundingClientRect();
         $("#popup-root").innerHTML =
-          `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 135)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
+          `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 180)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button data-action="meeting-open" data-id="${E(t.id)}">Лист на встречу</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
       }
       document.addEventListener("click", (event) => {
         const button = event.target.closest("[data-action]");
@@ -3510,6 +4507,48 @@
           id = button.dataset.id;
         $("#popup-root").innerHTML = "";
         switch (a) {
+          case "meeting-open":
+            openMeeting(id);
+            break;
+          case "meeting-close":
+            closeMeeting();
+            break;
+          case "meeting-preset":
+            applyMeetingPreset(id);
+            break;
+          case "meeting-print":
+            printMeeting();
+            break;
+          case "meeting-remember":
+            rememberMeeting();
+            break;
+          case "meeting-select-all":
+            meeting.selected = new Set(
+              meeting.order.filter(
+                (id) => meeting.showDone || task(id).status !== "DONE",
+              ),
+            );
+            renderMeetingTree();
+            renderMeetingPreview();
+            break;
+          case "meeting-select-none":
+            meeting.selected.clear();
+            renderMeetingTree();
+            renderMeetingPreview();
+            break;
+          case "meeting-up":
+            moveMeetingItem(id, -1);
+            break;
+          case "meeting-down":
+            moveMeetingItem(id, 1);
+            break;
+          case "meeting-break":
+            meeting.breaks.has(id)
+              ? meeting.breaks.delete(id)
+              : meeting.breaks.add(id);
+            renderMeetingTree();
+            renderMeetingPreview();
+            break;
           case "project":
             ui.project = id;
             render();
@@ -3734,6 +4773,71 @@
             break;
         }
       });
+      function meetingControl(event) {
+        if (!meeting || !event.target.closest("#meeting-root")) return;
+        const target = event.target,
+          key = target.dataset.sheetSetting;
+        if (target.id === "meeting-zoom") {
+          meeting.previewZoom = target.value;
+          fitMeetingPreview();
+          return;
+        }
+        if (target.id === "meeting-source") {
+          if (!target.value) return;
+          setMeetingRoot(target.value);
+          renderMeetingControls();
+          renderMeetingPreview();
+          return;
+        }
+        if (target.dataset.meetingTask) {
+          const id = target.dataset.meetingTask;
+          target.checked
+            ? meeting.selected.add(id)
+            : meeting.selected.delete(id);
+          renderMeetingTree();
+          renderMeetingPreview();
+          return;
+        }
+        if (target.id === "meeting-show-done") {
+          meeting.showDone = target.checked;
+          if (!target.checked)
+            for (const id of [...meeting.selected])
+              if (task(id).status === "DONE") meeting.selected.delete(id);
+          renderMeetingTree();
+          renderMeetingPreview();
+          return;
+        }
+        if (key) {
+          meeting[key] =
+            target.type === "checkbox"
+              ? target.checked
+              : ["font", "lines"].includes(key)
+                ? Number(target.value)
+                : target.value;
+          meeting.preset = "custom";
+          $("#meeting-root .meeting-presets .selected")?.classList.remove(
+            "selected",
+          );
+          clearTimeout(meetingTimer);
+          meetingTimer = setTimeout(renderMeetingPreview, 100);
+        }
+      }
+      document.addEventListener("input", (event) => {
+        if (event.target.closest("#meeting-root")) meetingControl(event);
+      });
+      document.addEventListener("change", (event) => {
+        if (
+          event.target.closest("#meeting-root") &&
+          event.target.tagName !== "INPUT"
+        )
+          meetingControl(event);
+      });
+      window.addEventListener("afterprint", () =>
+        document.body.classList.remove("meeting-print"),
+      );
+      window.addEventListener("resize", () => {
+        if (meeting) fitMeetingPreview();
+      });
       document.addEventListener("input", (event) => {
         const composer = event.target.closest(".note-composer");
         if (composer)
@@ -3823,6 +4927,15 @@
       });
       document.addEventListener("keydown", (event) => {
         if (
+          meeting &&
+          (event.ctrlKey || event.metaKey) &&
+          event.key.toLowerCase() === "p"
+        ) {
+          event.preventDefault();
+          printMeeting();
+          return;
+        }
+        if (
           event.key === "Enter" &&
           !event.shiftKey &&
           !event.isComposing &&
@@ -3833,12 +4946,17 @@
           return;
         }
         if (event.key === "Escape") {
+          if (meeting) {
+            closeMeeting();
+            return;
+          }
           if ($("#modal-root").children.length) closeModal();
           else closeDrawer();
           $("#popup-root").innerHTML = "";
         }
         if (
           event.key === "/" &&
+          !meeting &&
           !["INPUT", "TEXTAREA", "SELECT"].includes(
             document.activeElement.tagName,
           )
@@ -3848,7 +4966,9 @@
         }
         if (event.key === "Tab") {
           const container =
-            $("#modal-root .modal") || $("#drawer-root .drawer");
+            $("#meeting-root .meeting-workspace") ||
+            $("#modal-root .modal") ||
+            $("#drawer-root .drawer");
           if (container) {
             const inputs = [
               ...container.querySelectorAll("button,input,select,textarea"),
