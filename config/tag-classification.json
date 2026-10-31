@@ -1,0 +1,311 @@
+{
+  "status": "agreed-classification-not-yet-applied-to-project-hierarchy",
+  "source": "Теги - темы.xlsx with corrections agreed in chat",
+  "tags": [
+    {
+      "number": 1,
+      "sourceTag": "командировка",
+      "category": "event",
+      "name": "командировка"
+    },
+    {
+      "number": 2,
+      "sourceTag": "ВНЖ",
+      "category": "project",
+      "name": "ВНЖ"
+    },
+    {
+      "number": 3,
+      "sourceTag": "Продажи",
+      "category": "project",
+      "name": "Продажи"
+    },
+    {
+      "number": 4,
+      "sourceTag": "SP",
+      "category": "project",
+      "name": "SP"
+    },
+    {
+      "number": 5,
+      "sourceTag": "Архитекторы",
+      "category": "counterparty",
+      "name": "Архитекторы"
+    },
+    {
+      "number": 6,
+      "sourceTag": "Алкур",
+      "category": "counterparty",
+      "name": "Алкур"
+    },
+    {
+      "number": 7,
+      "sourceTag": "Словакия-инвест",
+      "category": "counterparty",
+      "name": "Словакия-инвест"
+    },
+    {
+      "number": 8,
+      "sourceTag": "Патрик",
+      "category": "counterparty",
+      "name": "Патрик"
+    },
+    {
+      "number": 9,
+      "sourceTag": "меликантова",
+      "category": "counterparty",
+      "name": "Меликантова"
+    },
+    {
+      "number": 10,
+      "sourceTag": "Аркадий",
+      "category": "counterparty",
+      "name": "Аркадий"
+    },
+    {
+      "number": 11,
+      "sourceTag": "неформал",
+      "category": "task",
+      "name": "неформал"
+    },
+    {
+      "number": 12,
+      "sourceTag": "послед контроль",
+      "category": "event",
+      "name": "послед контроль"
+    },
+    {
+      "number": 13,
+      "sourceTag": "новые проекты",
+      "category": "project",
+      "name": "новые проекты"
+    },
+    {
+      "number": 14,
+      "sourceTag": "разное личное",
+      "category": "project",
+      "name": "разное личное"
+    },
+    {
+      "number": 15,
+      "sourceTag": "document",
+      "category": "task",
+      "name": "document"
+    },
+    {
+      "number": 16,
+      "sourceTag": "Наташа дизайнер",
+      "category": "counterparty",
+      "name": "Наташа архитектор"
+    },
+    {
+      "number": 17,
+      "sourceTag": "RD",
+      "category": "project",
+      "name": "RD"
+    },
+    {
+      "number": 18,
+      "sourceTag": "Юрист",
+      "category": "counterparty",
+      "name": "Юрист"
+    },
+    {
+      "number": 19,
+      "sourceTag": "Бух Словакия",
+      "category": "counterparty",
+      "name": "Бух Словакия"
+    },
+    {
+      "number": 20,
+      "sourceTag": "текущие вопросы",
+      "category": "task",
+      "name": "текущие вопросы"
+    },
+    {
+      "number": 21,
+      "sourceTag": "Гантт",
+      "category": "task",
+      "name": "Гантт"
+    },
+    {
+      "number": 22,
+      "sourceTag": "Беларусь",
+      "category": "project",
+      "name": "Беларусь"
+    },
+    {
+      "number": 23,
+      "sourceTag": "Израиль",
+      "category": "project",
+      "name": "Израиль"
+    },
+    {
+      "number": 24,
+      "sourceTag": "Украинка",
+      "category": "project",
+      "name": "Украинка"
+    },
+    {
+      "number": 25,
+      "sourceTag": "Электричество VN",
+      "category": "project",
+      "name": "Электричество VN"
+    },
+    {
+      "number": 26,
+      "sourceTag": "Совещания",
+      "category": "event",
+      "name": "Совещания"
+    },
+    {
+      "number": 27,
+      "sourceTag": "козуб",
+      "category": "remove",
+      "name": "козуб"
+    },
+    {
+      "number": 28,
+      "sourceTag": "Тубстил",
+      "category": "remove",
+      "name": "Тубстил"
+    },
+    {
+      "number": 29,
+      "sourceTag": "общага",
+      "category": "project",
+      "name": "общага"
+    },
+    {
+      "number": 30,
+      "sourceTag": "Beeli",
+      "category": "counterparty",
+      "name": "Beeli"
+    },
+    {
+      "number": 31,
+      "sourceTag": "вырубка деревьев",
+      "category": "project",
+      "name": "вырубка деревьев"
+    },
+    {
+      "number": 32,
+      "sourceTag": "web",
+      "category": "project",
+      "name": "web"
+    },
+    {
+      "number": 33,
+      "sourceTag": "ТЗ сайт",
+      "category": "task",
+      "name": "ТЗ сайт"
+    },
+    {
+      "number": 34,
+      "sourceTag": "Планы квартир",
+      "category": "task",
+      "name": "Планы квартир"
+    },
+    {
+      "number": 35,
+      "sourceTag": "MTI",
+      "category": "remove",
+      "name": "MTI"
+    },
+    {
+      "number": 36,
+      "sourceTag": "договора",
+      "category": "task",
+      "name": "договора"
+    },
+    {
+      "number": 37,
+      "sourceTag": "Маркетинг",
+      "category": "project",
+      "name": "Маркетинг"
+    },
+    {
+      "number": 38,
+      "sourceTag": "Брендинг",
+      "category": "project",
+      "name": "Брендинг"
+    },
+    {
+      "number": 39,
+      "sourceTag": "лого",
+      "category": "task",
+      "name": "лого"
+    },
+    {
+      "number": 40,
+      "sourceTag": "туризм",
+      "category": "project",
+      "name": "туризм"
+    },
+    {
+      "number": 41,
+      "sourceTag": "1111",
+      "category": "remove",
+      "name": "1111"
+    },
+    {
+      "number": 42,
+      "sourceTag": "2222",
+      "category": "remove",
+      "name": "2222"
+    },
+    {
+      "number": 43,
+      "sourceTag": "бухгалтерия",
+      "category": "task",
+      "name": "бухгалтерия"
+    },
+    {
+      "number": 44,
+      "sourceTag": "планировки",
+      "category": "task",
+      "name": "планировки"
+    },
+    {
+      "number": 45,
+      "sourceTag": "тест",
+      "category": "remove",
+      "name": "тест"
+    },
+    {
+      "number": 46,
+      "sourceTag": "тест скрыть",
+      "category": "remove",
+      "name": "тест скрыть"
+    },
+    {
+      "number": 47,
+      "sourceTag": "architect",
+      "category": "remove",
+      "name": "architect"
+    },
+    {
+      "number": 48,
+      "sourceTag": "SP-chyba",
+      "category": "remove",
+      "name": "SP-chyba"
+    }
+  ],
+  "responsibles": [
+    "Патрик",
+    "Меликантова",
+    "Аркадий",
+    "Наташа архитектор",
+    "Юрай"
+  ],
+  "contactAliases": {
+    "Наташа дизайнер": "Наташа архитектор",
+    "меликантова": "Меликантова"
+  },
+  "excludedContacts": ["Козуб"],
+  "compoundContactCleanup": {
+    "Козуб, Стас": ["Стас"]
+  },
+  "preserveExistingTaskRecords": true,
+  "sameContactMayHaveMultipleRoles": true
+}
