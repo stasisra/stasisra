@@ -201,8 +201,15 @@ try {
     ) {
       reconcileNamePolicy(name, checksum);
     } else {
-      db.exec(sql);
-      record(name, checksum);
+      if (name === "20261031000200_workspace")
+        db.transaction(() => {
+          db.exec(sql);
+          record(name, checksum);
+        })();
+      else {
+        db.exec(sql);
+        record(name, checksum);
+      }
       console.log("Applied", name);
     }
   }

@@ -1,12 +1,11 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { internalPath } from "@/lib/navigation";
 import { useState } from "react";
 import { Button, Card, Input } from "@/components/ui";
 
 export default function LoginPage() {
-  const router = useRouter();
   const sp = useSearchParams();
   const next = internalPath(sp.get("next"), "/dashboard");
 
@@ -30,8 +29,7 @@ export default function LoginPage() {
         setError(data.error || "Не удалось войти");
         return;
       }
-      router.push(next);
-      router.refresh();
+      window.location.assign(next);
     } catch {
       setError("Нет соединения с сервером. Повторите вход.");
     } finally {

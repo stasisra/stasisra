@@ -11,7 +11,11 @@ const env = {
   ADMIN_PASSWORD: "synthetic-browser-password",
   NEXT_TELEMETRY_DISABLED: "1",
 };
-for (const file of ["scripts/init-db.ts", "scripts/admin.ts"])
+for (const file of [
+  "scripts/init-db.ts",
+  "scripts/migrate-workspace.ts",
+  "scripts/admin.ts",
+])
   execFileSync(process.execPath, ["--import", "tsx", file], {
     env,
     stdio: "inherit",

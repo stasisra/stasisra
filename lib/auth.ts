@@ -23,13 +23,27 @@ export async function createSessionToken(user: SessionUser) {
     .setExpirationTime("30d")
     .sign(getSecret());
 }
+function secureCookie() {
+  if (process.env.NODE_ENV !== "production") return false;
+  try {
+    const url = new URL(process.env.APP_URL || "");
+    if (
+      url.protocol === "http:" &&
+      ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+    )
+      return false;
+  } catch {
+    /* An unconfigured public deployment keeps Secure cookies. */
+  }
+  return true;
+}
 export async function setSessionCookie(token: string) {
   (await cookies()).set({
     name: COOKIE_NAME,
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie(),
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
@@ -40,7 +54,7 @@ export async function clearSessionCookie() {
     value: "",
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie(),
     path: "/",
     maxAge: 0,
   });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { attachmentMeta, attachmentSelect } from "@/lib/attachmentMeta";
-const MAX = 10 * 1024 * 1024;
+const MAX = 20 * 1024 * 1024;
 type Context = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, ctx: Context) {
   if (!(await getSession()))
@@ -25,7 +25,7 @@ export async function POST(req: Request, ctx: Context) {
     return NextResponse.json({ error: "Задача не найдена" }, { status: 404 });
   if (Number(req.headers.get("content-length")) > MAX + 65536)
     return NextResponse.json(
-      { error: "Максимальный размер — 10 МБ" },
+      { error: "Максимальный размер — 20 МБ" },
       { status: 413 },
     );
   const reader = req.body?.getReader();
@@ -40,7 +40,7 @@ export async function POST(req: Request, ctx: Context) {
     if (size > MAX + 65536) {
       await reader.cancel();
       return NextResponse.json(
-        { error: "Максимальный размер — 10 МБ" },
+        { error: "Максимальный размер — 20 МБ" },
         { status: 413 },
       );
     }
@@ -60,18 +60,85 @@ export async function POST(req: Request, ctx: Context) {
     );
   if (file.size > MAX)
     return NextResponse.json(
-      { error: "Максимальный размер — 10 МБ" },
+      { error: "Максимальный размер — 20 МБ" },
       { status: 413 },
     );
-  const row = await prisma.attachment.create({
-    data: {
-      taskId: id,
-      name: file.name.slice(0, 255),
-      type: file.type || "application/octet-stream",
-      size: file.size,
-      data: new Uint8Array(await file.arrayBuffer()),
-    },
-    select: attachmentSelect,
-  });
-  return NextResponse.json(attachmentMeta(row), { status: 201 });
+  const uploadId = form?.get("uploadId");
+  if (uploadId && !/^[a-zA-Z0-9_-]{1,100}$/.test(String(uploadId)))
+    return NextResponse.json(
+      { error: "Некорректный идентификатор загрузки" },
+      { status: 400 },
+    );
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  try {
+    const row = await prisma.$transaction(async (tx) => {
+      if (uploadId) {
+        const existing = await tx.attachment.findUnique({
+          where: { id: String(uploadId) },
+        });
+        if (existing) {
+          if (
+            existing.taskId !== id ||
+            existing.name !== file.name.slice(0, 255) ||
+            existing.size !== file.size ||
+            !Buffer.from(existing.data).equals(Buffer.from(bytes))
+          )
+            throw new Error("UPLOAD_CONFLICT");
+          return existing;
+        }
+      }
+      if (!(await tx.task.findUnique({ where: { id }, select: { id: true } })))
+        throw new Error("TASK_MISSING");
+      const created = await tx.attachment.create({
+        data: {
+          ...(uploadId ? { id: String(uploadId) } : {}),
+          taskId: id,
+          name: file.name.slice(0, 255),
+          type: file.type || "application/octet-stream",
+          size: file.size,
+          data: bytes,
+        },
+        select: attachmentSelect,
+      });
+      await tx.workspaceMeta.update({
+        where: { key: "revision" },
+        data: {
+          value: String(
+            Number(
+              (
+                await tx.workspaceMeta.findUniqueOrThrow({
+                  where: { key: "revision" },
+                })
+              ).value,
+            ) + 1,
+          ),
+        },
+      });
+      return created;
+    });
+    return NextResponse.json(attachmentMeta(row), {
+      status: 201,
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    return NextResponse.json(
+      {
+        error:
+          message === "UPLOAD_CONFLICT"
+            ? "Идентификатор файла уже используется"
+            : message === "TASK_MISSING"
+              ? "Задача удалена. Обновите данные."
+              : "Не удалось сохранить файл. Повторите загрузку.",
+      },
+      {
+        status:
+          message === "UPLOAD_CONFLICT"
+            ? 409
+            : message === "TASK_MISSING"
+              ? 404
+              : 500,
+      },
+    );
+  }
 }

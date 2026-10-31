@@ -48,6 +48,22 @@ model Task {
   executor        User?         @relation("Executor", fields: [executorId], references: [id])
   comments        TaskComment[]
   attachments     Attachment[]
+  projectId String?
+  responsibleContactId String?
+  kind String @default("task")
+  startTime String?
+  endTime String?
+  location String?
+  timeZone String @default("Asia/Jerusalem")
+  legacyTags String?
+  legacyAssignments String?
+  creationFingerprint String?
+  revision Int @default(0)
+  project Project? @relation(fields:[projectId],references:[id],onDelete:SetNull)
+  responsibleContact Contact? @relation("ContactResponsible",fields:[responsibleContactId],references:[id],onDelete:SetNull)
+  taskExecutors TaskExecutor[]
+  @@index([projectId])
+  @@index([responsibleContactId])
 
   @@index([startDate])
   @@index([endDate])
@@ -65,6 +81,9 @@ model TaskComment {
   createdAt DateTime @default(now())
   taskId    String
   authorId  String
+  kind String @default("comment")
+  resolved Boolean @default(false)
+  revision Int @default(0)
   author    User     @relation(fields: [authorId], references: [id])
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
@@ -94,4 +113,41 @@ model Attachment {
   createdAt DateTime @default(now())
   task Task @relation(fields:[taskId],references:[id],onDelete:Cascade)
   @@index([taskId])
+}
+
+model Project {
+ id String @id @default(uuid())
+ name String
+ key String @unique
+ color String @default("#7ba0df")
+ archived Boolean @default(false)
+ revision Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ tasks Task[]
+}
+model Contact {
+ id String @id @default(uuid())
+ name String
+ key String @unique
+ type String @default("Человек")
+ responsible Boolean @default(false)
+ archived Boolean @default(false)
+ revision Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ executors TaskExecutor[]
+ responsibleTasks Task[] @relation("ContactResponsible")
+}
+model TaskExecutor {
+ taskId String
+ contactId String
+ task Task @relation(fields:[taskId],references:[id],onDelete:Cascade)
+ contact Contact @relation(fields:[contactId],references:[id],onDelete:Cascade)
+ @@id([taskId,contactId])
+ @@index([contactId])
+}
+model WorkspaceMeta {
+ key String @id
+ value String
 }

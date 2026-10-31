@@ -23,6 +23,16 @@ export async function DELETE(_req: Request, ctx: Context) {
   if (!(await getSession()))
     return NextResponse.json({ error: "Требуется вход" }, { status: 401 });
   const { id } = await ctx.params;
-  await prisma.attachment.deleteMany({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.attachment.deleteMany({ where: { id } });
+    const meta = await tx.workspaceMeta.findUnique({
+      where: { key: "revision" },
+    });
+    if (meta)
+      await tx.workspaceMeta.update({
+        where: { key: "revision" },
+        data: { value: String(Number(meta.value) + 1) },
+      });
+  });
   return NextResponse.json({ ok: true });
 }

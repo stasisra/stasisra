@@ -18,6 +18,9 @@ async function main() {
   if (major < 22 || major > 24 || (major === 22 && minor < 12)) {
     throw new Error("Use Node.js 22.12+ or 24 in this terminal.");
   }
+  const port = Number(option("--port", "3001"));
+  if (!Number.isInteger(port) || port < 1024 || port > 65535)
+    throw new Error("Invalid local port");
   const root = path.resolve(option("--target", process.cwd()));
   const sourceRoot = path.resolve(
     option("--source", path.join(root, "..", "task-gantt-app")),
@@ -90,20 +93,20 @@ async function main() {
     [
       'DATABASE_URL="file:./dev.db"',
       'AUTH_JWT_SECRET="' + crypto.randomBytes(32).toString("hex") + '"',
-      'APP_URL="http://127.0.0.1:3001"',
+      'APP_URL="http://127.0.0.1:' + port + '"',
       "",
     ].join("\n"),
     { flag: "wx", mode: 0o600 },
   );
   const startFile = path.join(root, "start-new.cmd");
-  if (!fs.existsSync(startFile)) {
+  if (!process.argv.includes("--no-launcher") && !fs.existsSync(startFile)) {
     fs.writeFileSync(
       startFile,
       [
         "@echo off",
         'cd /d "%~dp0"',
         'set "PATH=' + path.dirname(process.execPath) + ';%PATH%"',
-        "call npm.cmd run dev -- --hostname 127.0.0.1 --port 3001",
+        "call npm.cmd run dev -- --hostname 127.0.0.1 --port " + port,
         "pause",
         "",
       ].join("\r\n"),
@@ -112,9 +115,7 @@ async function main() {
   }
   console.log("Database copied with SQLite backup: " + source);
   console.log("New database: " + destination);
-  console.log(
-    "New .env and start-new.cmd are ready. Secrets were not printed.",
-  );
+  console.log("New .env is ready. Secrets were not printed.");
   console.log("Next: npm run db:init");
 }
 

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Task & Gantt — темы и задачи</title>
+    <link rel="stylesheet" href="/workspace/workspace.css" />
+  </head>
+  <body>
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z" />
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24">
+        <path d="m7 10 5 5 5-5" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10" cy="10" r="6" />
+        <path d="m15 15 5 5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <path d="M4 7h16M4 17h16" />
+        <circle cx="9" cy="7" r="3" fill="white" />
+        <circle cx="15" cy="17" r="3" fill="white" />
+      </symbol>
+      <symbol id="i-task" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M7 3v4M17 3v4M3 11h18" />
+      </symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="m15 4 5 5M4 20l5-1L20 8l-4-4L5 15z" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+      </symbol>
+      <symbol id="i-lines" viewBox="0 0 24 24">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+      </symbol>
+      <symbol id="i-gantt" viewBox="0 0 24 24">
+        <path d="M3 3v18h18M7 7h8M10 12h10M7 17h6" />
+      </symbol>
+      <symbol id="i-paperclip" viewBox="0 0 24 24">
+        <path
+          d="m8 13 7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L13 2a2 2 0 0 1 3 3L5 16a1 1 0 0 0 2 2l10-10"
+        />
+      </symbol>
+      <symbol id="i-message" viewBox="0 0 24 24">
+        <path
+          d="M20 15a3 3 0 0 1-3 3H8l-5 3V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM7 8h9M7 12h6"
+        />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </symbol>
+      <symbol id="i-printer" viewBox="0 0 24 24">
+        <path d="M6 8V3h12v5M6 17H3V8h18v9h-3M6 14h12v7H6zM17 11h.01" />
+      </symbol>
+    </svg>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"
+          ><svg class="icon"><use href="#i-grid" /></svg></span
+        >Task &amp; Gantt
+      </div>
+      <nav class="topnav">
+        <button
+          class="active"
+          data-action="view"
+          data-id="table"
+          id="nav-table"
+        >
+          Задачи</button
+        ><button data-action="view" data-id="gantt" id="nav-gantt">Гант</button
+        ><button data-action="view" data-id="deadlines" id="nav-deadlines">
+          Дедлайны</button
+        ><button data-action="manage">Справочники</button>
+      </nav>
+      <div class="top-right">
+        <form action="/api/auth/logout" method="post">
+          <button class="btn" type="submit">Выйти</button>
+        </form>
+        <span id="current-date" style="font-size: 11px; color: #9ba6b6"></span>
+        <div class="profile">
+          <span class="avatar">А</span
+          ><span id="profile-name">Администратор</span>
+        </div>
+      </div>
+    </header>
+    <div class="demo-bar">
+      <span id="sync-status">Загружаем данные…</span
+      ><button data-action="reload-workspace">Обновить</button
+      ><button id="unassigned-count" data-action="unassigned-projects"></button>
+    </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-label">Рабочее пространство</div>
+        <button
+          class="side-item"
+          data-action="project"
+          data-id="all"
+          id="all-link"
+        >
+          <svg class="icon small-icon"><use href="#i-grid" /></svg
+          ><span class="label">Все темы</span
+          ><span class="num" id="all-count"></span></button
+        ><button
+          class="side-item"
+          data-action="project"
+          data-id="none"
+          id="none-link"
+        >
+          <svg class="icon small-icon"><use href="#i-folder" /></svg
+          ><span class="label">Без темы</span
+          ><span class="num" id="none-count"></span>
+        </button>
+        <div class="side-title">
+          Темы / проекты
+          <button
+            class="tinybtn"
+            data-action="new-project"
+            aria-label="Добавить тему"
+          >
+            <svg class="icon small-icon"><use href="#i-plus" /></svg>
+          </button>
+        </div>
+        <div class="side-scroll" id="project-list"></div>
+        <div class="side-foot">
+          <button class="side-item" data-action="manage">
+            <svg class="icon small-icon"><use href="#i-settings" /></svg
+            >Справочники<span class="num">↗</span>
+          </button>
+          <div class="hint">Темы · контрагенты · ответственные</div>
+        </div>
+      </aside>
+      <main id="main-scroll">
+        <div class="breadcrumb" id="breadcrumb">
+          Рабочее пространство / Задачи
+        </div>
+        <div class="page-head">
+          <div>
+            <h1 id="page-title">Все темы</h1>
+            <p class="subtitle" id="page-subtitle"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn" data-action="meeting-open">
+              <svg class="icon small-icon"><use href="#i-printer" /></svg>Печать
+              / экспорт
+            </button>
+            <button class="btn optional" data-action="create-event">
+              <svg class="icon small-icon"><use href="#i-calendar" /></svg
+              >Мероприятие</button
+            ><button class="btn primary" data-action="create-task">
+              <svg class="icon small-icon"><use href="#i-plus" /></svg>Задача
+            </button>
+          </div>
+        </div>
+        <div class="search">
+          <svg class="icon small-icon"><use href="#i-search" /></svg
+          ><input
+            id="search"
+            placeholder="Найти задачу или описание…"
+            aria-label="Поиск задач"
+          /><span class="key">/</span>
+        </div>
+        <div class="filterbar" id="filters"></div>
+        <div class="chips" id="chips"></div>
+        <div id="task-content"></div>
+        <div class="bottom-line">
+          <span id="result-count"></span
+          ><span>Нажмите на задачу, чтобы открыть карточку</span>
+        </div>
+      </main>
+    </div>
+    <div id="drawer-root"></div>
+    <div id="modal-root"></div>
+    <div id="popup-root"></div>
+    <div id="meeting-root"></div>
+    <div id="print-output"></div>
+    <div id="toast" class="toast" role="status"></div>
+
+    <script src="/workspace/vendor/purify.min.js"></script>
+    <script src="/workspace/vendor/xlsx.full.min.js"></script>
+
+    <script src="/workspace/app.js" defer></script>
+  </body>
+</html>

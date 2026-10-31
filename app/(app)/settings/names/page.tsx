@@ -1,4 +1,4 @@
 import { redirect } from "next/navigation";
-export default function NamesSettings() {
-  redirect("/dashboard/dictionaries?type=executors");
+export default function Page() {
+  redirect("/tasks?manage=contacts");
 }
