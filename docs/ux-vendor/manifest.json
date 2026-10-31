@@ -1,0 +1,29 @@
+[
+  {
+    "package": "mammoth",
+    "version": "1.13.0",
+    "source": "https://registry.npmjs.org/mammoth/-/mammoth-1.13.0.tgz",
+    "integrity": "sha512-2cawcYFcP7ISfXbBcL9lmVgTNWo88v/52ND1gnywHtVT/pX0//puPnf0iMPV9ZgmuvNOE+zkIhDgZ9M2c2dDDg==",
+    "file": "mammoth.browser.min.js",
+    "sha256": "92914a3708cfdf1e62cb553d1856a7fedab21da83d8ee82845de2f897b368cab",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "package": "dompurify",
+    "version": "3.4.17",
+    "source": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz",
+    "integrity": "sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==",
+    "file": "purify.min.js",
+    "sha256": "cd37898f9782adf54820c413191b5691803f0f137c799d6edcfd38523b4c2c31",
+    "license": "(MPL-2.0 OR Apache-2.0)"
+  },
+  {
+    "package": "@e965/xlsx",
+    "version": "0.20.3",
+    "source": "https://registry.npmjs.org/@e965/xlsx/-/xlsx-0.20.3.tgz",
+    "integrity": "sha512-703RN/3OdsRD5mtse2HBX7Um7xwaP9tlswEG6svOtjqokXoX7rJdQj7DyabD2I+xk22RgaIIU+R6BHgkpZGB/w==",
+    "file": "xlsx.full.min.js",
+    "sha256": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41",
+    "license": "Apache-2.0"
+  }
+]

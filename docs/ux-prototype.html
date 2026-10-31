@@ -1241,6 +1241,467 @@
           font-size: 11px;
         }
       }
+      .activity-summary {
+        margin-top: 6px;
+        max-width: 100%;
+      }
+      .note-preview {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        padding: 3px 0;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #65758d;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+      }
+      .note-preview strong {
+        font-weight: 600;
+      }
+      .note-preview:hover {
+        color: var(--accent);
+      }
+      .note-preview.question-preview {
+        color: #986421;
+        background: #fff6e6;
+        padding: 4px 7px;
+        border-radius: 5px;
+        margin-top: 4px;
+      }
+      .task-activity-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+      }
+      .task-activity-actions .textbtn {
+        font-size: 10px;
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+      }
+      .quick-file {
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .question-count {
+        background: #fff0d1;
+        color: #986421;
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-size: 9px;
+      }
+      .file-chip {
+        border: 1px solid #e0e7f3;
+        border-radius: 5px;
+        background: #f7faff;
+        padding: 3px 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #58749e;
+        font-size: 10px;
+        max-width: 185px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-chip:hover {
+        background: #eaf2ff;
+      }
+      .inline-activity {
+        grid-column: 1/-1;
+        background: #f8faff;
+        border: 1px solid #e2e9f5;
+        padding: 16px 18px;
+        margin: 0 0 12px 38px;
+        border-radius: 9px;
+      }
+      .inline-activity .notes-list {
+        max-height: 260px;
+        overflow: auto;
+      }
+      .note-composer {
+        margin-top: 10px;
+      }
+      .composer-top {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .composer-top select {
+        padding: 5px 7px;
+        font-size: 11px;
+      }
+      .composer-top > span {
+        font-size: 9px;
+        color: #8390a4;
+      }
+      .composer-input {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      .composer-input textarea {
+        resize: vertical;
+        min-height: 58px;
+        width: 100%;
+        font-size: 12px;
+        flex: 1;
+      }
+      .activity-heading {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .activity-heading .textbtn {
+        margin-left: auto;
+      }
+      .activity-empty {
+        font-size: 11px;
+        color: #8593a7;
+        line-height: 1.6;
+        margin: 8px 0;
+      }
+      .activity-section {
+        padding-bottom: 18px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .attachment-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        border: 1px solid #e3eaf4;
+        background: #fafcff;
+        border-radius: 7px;
+        margin: 7px 0;
+        padding: 8px;
+      }
+      .attachment-name {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        min-width: 0;
+        flex: 1;
+        font-size: 11px;
+        color: #456da9;
+      }
+      .attachment-name > span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .attachment-name small {
+        display: block;
+        font-size: 9px;
+        color: #8a99ad;
+        margin-top: 3px;
+      }
+      .upload-zone {
+        display: block;
+        text-align: center;
+        border: 1px dashed #becfeb;
+        background: #f8fbff;
+        color: #5078b6;
+        border-radius: 8px;
+        padding: 11px;
+        cursor: pointer;
+        font-size: 11px;
+        margin-top: 9px;
+      }
+      .upload-zone:hover {
+        background: #edf4ff;
+      }
+      .activity-note {
+        border-left: 2px solid #dce6f6;
+        padding: 8px 10px;
+        margin: 8px 0;
+        background: #fafcff;
+        border-radius: 0 6px 6px 0;
+      }
+      .activity-note.question-note {
+        background: #fff8e9;
+        border-color: #e7bc65;
+      }
+      .activity-note.resolved-note {
+        background: #f1f8f4;
+        border-color: #a9cbb9;
+      }
+      .note-heading {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+        font-size: 9px;
+        color: #8a98ac;
+        margin-bottom: 4px;
+      }
+      .note-heading strong {
+        color: #677c9b;
+        font-weight: 600;
+      }
+      .question-note .note-heading strong {
+        color: #976a26;
+      }
+      .note-heading .textbtn {
+        margin-left: auto;
+        font-size: 9px;
+      }
+      .note-body {
+        font-size: 11px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        line-height: 1.6;
+        color: #536780;
+      }
+      .preview-modal {
+        width: 1000px;
+      }
+      .preview-meta {
+        font-size: 11px;
+        color: #8796aa;
+        margin-bottom: 16px;
+      }
+      .file-image {
+        display: block;
+        max-width: 100%;
+        max-height: 65vh;
+        margin: auto;
+        object-fit: contain;
+      }
+      .file-pdf {
+        display: block;
+        width: 100%;
+        height: 65vh;
+        border: 1px solid #e5eaf2;
+      }
+      .file-text {
+        font:
+          13px/1.7 "Segoe UI",
+          Arial,
+          sans-serif;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #f7f9fd;
+        border-radius: 8px;
+        padding: 22px;
+        margin: 0;
+      }
+      .file-unavailable {
+        font-size: 14px;
+        text-align: center;
+        line-height: 1.8;
+        color: #7c8aa0;
+        padding: 65px 20px;
+      }
+      #kind-hint {
+        font-size: 11px;
+        line-height: 1.6;
+        color: #7f8da3;
+        margin-top: -6px;
+        margin-bottom: 16px;
+      }
+      .event-summary {
+        font-size: 10px;
+        color: #8b78b1;
+        line-height: 1.6;
+        margin-top: 4px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .deadline-controls {
+        border: 1px solid var(--line);
+        background: white;
+        border-radius: 10px;
+        padding: 17px;
+        margin-bottom: 18px;
+      }
+      .deadline-controls-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .deadline-controls-top > strong {
+        font-size: 12px;
+      }
+      .period-options {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .period-options button {
+        border: 1px solid #e1e7f0;
+        border-radius: 6px;
+        background: #fff;
+        padding: 7px 11px;
+        font-size: 11px;
+        color: #6d7f9a;
+      }
+      .period-options button.selected {
+        background: var(--soft);
+        border-color: #a9c1ef;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .overdue-toggle {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #8190a5;
+        margin-left: auto;
+      }
+      .deadline-range {
+        font-size: 10px;
+        color: #8796ad;
+        margin-top: 12px;
+      }
+      .deadline-dates {
+        display: flex;
+        gap: 18px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+      .deadline-dates label {
+        font-size: 11px;
+        color: #7b8ba3;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .deadline-dates input {
+        font-size: 12px;
+      }
+      .task-project-label {
+        display: inline-block;
+        font-size: 10px;
+        color: #7e91ac;
+        background: #f0f4fa;
+        border-radius: 4px;
+        padding: 2px 5px;
+        margin: 4px 0 2px;
+      }
+      #nav-deadlines .question-count {
+        margin-left: 4px;
+      }
+      .office-toolbar {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .word-document {
+        padding: 35px 45px;
+        border: 1px solid #e3e8f0;
+        background: #fff;
+        color: #34445d;
+        line-height: 1.75;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+      }
+      .word-document h1 {
+        font-size: 24px;
+        margin-top: 0;
+        color: #233653;
+      }
+      .word-document h2 {
+        font-size: 19px;
+        color: #385780;
+      }
+      .word-document img {
+        max-width: 100%;
+        height: auto;
+      }
+      .word-document table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+      }
+      .word-document td,
+      .word-document th {
+        padding: 8px 12px;
+        border: 1px solid #dce4ef;
+      }
+      .spreadsheet-scroll {
+        max-height: 58vh;
+        overflow: auto;
+        border: 1px solid #dce5f0;
+      }
+      .spreadsheet {
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 100%;
+        font-size: 12px;
+        color: #455b78;
+      }
+      .spreadsheet td,
+      .spreadsheet th {
+        padding: 9px 12px;
+        border-right: 1px solid #e3e9f2;
+        border-bottom: 1px solid #e3e9f2;
+        min-width: 130px;
+        max-width: 400px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        vertical-align: top;
+      }
+      .spreadsheet th {
+        background: #edf3fb;
+        color: #7c8da7;
+        font-size: 10px;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .spreadsheet tbody th {
+        min-width: 42px;
+        width: 42px;
+        left: 0;
+        position: sticky;
+        z-index: 1;
+        text-align: right;
+      }
+      .spreadsheet .sheet-corner {
+        min-width: 42px;
+      }
+      .spreadsheet td.first-sheet-row {
+        background: #f5f9ff;
+        font-weight: 600;
+        color: #456ba0;
+      }
+      .sheet-pagination {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .sheet-pagination span {
+        font-size: 10px;
+        color: #8897ac;
+        margin-right: auto;
+      }
+      .sheet-pagination .btn {
+        font-size: 10px;
+        padding: 6px 8px;
+      }
     </style>
   </head>
   <body>
@@ -1296,6 +1757,19 @@
       <symbol id="i-gantt" viewBox="0 0 24 24">
         <path d="M3 3v18h18M7 7h8M10 12h10M7 17h6" />
       </symbol>
+      <symbol id="i-paperclip" viewBox="0 0 24 24">
+        <path
+          d="m8 13 7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L13 2a2 2 0 0 1 3 3L5 16a1 1 0 0 0 2 2l10-10"
+        />
+      </symbol>
+      <symbol id="i-message" viewBox="0 0 24 24">
+        <path
+          d="M20 15a3 3 0 0 1-3 3H8l-5 3V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM7 8h9M7 12h6"
+        />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </symbol>
     </svg>
     <header class="topbar">
       <div class="brand">
@@ -1312,6 +1786,8 @@
         >
           Задачи</button
         ><button data-action="view" data-id="gantt" id="nav-gantt">Гант</button
+        ><button data-action="view" data-id="deadlines" id="nav-deadlines">
+          Дедлайны</button
         ><button data-action="manage">Справочники</button>
       </nav>
       <div class="top-right">
@@ -1405,6 +1881,10 @@
     <div id="modal-root"></div>
     <div id="popup-root"></div>
     <div id="toast" class="toast" role="status"></div>
+    <script src="ux-vendor/mammoth.browser.min.js"></script>
+    <script src="ux-vendor/purify.min.js"></script>
+    <script src="ux-vendor/xlsx.full.min.js"></script>
+    <script src="ux-vendor/examples.js"></script>
     <script>
       "use strict";
       const $ = (s) => document.querySelector(s),
@@ -1491,6 +1971,11 @@
         kind,
         description,
         comments: [],
+        attachments: [],
+        startTime: "",
+        endTime: "",
+        location: "",
+        timeZone: "Asia/Jerusalem",
       });
       const seed = {
         projects: projectSeed.map(([id, name, color]) => ({
@@ -1745,6 +2230,75 @@
           date: "30 октября, 15:20",
         },
       ];
+      seed.tasks.find((t) => t.id === "s1").comments = [
+        {
+          id: "q-s1",
+          kind: "question",
+          text: "Подтверждена ли встреча с архитекторами? Нужно получить ответ до переноса даты.",
+          date: "30 октября, 16:10",
+          resolved: false,
+        },
+      ];
+      seed.tasks.find((t) => t.id === "s4").comments = [
+        {
+          id: "n-s4",
+          kind: "comment",
+          text: "Наташа подготовит обновлённые планировки к следующей встрече.",
+          date: "30 октября, 17:00",
+        },
+      ];
+      seed.tasks
+        .find((t) => t.id === "w0")
+        .comments.push({
+          id: "q-w0",
+          kind: "question",
+          text: "Кто передаёт тексты и фотографии для первого экрана?",
+          date: "31 октября, 09:30",
+          resolved: false,
+        });
+      seed.tasks.find((t) => t.id === "w0").attachments = [
+        {
+          id: "demo-brief",
+          name: "ТЗ сайта — пример.txt",
+          type: "text/plain",
+          size: 274,
+          demo: "brief",
+        },
+        {
+          id: "demo-screen",
+          name: "Первый экран — пример.svg",
+          type: "image/svg+xml",
+          size: 1180,
+          demo: "screen",
+        },
+      ];
+      Object.assign(
+        seed.tasks.find((t) => t.id === "s2"),
+        {
+          startTime: "11:00",
+          endTime: "12:00",
+          location: "Офис проекта",
+          timeZone: "Asia/Jerusalem",
+        },
+      );
+      seed.tasks
+        .find((t) => t.id === "w0")
+        .attachments.push(
+          {
+            id: "demo-word",
+            name: "ТЗ сайта.docx",
+            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            size: 37156,
+            demo: "word",
+          },
+          {
+            id: "demo-excel",
+            name: "Задачи и материалы.xlsx",
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            size: 5860,
+            demo: "excel",
+          },
+        );
       let model = structuredClone(seed);
       try {
         const data = JSON.parse(localStorage.getItem(STORAGE) || "null");
@@ -1756,6 +2310,15 @@
         )
           model = data;
       } catch {}
+      for (const t of model.tasks) {
+        t.attachments ||= [];
+        t.comments ||= [];
+        t.comments.forEach((c, index) => {
+          c.id ||= `${t.id}-note-${index}`;
+          c.kind ||= "comment";
+          c.resolved = !!c.resolved;
+        });
+      }
       const ui = {
         project: "all",
         responsible: "",
@@ -1771,6 +2334,13 @@
         manager: "projects",
         managerArchived: false,
         drawer: null,
+        uploads: 0,
+        quick: null,
+        noteDrafts: {},
+        deadlinePeriod: "7",
+        deadlineStart: TODAY,
+        deadlineEnd: "2026-11-06",
+        deadlineOverdue: true,
       };
       const save = () => {
         try {
@@ -1960,9 +2530,504 @@
             ? '<button class="textbtn" data-action="all-with-filters">Искать во всех темах →</button>'
             : "");
       }
-      function renderTaskRow(t, level, matched) {
+      const record = (id) =>
+        task(id) || (ui.drawer?.data.id === id ? ui.drawer.data : null);
+      const noteDate = () =>
+        new Date().toLocaleString("ru-RU", {
+          timeZone: "Asia/Jerusalem",
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      let blobDbPromise;
+      const previewUrls = new Set();
+      function fileDb() {
+        if (!blobDbPromise)
+          blobDbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open("taskgantt_ux_files_v1", 1);
+            request.onupgradeneeded = () =>
+              request.result.createObjectStore("files");
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => {
+              blobDbPromise = null;
+              reject(request.error);
+            };
+          });
+        return blobDbPromise;
+      }
+      async function fileStore(action, id, value) {
+        const db = await fileDb();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(
+            "files",
+            action === "get" ? "readonly" : "readwrite",
+          );
+          const store = transaction.objectStore("files");
+          const request =
+            action === "put"
+              ? store.put(value, id)
+              : action === "get"
+                ? store.get(id)
+                : store.delete(id);
+          transaction.oncomplete = () => resolve(request.result);
+          transaction.onabort = () =>
+            reject(transaction.error || new Error("File storage unavailable"));
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }
+      function revokePreviews() {
+        for (const url of previewUrls) URL.revokeObjectURL(url);
+        previewUrls.clear();
+      }
+      function fileSize(size) {
+        return size < 1024
+          ? `${size} Б`
+          : size < 1048576
+            ? `${Math.round(size / 1024)} КБ`
+            : `${(size / 1048576).toFixed(1)} МБ`;
+      }
+      const demoScreen =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540" fill="#f2f5fb"/><rect x="36" y="30" width="888" height="56" rx="12" fill="white"/><text x="60" y="65" font-family="Arial" font-size="22" fill="#315ca8">WEB / Пример первого экрана</text><rect x="36" y="110" width="888" height="390" rx="20" fill="white"/><text x="85" y="210" font-family="Arial" font-size="38" fill="#27364f">Будущий сайт проекта</text><text x="85" y="260" font-family="Arial" font-size="21" fill="#71829d">Заголовок, описание и форма заявки</text><rect x="85" y="307" width="230" height="54" rx="12" fill="#3569dc"/><text x="111" y="342" font-family="Arial" font-size="20" fill="white">Оставить заявку</text><text x="85" y="450" font-family="Arial" font-size="17" fill="#8a99af">Демонстрационный файл для просмотра вложений</text></svg>';
+      async function attachmentBlob(file) {
+        if (file.demo === "screen")
+          return new Blob([demoScreen], { type: "image/svg+xml" });
+        if (file.demo === "brief")
+          return new Blob(
+            [
+              "ТЗ сайта — демонстрационный документ\n\n1. Главная страница\n2. Структура разделов\n3. Форма заявки\n\nВопрос: какие материалы нужны от заказчика?",
+            ],
+            { type: "text/plain;charset=utf-8" },
+          );
+        if (["word", "excel"].includes(file.demo))
+          return new Blob(
+            [
+              Uint8Array.from(atob(window.UX_EXAMPLE_FILES[file.demo]), (c) =>
+                c.charCodeAt(0),
+              ),
+            ],
+            { type: file.type },
+          );
+        return fileStore("get", file.id);
+      }
+      function attachmentList(t, compact = false) {
+        const files = t.attachments || [];
+        if (compact)
+          return (
+            files
+              .slice(-2)
+              .map(
+                (f) =>
+                  `<button type="button" class="file-chip" data-action="preview-file" data-id="${E(t.id)}" data-file="${E(f.id)}" title="Просмотреть ${E(f.name)}">${icon("paperclip", true)}${E(f.name)}</button>`,
+              )
+              .join("") +
+            (files.length > 2
+              ? `<button class="textbtn" data-action="edit-task" data-id="${E(t.id)}">ещё ${files.length - 2}</button>`
+              : "")
+          );
+        return (
+          files
+            .map(
+              (f) =>
+                `<div class="attachment-row"><button type="button" class="attachment-name" data-action="preview-file" data-id="${E(t.id)}" data-file="${E(f.id)}">${icon("paperclip", true)}<span>${E(f.name)}<small>${fileSize(f.size)} · открыть</small></span></button><button type="button" class="tinybtn" data-action="download-file" data-id="${E(t.id)}" data-file="${E(f.id)}" aria-label="Скачать ${E(f.name)}" title="Скачать">${icon("download", true)}</button><button type="button" class="tinybtn" data-action="remove-file" data-id="${E(t.id)}" data-file="${E(f.id)}" aria-label="Удалить файл ${E(f.name)}" title="Удалить файл">${icon("trash", true)}</button></div>`,
+            )
+            .join("") ||
+          '<p class="activity-empty">Документы, фотографии и материалы к задаче.</p>'
+        );
+      }
+      function notesHtml(t) {
+        return (
+          (t.comments || [])
+            .map(
+              (c) =>
+                `<div class="activity-note ${c.kind === "question" ? (c.resolved ? "resolved-note" : "question-note") : ""}"><div class="note-heading"><strong>${c.kind === "question" ? (c.resolved ? "Вопрос решён" : "Открытый вопрос") : "Комментарий"}</strong><span>Вы · ${E(c.date)}</span>${c.kind === "question" ? `<button type="button" class="textbtn" data-action="resolve-note" data-id="${E(t.id)}" data-note="${E(c.id)}">${c.resolved ? "Открыть снова" : "Отметить решённым"}</button>` : ""}</div><div class="note-body">${E(c.text)}</div></div>`,
+            )
+            .join("") ||
+          '<p class="activity-empty">Запишите вопрос или договорённость — они будут видны и в списке задач.</p>'
+        );
+      }
+      function noteComposer(t, scope) {
+        const draft = ui.noteDrafts[`${scope}:${t.id}`] || {
+          kind: "comment",
+          text: "",
+        };
+        return `<div class="note-composer" data-task="${E(t.id)}" data-scope="${scope}"><div class="composer-top"><select class="note-kind" aria-label="Тип записи"><option value="comment" ${draft.kind === "comment" ? "selected" : ""}>Комментарий</option><option value="question" ${draft.kind === "question" ? "selected" : ""}>Вопрос</option></select><span>Enter — добавить · Shift+Enter — новая строка</span></div><div class="composer-input"><textarea ${scope === "drawer" ? 'id="comment-text"' : ""} class="note-text" rows="2" maxlength="10000" placeholder="Быстро записать комментарий или вопрос…" aria-label="Комментарий или вопрос">${E(draft.text)}</textarea><button type="button" class="btn primary" data-action="post-note" data-id="${E(t.id)}">Добавить</button></div></div>`;
+      }
+      function activitySummary(t) {
+        const comments = t.comments || [],
+          open = comments.filter((c) => c.kind === "question" && !c.resolved),
+          last = comments.at(-1);
+        const summaries = [
+          ...(open.length ? [open.at(-1)] : []),
+          ...(last && last !== open.at(-1) ? [last] : []),
+        ];
+        return `<div class="activity-summary">${summaries.map((c) => `<button class="note-preview ${c.kind === "question" && !c.resolved ? "question-preview" : ""}" type="button" data-action="quick-note" data-id="${E(t.id)}"><strong>${c.kind === "question" ? (c.resolved ? "Вопрос решён" : "Вопрос") : "Комментарий"}:</strong> ${E(c.text)}</button>`).join("")}<div class="task-activity-actions">${attachmentList(t, true)}<button type="button" class="textbtn quick-note-button" data-action="quick-note" data-id="${E(t.id)}">${icon("message", true)} Комментарий / вопрос${open.length ? ` <span class="question-count">Вопросов: ${open.length}</span>` : ""}</button><label class="textbtn quick-file">${icon("paperclip", true)} Файл<input type="file" multiple data-upload-task="${E(t.id)}" aria-label="Прикрепить файлы к ${E(t.title)}" hidden></label></div></div>`;
+      }
+      function refreshActivity(id) {
+        renderContent();
+        if (ui.drawer?.data.id === id) {
+          const t = record(id);
+          if ($("#drawer-files"))
+            $("#drawer-files").innerHTML = attachmentList(t);
+          if ($("#comment-list")) $("#comment-list").innerHTML = notesHtml(t);
+        }
+      }
+      function postNote(composer) {
+        if (!composer) return;
+        const id = composer.dataset.task,
+          t = record(id),
+          input = composer.querySelector(".note-text"),
+          text = input.value.trim();
+        if (!text || !t) return;
+        const note = {
+          id: uid(),
+          kind: composer.querySelector(".note-kind").value,
+          text,
+          date: noteDate(),
+          resolved: false,
+        };
+        t.comments.push(note);
+        if (task(id)) save();
+        delete ui.noteDrafts[`${composer.dataset.scope}:${id}`];
+        input.value = "";
+        refreshActivity(id);
+        const target =
+          composer.dataset.scope === "row"
+            ? document.querySelector(
+                `.note-composer[data-scope="row"][data-task="${CSS.escape(id)}"] .note-text`,
+              )
+            : $("#comment-text");
+        target?.focus();
+        toast(
+          !task(id)
+            ? "Запись добавлена в черновик задачи"
+            : note.kind === "question"
+              ? "Вопрос добавлен и виден в списке"
+              : "Комментарий добавлен",
+        );
+      }
+      async function uploadFiles(input) {
+        const id = input.dataset.uploadTask,
+          t = record(id),
+          files = [...input.files];
+        input.value = "";
+        if (!t) return;
+        ui.uploads++;
+        try {
+          for (const file of files) {
+            if (file.size > 20 * 1024 * 1024) {
+              toast("В макете можно прикрепить файл до 20 МБ");
+              continue;
+            }
+            const meta = {
+              id: uid(),
+              name: file.name,
+              size: file.size,
+              type: file.type,
+            };
+            try {
+              await fileStore("put", meta.id, file);
+              if (record(id) !== t) {
+                await fileStore("delete", meta.id);
+                continue;
+              }
+              t.attachments.push(meta);
+              if (task(id)) save();
+              refreshActivity(id);
+              toast("Файл прикреплён. Нажмите на название для просмотра.");
+            } catch {
+              toast(
+                "Не удалось сохранить файл в браузере. Попробуйте другой файл.",
+              );
+            }
+          }
+        } finally {
+          ui.uploads--;
+        }
+      }
+      async function previewFile(id, fileId, download = false) {
+        const file = record(id)?.attachments.find((f) => f.id === fileId);
+        if (!file) return;
+        try {
+          const blob = await attachmentBlob(file);
+          if (!blob) {
+            toast("Файл недоступен в этом браузере. Прикрепите его заново.");
+            return;
+          }
+          if (download) {
+            const url = URL.createObjectURL(blob),
+              link = document.createElement("a");
+            link.href = url;
+            link.download = file.name;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+            return;
+          }
+          if (/\.(docx|xlsx|xls|xlsb|xlsm|ods)$/i.test(file.name)) {
+            await previewOffice(file, blob, id);
+            return;
+          }
+          closeModal();
+          const url = URL.createObjectURL(blob);
+          previewUrls.add(url);
+          let body;
+          if (/^image\/(png|jpeg|gif|webp|bmp|avif|svg\+xml)$/.test(blob.type))
+            body = `<img class="file-image" src="${url}" alt="${E(file.name)}">`;
+          else if (
+            (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) &&
+            (await blob.slice(0, 5).text()) === "%PDF-"
+          ) {
+            const pdfUrl = URL.createObjectURL(
+              new Blob([blob], { type: "application/pdf" }),
+            );
+            previewUrls.add(pdfUrl);
+            body = `<iframe class="file-pdf" src="${pdfUrl}" title="${E(file.name)}"></iframe>`;
+          } else if (
+            /^text\/(plain|csv)/.test(blob.type) ||
+            /\.(txt|md|csv|json|log)$/i.test(file.name)
+          )
+            body = `<pre class="file-text">${E(await blob.slice(0, 1048576).text())}</pre>${blob.size > 1048576 ? '<p class="activity-empty">Показан первый 1 МБ. Полный файл можно скачать.</p>' : ""}`;
+          else
+            body =
+              '<div class="file-unavailable">Для этого формата встроенный просмотр недоступен.<br>Скачайте файл и откройте его в установленной программе.</div>';
+          modal(
+            file.name,
+            `<div class="preview-meta">${fileSize(file.size)} · Вложение задачи</div>${body}`,
+            `<button class="btn" data-action="close-modal">Закрыть</button><button class="btn primary" data-action="download-file" data-id="${E(id)}" data-file="${E(file.id)}">${icon("download", true)}Скачать файл</button>`,
+          );
+          $("#modal-root .modal").classList.add("preview-modal");
+        } catch {
+          toast("Не удалось открыть файл. Попробуйте прикрепить его заново.");
+        }
+      }
+      let officeView = null;
+      function excelValue(cell, book) {
+        if (!cell) return "";
+        if (cell.t === "n" && cell.z && XLSX.SSF.is_date(cell.z)) {
+          const format = cell.z.replace(/([dmy])\.(?=[dmy])/gi, '$1"."');
+          try {
+            return XLSX.SSF.format(format, cell.v, {
+              date1904: !!book.Workbook?.WBProps?.date1904,
+            });
+          } catch {}
+        }
+        return cell.w ?? XLSX.utils.format_cell(cell);
+      }
+      function renderWorkbook() {
+        const view = officeView,
+          book = view?.book,
+          sheet = book?.Sheets[book.SheetNames[view.sheet]];
+        if (!sheet) return;
+        const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+        const rowStart = range.s.r + view.row * 100,
+          colStart = range.s.c + view.col * 30;
+        const rowEnd = Math.min(range.e.r, rowStart + 99),
+          colEnd = Math.min(range.e.c, colStart + 29);
+        let head = '<th class="sheet-corner">№</th>';
+        for (let col = colStart; col <= colEnd; col++)
+          head += `<th>${XLSX.utils.encode_col(col)}</th>`;
+        let rows = "";
+        for (let row = rowStart; row <= rowEnd; row++) {
+          let cells = `<th>${row + 1}</th>`;
+          for (let col = colStart; col <= colEnd; col++) {
+            const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+            const value = excelValue(cell, book);
+            cells += `<td class="${row === range.s.r ? "first-sheet-row" : ""}">${E(value)}</td>`;
+          }
+          rows += `<tr>${cells}</tr>`;
+        }
+        const pageInfo = `Строки ${rowStart + 1}–${rowEnd + 1} из ${range.e.r + 1} · Столбцы ${XLSX.utils.encode_col(colStart)}–${XLSX.utils.encode_col(colEnd)}`;
+        $("#office-body").innerHTML =
+          `<div class="office-toolbar">${book.SheetNames.map((name, index) => `<button type="button" class="btn ${index === view.sheet ? "soft" : ""}" data-action="office-sheet" data-id="${index}">${E(name)}</button>`).join("")}</div><div class="spreadsheet-scroll"><table class="spreadsheet"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="sheet-pagination"><span>${E(pageInfo)}</span><button class="btn" data-action="office-row" data-id="-1" ${view.row === 0 ? "disabled" : ""}>↑ 100 строк</button><button class="btn" data-action="office-row" data-id="1" ${rowEnd >= range.e.r ? "disabled" : ""}>↓ 100 строк</button><button class="btn" data-action="office-col" data-id="-1" ${view.col === 0 ? "disabled" : ""}>← Столбцы</button><button class="btn" data-action="office-col" data-id="1" ${colEnd >= range.e.c ? "disabled" : ""}>Столбцы →</button></div><p class="activity-empty">Режим просмотра. Значения и формат чисел берутся из файла; формулы не пересчитываются, макросы не выполняются.</p>`;
+      }
+      async function previewOffice(file, blob, id) {
+        closeModal();
+        const context = {
+          fileId: file.id,
+          book: null,
+          sheet: 0,
+          row: 0,
+          col: 0,
+        };
+        officeView = context;
+        modal(
+          file.name,
+          `<div class="preview-meta">${fileSize(file.size)} · Вложение задачи</div><div id="office-body"><p class="activity-empty">Подготовка документа к просмотру…</p></div>`,
+          `<button class="btn" data-action="close-modal">Закрыть</button><button class="btn primary" data-action="download-file" data-id="${E(id)}" data-file="${E(file.id)}">${icon("download", true)}Скачать оригинал</button>`,
+        );
+        $("#modal-root .modal").classList.add("preview-modal");
+        try {
+          const buffer = await blob.arrayBuffer();
+          if (/\.docx$/i.test(file.name)) {
+            if (!window.mammoth || !window.DOMPurify)
+              throw new Error("Office libraries unavailable");
+            const result = await mammoth.convertToHtml(
+              { arrayBuffer: buffer },
+              {
+                externalFileAccess: false,
+                convertImage: mammoth.images.imgElement(async (image) => ({
+                  src: `data:${image.contentType};base64,${await image.read("base64")}`,
+                })),
+              },
+            );
+            if (officeView !== context) return;
+            const html = DOMPurify.sanitize(result.value, {
+              ALLOWED_TAGS: [
+                "p",
+                "br",
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "strong",
+                "em",
+                "u",
+                "s",
+                "del",
+                "sub",
+                "sup",
+                "ul",
+                "ol",
+                "li",
+                "table",
+                "thead",
+                "tbody",
+                "tr",
+                "th",
+                "td",
+                "blockquote",
+                "img",
+                "span",
+                "hr",
+              ],
+              ALLOWED_ATTR: [
+                "src",
+                "alt",
+                "width",
+                "height",
+                "colspan",
+                "rowspan",
+              ],
+              ALLOWED_URI_REGEXP: /^data:image\//i,
+              FORBID_ATTR: ["style", "srcset", "id", "name"],
+            });
+            $("#office-body").innerHTML =
+              `<p class="activity-empty">Word · режим чтения. Разметка может отличаться от оригинала.</p><article class="word-document">${html || "<p>В документе нет текста для просмотра.</p>"}</article>`;
+          } else {
+            if (!window.XLSX) throw new Error("Excel library unavailable");
+            context.book = XLSX.read(buffer, {
+              type: "array",
+              cellHTML: false,
+              cellNF: true,
+              cellText: true,
+              cellStyles: false,
+              cellFormula: false,
+              bookVBA: false,
+            });
+            if (officeView !== context) return;
+            if (!context.book.SheetNames.length)
+              throw new Error("Empty workbook");
+            renderWorkbook();
+          }
+        } catch {
+          if (officeView === context && $("#office-body"))
+            $("#office-body").innerHTML =
+              '<div class="file-unavailable">Не удалось прочитать документ. Возможно, файл повреждён, защищён паролем или имеет другой формат.<br>Оригинал можно скачать.</div>';
+        }
+      }
+      function updateEventFields() {
+        const event = $("#task-kind").value === "event";
+        $("#event-fields").hidden = !event;
+        $("#percent-field").hidden = event;
+        $("#task-percent").disabled = event;
+        $("#kind-hint").textContent = event
+          ? "Встреча, звонок или поездка: дата, время и участники."
+          : "Задача: результат, который нужно получить к сроку.";
+        $("#executor-label").textContent = event
+          ? "Участники / исполнители"
+          : "Исполнители";
+      }
+      function deadlineRange() {
+        const start = ui.deadlinePeriod === "custom" ? ui.deadlineStart : TODAY;
+        const days = Number(ui.deadlinePeriod);
+        const end =
+          ui.deadlinePeriod === "custom"
+            ? ui.deadlineEnd
+            : new Date(
+                new Date(TODAY + "T00:00:00Z").getTime() +
+                  ((days || 1) - 1) * DAY,
+              )
+                .toISOString()
+                .slice(0, 10);
+        return { start, end };
+      }
+      function deadlineHeading(date) {
+        if (date === TODAY) return "Сегодня · 31 октября";
+        const delta = Math.round((new Date(date) - new Date(TODAY)) / DAY);
+        return `${delta === 1 ? "Завтра · " : ""}${new Date(date + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "short" })}`;
+      }
+      function deadlineSection(label, rows, late = false) {
+        return `<section class="section deadline-section"><div class="section-head"><span class="dot" style="--dot:${late ? "#d97174" : "#7ba0df"}"></span><h2>${E(label)}</h2><span class="count">${rows.length}</span></div><div class="table-head"><span>Задача / тема</span><span>Исполнитель</span><span>Ответственный</span><span>Дедлайн</span><span class="progress-col">Готовность</span><span>Статус</span><span></span></div>${rows.map((t) => renderTaskRow(t, 0, true, true)).join("")}</section>`;
+      }
+      function renderDeadlines() {
+        const range = deadlineRange();
+        $("#page-title").textContent = "Дедлайны";
+        $("#breadcrumb").textContent = "Рабочее пространство / Дедлайны";
+        $("#page-subtitle").textContent =
+          "Что нужно закончить — по датам, с учётом выбранных темы и людей";
+        const periods = [
+          ["1", "Сегодня"],
+          ["3", "3 дня"],
+          ["7", "7 дней"],
+          ["14", "14 дней"],
+          ["30", "30 дней"],
+          ["custom", "Свои даты"],
+        ];
+        let controls = `<section class="deadline-controls"><div class="deadline-controls-top"><strong>Период</strong><div class="period-options">${periods.map(([id, label]) => `<button class="${ui.deadlinePeriod === id ? "selected" : ""}" data-action="deadline-period" data-id="${id}">${label}</button>`).join("")}</div><label class="overdue-toggle"><input id="deadline-overdue" type="checkbox" ${ui.deadlineOverdue ? "checked" : ""}>Показывать просроченные</label></div>${ui.deadlinePeriod === "custom" ? `<div class="deadline-dates"><label>С <input type="date" id="deadline-start" value="${E(ui.deadlineStart)}"></label><label>По <input type="date" id="deadline-end" value="${E(ui.deadlineEnd)}"></label></div>` : ""}<div class="deadline-range">${range.start && range.end ? `${E(deadlineHeading(range.start))} — ${E(deadlineHeading(range.end))} · даты включительно` : "Укажите обе даты"}</div></section>`;
+        if (!range.start || !range.end || range.end < range.start) {
+          $("#task-content").innerHTML =
+            controls +
+            '<p class="form-error" role="alert">Выберите период: дата окончания должна быть не раньше даты начала.</p>';
+          $("#result-count").textContent = "Период не выбран";
+          return;
+        }
+        const base = model.tasks.filter(matches);
+        const late = base
+          .filter((t) => t.end < TODAY && t.status !== "DONE")
+          .sort((a, b) => a.end.localeCompare(b.end));
+        const upcoming = base
+          .filter(
+            (t) =>
+              t.end >= range.start &&
+              t.end <= range.end &&
+              (t.end >= TODAY || t.status === "DONE"),
+          )
+          .sort(
+            (a, b) =>
+              a.end.localeCompare(b.end) ||
+              (a.startTime || "").localeCompare(b.startTime || ""),
+          );
+        if (ui.deadlineOverdue && late.length)
+          controls += deadlineSection("Просрочено", late, true);
+        for (const date of [...new Set(upcoming.map((t) => t.end))])
+          controls += deadlineSection(
+            deadlineHeading(date),
+            upcoming.filter((t) => t.end === date),
+          );
+        if (!upcoming.length)
+          controls +=
+            '<div class="section empty"><div class="empty-icon">' +
+            icon("calendar") +
+            "</div><h3>На выбранный период дедлайнов нет</h3><p>Выберите другой период или измените фильтры.</p></div>";
+        $("#task-content").innerHTML = controls;
+        $("#result-count").textContent =
+          `В периоде: ${upcoming.length} · Просрочено: ${late.length}`;
+      }
+      function renderTaskRow(t, level, matched, showProject = false) {
         const kids = model.tasks.filter((c) => c.parent === t.id).length;
-        return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col"><span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button></div>`;
+        return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
       }
       function section(p, rows, directSet) {
         const id = p?.id || "",
@@ -2002,6 +3067,13 @@
           .join("")}</div>`;
       }
       function renderContent() {
+        $("#nav-deadlines").classList.toggle("active", ui.view === "deadlines");
+        $("#nav-table").classList.toggle("active", ui.view === "table");
+        $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
+        if (ui.view === "deadlines") {
+          renderDeadlines();
+          return;
+        }
         const { direct, set, rows } = filtered();
         $("#page-title").textContent =
           ui.project === "all"
@@ -2039,10 +3111,15 @@
         renderContent();
       }
       function closeDrawer() {
+        if (ui.drawer && !task(ui.drawer.data.id))
+          for (const f of ui.drawer.data.attachments || [])
+            if (!f.demo) void fileStore("delete", f.id).catch(() => {});
         ui.drawer = null;
         $("#drawer-root").innerHTML = "";
       }
       function closeModal() {
+        revokePreviews();
+        officeView = null;
         $("#modal-root").innerHTML = "";
       }
       function modal(title, body, footer = "", small = false) {
@@ -2055,12 +3132,13 @@
         project = null,
         kind = "task",
       ) {
+        if (ui.drawer) closeDrawer();
         const original = id ? task(id) : null;
         if (id && !original) return;
         const data = original
           ? structuredClone(original)
           : makeTask(
-              "",
+              uid(),
               "",
               parent
                 ? task(parent).project
@@ -2077,19 +3155,25 @@
               "PLANNED",
               kind,
             );
-        ui.drawer = { id, parent, project, kind };
-        const exclude = id ? descendants(id) : new Set();
-        const available = model.tasks.filter(
-          (t) => t.project === data.project && !exclude.has(t.id),
-        );
+        ui.drawer = { id, parent, project, kind, data };
+        const exclude = id ? descendants(id) : new Set(),
+          available = model.tasks.filter(
+            (t) => t.project === data.project && !exclude.has(t.id),
+          );
         const contacts = model.contacts.filter(
           (c) => !c.archived || data.executors.includes(c.id),
         );
         const responsible = model.contacts.filter(
           (c) => (c.responsible && !c.archived) || c.id === data.responsible,
         );
+        const current = original || data;
         $("#drawer-root").innerHTML =
-          `<div class="backdrop" data-action="close-drawer"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="${id ? "Карточка задачи" : "Новая задача"}"><div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${data.kind === "event" ? "МЕРОПРИЯТИЕ" : "ЗАДАЧА"}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : parent ? "Новая подзадача" : kind === "event" ? "Новое мероприятие" : "Новая задача")}</h2></div><form id="task-form" class="drawer-body"><div id="task-error"></div><div class="field"><label for="task-title">Название</label><input id="task-title" name="title" required maxlength="1000" placeholder="Что нужно сделать?" value="${E(data.title)}"></div><div class="twocol"><div class="field"><label for="task-project">Тема / проект</label><select id="task-project" name="project" ${data.parent ? "disabled" : ""}><option value="">Без темы</option>${model.projects
+          `<div class="backdrop" data-action="close-drawer"></div>
+          <section class="drawer" role="dialog" aria-modal="true" aria-label="${id ? "Карточка задачи" : "Новая задача"}">
+          <div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${data.kind === "event" ? "МЕРОПРИЯТИЕ" : "ЗАДАЧА"}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : parent ? "Новая подзадача" : kind === "event" ? "Новое мероприятие" : "Новая задача")}</h2></div>
+          <form id="task-form" class="drawer-body"><div id="task-error"></div>
+          <div class="field"><label for="task-title">Название</label><input id="task-title" name="title" required maxlength="1000" placeholder="Что нужно сделать?" value="${E(data.title)}"></div>
+          <div class="twocol"><div class="field"><label for="task-project">Тема / проект</label><select id="task-project" name="project" ${data.parent ? "disabled" : ""}><option value="">Без темы</option>${model.projects
             .filter((p) => !p.archived || p.id === data.project)
             .map(
               (p) =>
@@ -2097,7 +3181,17 @@
             )
             .join(
               "",
-            )}</select>${data.parent ? "<small>Наследуется от родительской задачи</small>" : ""}</div><div class="field"><label for="task-kind">Тип</label><select id="task-kind" name="kind"><option value="task" ${data.kind === "task" ? "selected" : ""}>Задача</option><option value="event" ${data.kind === "event" ? "selected" : ""}>Мероприятие</option></select></div></div><div class="field"><label for="task-parent">Родительская задача</label><select id="task-parent" name="parent"><option value="">Самостоятельная задача</option>${available.map((t) => `<option value="${E(t.id)}" ${t.id === data.parent ? "selected" : ""}>${E(t.title)}</option>`).join("")}</select></div><div class="field"><label for="task-description">Описание</label><textarea id="task-description" name="description" placeholder="Детали, договорённости, ожидаемый результат">${E(data.description)}</textarea></div><div class="field"><span class="field-label">Исполнители</span><div class="multi">${contacts.map((c) => `<label><input type="checkbox" name="executors" value="${E(c.id)}" ${data.executors.includes(c.id) ? "checked" : ""}>${E(c.name)}</label>`).join("")}</div><small>Можно выбрать несколько людей или организаций</small></div><div class="field"><label for="task-responsible">Ответственный</label><select id="task-responsible" name="responsible">${options(responsible, data.responsible, "Не назначен")}</select></div><div class="twocol"><div class="field"><label for="task-start">Начало</label><input id="task-start" type="date" name="start" value="${E(data.start)}" required></div><div class="field"><label for="task-end">Окончание</label><input id="task-end" type="date" name="end" value="${E(data.end)}" required></div></div><div class="twocol"><div class="field"><label for="task-status">Статус</label><select id="task-status" name="status">${Object.entries(
+            )}</select>${data.parent ? "<small>Наследуется от родительской задачи</small>" : ""}</div>
+          <div class="field"><label for="task-kind">Тип</label><select id="task-kind" name="kind"><option value="task" ${data.kind === "task" ? "selected" : ""}>Задача</option><option value="event" ${data.kind === "event" ? "selected" : ""}>Мероприятие</option></select></div></div><div id="kind-hint"></div>
+          <section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы к задаче</div><div id="drawer-files">${attachmentList(current)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>Word, Excel, PDF, изображения и текст — просмотр здесь. Оригинал всегда можно скачать.</small><p class="activity-empty">${id ? "Файлы и записи обсуждения сохраняются сразу." : "Файлы и записи сохранятся вместе с новой задачей."}</p></section>
+          <section class="activity-section"><div class="activity-heading">${icon("message", true)} Комментарии и вопросы</div><div id="comment-list">${notesHtml(current)}</div>${noteComposer(current, "drawer")}</section>
+          <div class="field"><label for="task-parent">Родительская задача</label><select id="task-parent" name="parent"><option value="">Самостоятельная задача</option>${available.map((t) => `<option value="${E(t.id)}" ${t.id === data.parent ? "selected" : ""}>${E(t.title)}</option>`).join("")}</select></div>
+          <div class="field"><label for="task-description">Описание</label><textarea id="task-description" name="description" placeholder="Детали, договорённости, ожидаемый результат">${E(data.description)}</textarea></div>
+          <div class="field"><span class="field-label" id="executor-label">Исполнители</span><div class="multi">${contacts.map((c) => `<label><input type="checkbox" name="executors" value="${E(c.id)}" ${data.executors.includes(c.id) ? "checked" : ""}>${E(c.name)}</label>`).join("")}</div><small>Можно выбрать несколько людей или организаций</small></div>
+          <div class="field"><label for="task-responsible">Ответственный</label><select id="task-responsible" name="responsible">${options(responsible, data.responsible, "Не назначен")}</select></div>
+          <div class="twocol"><div class="field"><label for="task-start">Начало</label><input id="task-start" type="date" name="start" value="${E(data.start)}" required></div><div class="field"><label for="task-end">Окончание / дедлайн</label><input id="task-end" type="date" name="end" value="${E(data.end)}" required></div></div>
+          <div id="event-fields"><div class="twocol"><div class="field"><label for="event-start-time">Время начала</label><input id="event-start-time" type="time" name="startTime" value="${E(data.startTime || "")}"></div><div class="field"><label for="event-end-time">Время окончания</label><input id="event-end-time" type="time" name="endTime" value="${E(data.endTime || "")}"></div></div><div class="field"><label for="event-location">Место / ссылка на встречу</label><input id="event-location" name="location" value="${E(data.location || "")}" placeholder="Адрес или ссылка"></div><p class="activity-empty">Время: Иерусалим (Asia/Jerusalem). Без времени — мероприятие на весь день.</p></div>
+          <div class="twocol"><div class="field"><label for="task-status">Статус</label><select id="task-status" name="status">${Object.entries(
             statuses,
           )
             .map(
@@ -2106,10 +3200,16 @@
             )
             .join(
               "",
-            )}</select></div><div class="field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>${id ? `<div class="mini-separator"><div class="field-label">Обсуждение</div><div id="comment-list">${data.comments.map((c) => `<div class="comment"><strong>Вы · ${E(c.date)}</strong>${E(c.text)}</div>`).join("")}</div><div style="display:flex;gap:7px;margin-top:10px"><input id="comment-text" placeholder="Добавить комментарий…" aria-label="Комментарий" style="flex:1;font-size:11px"><button class="btn" type="button" data-action="add-comment" data-id="${E(id)}">Добавить</button></div></div>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
+            )}</select></div><div class="field" id="percent-field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>
+          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
+        updateEventFields();
         setTimeout(() => $("#task-title")?.focus(), 30);
       }
       function saveTask(form) {
+        if (ui.uploads) {
+          toast("Дождитесь прикрепления файлов");
+          return;
+        }
         const values = new FormData(form),
           id = ui.drawer.id,
           old = id ? task(id) : null;
@@ -2132,7 +3232,7 @@
           project = p.project;
         }
         const data = {
-          id: id || uid(),
+          id: id || ui.drawer.data.id,
           title: String(values.get("title")).trim(),
           description: String(values.get("description") || "").trim(),
           project,
@@ -2144,8 +3244,25 @@
           percent: Number(values.get("percent")),
           status: String(values.get("status")),
           kind: String(values.get("kind")),
-          comments: old?.comments || [],
+          comments: (old || ui.drawer.data).comments,
+          attachments: (old || ui.drawer.data).attachments,
+          startTime: String(values.get("startTime") || ""),
+          endTime: String(values.get("endTime") || ""),
+          location: String(values.get("location") || "").trim(),
+          timeZone: "Asia/Jerusalem",
         };
+        if (
+          data.kind === "event" &&
+          start === end &&
+          data.startTime &&
+          data.endTime &&
+          data.endTime < data.startTime
+        ) {
+          $("#task-error").innerHTML =
+            '<div class="form-error" role="alert">Время окончания раньше времени начала</div>';
+          $("#task-error").scrollIntoView({ block: "center" });
+          return;
+        }
         if (!data.title) {
           $("#task-error").innerHTML =
             '<div class="form-error" role="alert">Введите название задачи</div>';
@@ -2450,6 +3567,8 @@
             break;
           case "confirm-task-delete": {
             const t = task(id);
+            for (const f of t.attachments)
+              if (!f.demo) void fileStore("delete", f.id).catch(() => {});
             for (const child of model.tasks.filter((c) => c.parent === id))
               child.parent = t.parent;
             model.tasks = model.tasks.filter((t) => t.id !== id);
@@ -2503,19 +3622,73 @@
           case "close-modal":
             closeModal();
             break;
-          case "add-comment": {
-            const text = $("#comment-text").value.trim();
-            if (!text) return;
-            task(id).comments.push({ text, date: "Сейчас" });
-            save();
-            $("#comment-list").insertAdjacentHTML(
-              "beforeend",
-              `<div class="comment"><strong>Вы · Сейчас</strong>${E(text)}</div>`,
+          case "quick-note":
+            ui.quick = ui.quick === id ? null : id;
+            renderContent();
+            document
+              .querySelector(
+                `.note-composer[data-scope="row"][data-task="${CSS.escape(id)}"] .note-text`,
+              )
+              ?.focus();
+            break;
+          case "post-note":
+            postNote(button.closest(".note-composer"));
+            break;
+          case "add-comment":
+            postNote($("#comment-text")?.closest(".note-composer"));
+            break;
+          case "resolve-note": {
+            const t = record(id),
+              note = t?.comments.find((c) => c.id === button.dataset.note);
+            if (!note) break;
+            note.resolved = !note.resolved;
+            if (task(id)) save();
+            refreshActivity(id);
+            toast(
+              note.resolved ? "Вопрос отмечен решённым" : "Вопрос снова открыт",
             );
-            $("#comment-text").value = "";
-            toast("Комментарий добавлен в макет");
             break;
           }
+          case "office-sheet":
+            if (officeView) {
+              officeView.sheet = Number(id);
+              officeView.row = officeView.col = 0;
+              renderWorkbook();
+            }
+            break;
+          case "office-row":
+            if (officeView) {
+              officeView.row = Math.max(0, officeView.row + Number(id));
+              renderWorkbook();
+            }
+            break;
+          case "office-col":
+            if (officeView) {
+              officeView.col = Math.max(0, officeView.col + Number(id));
+              renderWorkbook();
+            }
+            break;
+          case "preview-file":
+            void previewFile(id, button.dataset.file);
+            break;
+          case "download-file":
+            void previewFile(id, button.dataset.file, true);
+            break;
+          case "remove-file": {
+            const t = record(id),
+              file = t?.attachments.find((f) => f.id === button.dataset.file);
+            if (!file) break;
+            t.attachments = t.attachments.filter((f) => f.id !== file.id);
+            if (task(id)) save();
+            if (!file.demo) void fileStore("delete", file.id).catch(() => {});
+            refreshActivity(id);
+            toast("Файл убран из задачи");
+            break;
+          }
+          case "deadline-period":
+            ui.deadlinePeriod = id;
+            renderContent();
+            break;
           case "reset-demo":
             modal(
               "Сбросить пример?",
@@ -2525,7 +3698,22 @@
             );
             break;
           case "confirm-reset":
+            closeDrawer();
+            for (const t of model.tasks)
+              for (const f of t.attachments || [])
+                if (!f.demo) void fileStore("delete", f.id).catch(() => {});
             model = structuredClone(seed);
+            for (const t of model.tasks)
+              t.comments.forEach((c, index) => {
+                c.id ||= `${t.id}-note-${index}`;
+                c.kind ||= "comment";
+              });
+            ui.quick = null;
+            ui.noteDrafts = {};
+            ui.deadlinePeriod = "7";
+            ui.deadlineStart = TODAY;
+            ui.deadlineEnd = "2026-11-06";
+            ui.deadlineOverdue = true;
             ui.project = "all";
             ui.responsible = ui.executor = ui.status = ui.due = ui.q = "";
             ui.done = false;
@@ -2546,7 +3734,40 @@
             break;
         }
       });
+      document.addEventListener("input", (event) => {
+        const composer = event.target.closest(".note-composer");
+        if (composer)
+          ui.noteDrafts[`${composer.dataset.scope}:${composer.dataset.task}`] =
+            {
+              kind: composer.querySelector(".note-kind").value,
+              text: composer.querySelector(".note-text").value,
+            };
+      });
       document.addEventListener("change", (event) => {
+        if (event.target.matches("[data-upload-task]")) {
+          void uploadFiles(event.target);
+          return;
+        }
+        const composer = event.target.closest(".note-composer");
+        if (composer)
+          ui.noteDrafts[`${composer.dataset.scope}:${composer.dataset.task}`] =
+            {
+              kind: composer.querySelector(".note-kind").value,
+              text: composer.querySelector(".note-text").value,
+            };
+        if (event.target.id === "task-kind") updateEventFields();
+        if (event.target.id === "deadline-overdue") {
+          ui.deadlineOverdue = event.target.checked;
+          renderContent();
+        }
+        if (event.target.id === "deadline-start") {
+          ui.deadlineStart = event.target.value;
+          renderContent();
+        }
+        if (event.target.id === "deadline-end") {
+          ui.deadlineEnd = event.target.value;
+          renderContent();
+        }
         const id = event.target.id,
           value = event.target.value;
         const map = {
@@ -2601,6 +3822,16 @@
         }
       });
       document.addEventListener("keydown", (event) => {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey &&
+          !event.isComposing &&
+          event.target.matches(".note-text")
+        ) {
+          event.preventDefault();
+          postNote(event.target.closest(".note-composer"));
+          return;
+        }
         if (event.key === "Escape") {
           if ($("#modal-root").children.length) closeModal();
           else closeDrawer();
