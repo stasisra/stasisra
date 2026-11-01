@@ -12,5 +12,7 @@ prisma/dev.db
 test-results/
 playwright-report/
 prisma/.prisma/
+.next-setup-ready
+exports/
 
 schema-check.json

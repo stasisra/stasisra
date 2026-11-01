@@ -1,3 +1,5 @@
+import Database from "better-sqlite3";
+import { productAction } from "../lib/product/service";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -11,15 +13,39 @@ const env = {
   ADMIN_PASSWORD: "synthetic-browser-password",
   NEXT_TELEMETRY_DISABLED: "1",
 };
-for (const file of [
-  "scripts/init-db.ts",
-  "scripts/migrate-workspace.ts",
-  "scripts/admin.ts",
-])
+for (const file of ["scripts/init-db.ts", "scripts/admin.ts"])
   execFileSync(process.execPath, ["--import", "tsx", file], {
     env,
     stdio: "inherit",
   });
+// Synthetic directories for browser tests only; production setup starts empty.
+
+const db = new Database(path.join(dir, "test.db"));
+const admin = db
+  .prepare("SELECT id,name,email FROM User WHERE role='ADMIN' LIMIT 1")
+  .get() as { id: string; name: string; email: string };
+const actor = { ...admin, role: "ADMIN" as const };
+for (const [id, name] of [
+  ["sp", "SP"],
+  ["web", "web"],
+  ["vnz", "ВНЖ"],
+])
+  productAction(db, actor, {
+    action: "saveDirectory",
+    data: { id, mode: "projects", name },
+  });
+for (const [id, name] of [
+  ["patrick", "Патрик"],
+  ["melikantova", "Меликантова"],
+  ["arkady", "Аркадий"],
+  ["natasha", "Наташа архитектор"],
+  ["juraj", "Юрай"],
+])
+  productAction(db, actor, {
+    action: "saveDirectory",
+    data: { id, mode: "contacts", name, responsible: true },
+  });
+db.close();
 const server = spawn(
   process.execPath,
   [

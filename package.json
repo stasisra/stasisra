@@ -1,7 +1,7 @@
 {
   "name": "task-gantt-app",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,7 +17,7 @@
     "db:init": "tsx --env-file-if-exists=.env scripts/init-db.ts",
     "test:e2e": "playwright test",
     "db:upgrade": "tsx --env-file-if-exists=.env scripts/migrate-workspace.ts",
-    "check:workspace": "node --check public/workspace/app.js && node --check public/workspace/office-worker.js"
+    "check:workspace": "node --check public/workspace/app.js && node --check public/workspace/office-worker.js && node --check public/workspace/task-filter.js && node --check public/workspace/product-ui.js"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^6.19.2",

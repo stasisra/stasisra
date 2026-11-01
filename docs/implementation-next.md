@@ -1,0 +1,15 @@
+# Implementation ledger — model 0.3, 2026-11-01
+
+Authorized scope: export the user's current Windows database for an Excel keep/delete review; implement the new program independently using synthetic data; import real selected records when supplied. Product requirements are in product-description-ru.md.
+
+Implemented: independent work-task and activity contexts, topics with descriptions, recursive work/agenda hierarchies, nested events, links across topics, independent per-item roles, free tags, optimistic revisions, idempotent creates/uploads, transactionally validated changes, promotion with shared files/notes, persisted agenda order. New parameterized SQLite service and APIs are in lib/product and /api/next; SQL migration 20261101000100_product retains the old Task tables. Prisma Client remains responsible for auth/legacy tables; use db:init, not prisma db push.
+
+Implemented UI: context-aware cards, save-and-add, event list/calendar and per-counterparty agenda, quick notes/questions, common directory CRUD/replacement, topic+tree selection with subtree exclusions, people/tags/date filters, grouping including events, global search, work-only Gantt/deadlines, local Office/PDF/image/text viewers, general/meeting print with full descriptions and image materials, CSV/XLSX, review-import wizard with preview/staged files/apply.
+
+Export package published earlier on task-gantt-fixed commit 94565550fd18f1e9800017f4cbc82811f8713985. It reads the actual current database on the user's computer; cloud has no access to that live file. Export destination contains tasks-review.xlsx, data.json, original files, manifest and local full database backup. No real-data export or import is claimed here. Do not delete rows/IDs while editing; use keep/delete decisions.
+
+New installation: task-gantt-app-next, port 3003, clean DB plus only the existing administrator login, fresh session secret/cookie, existing libraries through a directory junction to task-gantt-app-workspace. No source-task copying or legacy hard-coded directory seed. Prior app on 3002 stays available; its folder/node_modules must remain while shared. Installer retries retain next-model data; partial setup is refused. Scripts setup-next.cjs/setup-next.cmd/start-next.cmd and archive packaging are included.
+
+Verification: 36 unit/integration tests, 13 Chromium workflows, typecheck/lint/JavaScript syntax and production build. Separate extracted-archive setup/build/start/auth/task-save/browser check completed. Windows .cmd itself was not executed. Office rendering and very large dataset performance have the limits described in README/FIXES. Actual cleaned Excel is pending the user; it is not a blocker to shipping the tested program.
+
+Release branch remains task-gantt-fixed; main must remain unchanged. Publish source and downloads/task-gantt-app-next.zip, then verify the actual GitHub raw bytes against local SHA-256 and ZIP CRC. Preserve old published archives rather than replacing them with a new model under the same name.

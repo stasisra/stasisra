@@ -201,7 +201,7 @@ try {
     ) {
       reconcileNamePolicy(name, checksum);
     } else {
-      if (name === "20261031000200_workspace")
+      if (name === "20261031000200_workspace" || name === "20261101000100_product")
         db.transaction(() => {
           db.exec(sql);
           record(name, checksum);

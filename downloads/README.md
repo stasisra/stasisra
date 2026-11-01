@@ -1,9 +1,8 @@
-# Файлы для скачивания
+# Загрузки
 
-Актуальная рабочая версия: [task-gantt-app-workspace.zip](https://raw.githubusercontent.com/stasisra/stasisra/task-gantt-fixed/downloads/task-gantt-app-workspace.zip).
+- **task-gantt-export-review.zip** — отдельная офлайн-выгрузка актуальной базы Windows в редактируемый Excel и локальный архив с файлами.
+- **task-gantt-app-next.zip** — новая модель 0.3, отдельная папка task-gantt-app-next, setup-next.cmd / start-next.cmd, порт 3003. Нужны библиотеки соседней установленной task-gantt-app-workspace и Node 22.12+ / 24; новая база сначала пустая, прежний вход ADMIN сохраняется.
+- task-gantt-app-workspace.zip и task-gantt-app-fixed.zip — прежние выпуски, не содержат новую модель.
+- PDF и ux-prototype.zip — прежние примеры и макет.
 
-Распакуйте содержащуюся в архиве папку `task-gantt-app-workspace` в `C:\Distr_Local`, выполните `install-workspace.cmd`, затем `start-workspace.cmd`. Новая копия работает на http://127.0.0.1:3002 и берёт снимок базы из соседней `task-gantt-app-fixed`. Пароль прежний. Старую папку не удаляйте до проверки новой версии. Подробности находятся внутри архива в `START-HERE.ru.txt` и `README.md`.
-
-`task-gantt-app-workspace.sha256` содержит контрольную сумму архива. В нём нет базы, секретов, зависимостей и результатов сборки.
-
-Остальные файлы в этой папке — прежняя исправленная основа, согласованный UX-макет и примеры печати. Макет открывается отдельно и не подключается к рабочей базе.
+Новая программа импортирует tasks-review.xlsx вместе с data.json и выбранными файлами исходной выгрузки через предпросмотр. Подробные инструкции находятся в README.md внутри нового архива. Архив новой версии не содержит пользовательских баз, .env, node_modules и .next.

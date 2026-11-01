@@ -90,6 +90,8 @@
           id="nav-table"
         >
           Задачи</button
+        ><button data-action="view" data-id="events" id="nav-events">
+          Мероприятия</button
         ><button data-action="view" data-id="gantt" id="nav-gantt">Гант</button
         ><button data-action="view" data-id="deadlines" id="nav-deadlines">
           Дедлайны</button
@@ -162,6 +164,9 @@
             <p class="subtitle" id="page-subtitle"></p>
           </div>
           <div class="head-actions">
+            <button class="btn optional" data-product="import">
+              Импорт Excel
+            </button>
             <button class="btn" data-action="meeting-open">
               <svg class="icon small-icon"><use href="#i-printer" /></svg>Печать
               / экспорт
@@ -182,6 +187,10 @@
             aria-label="Поиск задач"
           /><span class="key">/</span>
         </div>
+        <label class="search-scope"
+          ><input type="checkbox" id="search-everywhere" />Искать во всех
+          разделах: задачи, мероприятия, вопросы</label
+        >
         <div class="filterbar" id="filters"></div>
         <div class="chips" id="chips"></div>
         <div id="task-content"></div>
@@ -201,6 +210,8 @@
     <script src="/workspace/vendor/purify.min.js"></script>
     <script src="/workspace/vendor/xlsx.full.min.js"></script>
 
+    <script src="/workspace/task-filter.js"></script>
+    <script src="/workspace/product-ui.js"></script>
     <script src="/workspace/app.js" defer></script>
   </body>
 </html>

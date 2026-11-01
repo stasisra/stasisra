@@ -1,6 +1,7 @@
 (async function () {
   "use strict";
   let requests = 0;
+  let productUI = null;
   const pendingFiles = new Map(),
     noteRequests = new Map();
 
@@ -22,6 +23,9 @@
     `<svg class="icon ${small ? "small-icon" : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
   let TODAY = "";
   const DAY = 86400000;
+  const TaskFilter = window.TaskTreeFilter;
+  if (!TaskFilter)
+    throw new Error("Обновите страницу: не загружен фильтр задач");
 
   function syncStatus(text, error = false) {
     const element = document.querySelector("#sync-status");
@@ -68,7 +72,7 @@
     return data;
   }
   async function getWorkspace() {
-    return normalizeModel(await (await checkedFetch("/api/workspace")).json());
+    return normalizeModel(await (await checkedFetch("/api/next")).json());
   }
   function acceptModel(data, force = false) {
     data = normalizeModel(data);
@@ -76,14 +80,16 @@
       force ||
       data.instanceId !== model.instanceId ||
       data.revision >= model.revision
-    )
+    ) {
       model = data;
+      productUI?.refreshLookups();
+    }
   }
   async function mutate(action, data) {
     requests++;
     syncStatus("Сохраняем…");
     try {
-      const response = await checkedFetch("/api/workspace", {
+      const response = await checkedFetch("/api/next", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, data }),
@@ -170,7 +176,7 @@
     const pending = pendingFiles.get(file.id);
     if (pending) return pending.file;
     const response = await checkedFetch(
-      "/api/attachments/" + encodeURIComponent(file.id),
+      "/api/next/files/" + encodeURIComponent(file.id),
     );
     return new Blob([await response.arrayBuffer()], {
       type: file.type || "application/octet-stream",
@@ -181,7 +187,7 @@
     form.set("file", entry.file);
     form.set("uploadId", entry.meta.id);
     await checkedFetch(
-      "/api/tasks/" + encodeURIComponent(taskId) + "/attachments",
+      "/api/next/items/" + encodeURIComponent(taskId) + "/files",
       { method: "POST", body: form },
     );
     pendingFiles.delete(entry.meta.id);
@@ -244,6 +250,20 @@
         values.get("timeZone") || ui.drawer.data.timeZone || model.timeZone,
       ),
       revision: ui.drawer.data.revision || 0,
+      counterparties: values.getAll("counterparties").map(String),
+      tags: [
+        ...new Set(
+          [
+            ...(ui.drawer.data.tags || []),
+            String($("#task-tag-input")?.value || "").trim(),
+          ].filter(Boolean),
+        ),
+      ],
+      topics: values.getAll("topics").map(String),
+      activityId: ui.drawer.data.activityId || null,
+      linkedTaskId: ui.drawer.data.linkedTaskId || null,
+      originItemId: ui.drawer.data.originItemId || null,
+      outcome: String(values.get("outcome") || ""),
       comments: ui.drawer.id
         ? []
         : ui.drawer.data.comments.map((c) => ({
@@ -292,21 +312,18 @@
     const url = new URL(location.href);
     url.searchParams.delete("task");
     url.searchParams.delete("new");
-    history.replaceState(null, "", url.pathname + url.search);
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
   async function saveTask(form) {
     if (form.dataset.busy === "true" || ui.uploads) return;
     const button = $('#drawer-root [form="task-form"]'),
       data = captureTaskForm(form),
       wasNew = !ui.drawer.id;
-    if (!data.title || !data.start || !data.end) {
-      errorIn(
-        "#task-error",
-        new Error("Заполните название, начало и окончание"),
-      );
+    if (!data.title) {
+      errorIn("#task-error", new Error("Введите название"));
       return;
     }
-    if (data.end < data.start) {
+    if (data.start && data.end && data.end < data.start) {
       errorIn("#task-error", new Error("Дата окончания раньше даты начала"));
       return;
     }
@@ -329,7 +346,8 @@
       acceptModel(await getWorkspace());
       closeDrawer(true);
       render();
-      toast("Задача сохранена");
+      toast("Запись сохранена");
+      return true;
     } catch (error) {
       if (error.status === 409 && wasNew) {
         try {
@@ -342,6 +360,7 @@
       }
       errorIn("#task-error", error);
       refreshActivity(data.id);
+      return false;
     } finally {
       form.dataset.busy = "false";
       form.inert = false;
@@ -435,12 +454,12 @@
           id: id || directoryContext.newId,
           mode,
           name,
-          type:
-            mode === "projects"
+          description: $("#directory-description")?.value || "",
+          type: ["projects", "tags"].includes(mode)
+            ? "Человек"
+            : mode === "responsibles" && !id
               ? "Человек"
-              : mode === "responsibles" && !id
-                ? "Человек"
-                : $("#contact-type").value,
+              : $("#contact-type").value,
           responsible:
             mode === "responsibles" && !id
               ? true
@@ -460,7 +479,12 @@
   }
   async function hideDirectory(id, expectedRevision, archived) {
     const mode = ui.manager,
-      item = mode === "projects" ? proj(id) : person(id);
+      item =
+        mode === "projects"
+          ? proj(id)
+          : mode === "tags"
+            ? model.tags.find((t) => t.id === id)
+            : person(id);
     try {
       await mutate("hideDirectory", {
         mode,
@@ -492,6 +516,23 @@
         ];
         ui.project = ui.projects.length === 1 ? ui.projects[0] : "all";
       }
+      if (mode === "tags") {
+        ui.includeTags = [
+          ...new Set(
+            ui.includeTags.flatMap((value) =>
+              value === id ? (replacement ? [replacement] : []) : [value],
+            ),
+          ),
+        ];
+        ui.excludeTags = [
+          ...new Set(
+            ui.excludeTags.flatMap((value) =>
+              value === id ? (replacement ? [replacement] : []) : [value],
+            ),
+          ),
+        ];
+      }
+      if (ui.counterparty === id) ui.counterparty = replacement;
       if (ui.executor === id) ui.executor = replacement;
       if (ui.responsible === id) ui.responsible = replacement;
       ui.filterDraft = null;
@@ -538,9 +579,15 @@
     try {
       if (pendingFiles.has(fileId)) pendingFiles.delete(fileId);
       else {
-        await checkedFetch("/api/attachments/" + encodeURIComponent(fileId), {
-          method: "DELETE",
-        });
+        await checkedFetch(
+          "/api/next/files/" +
+            encodeURIComponent(fileId) +
+            "?itemId=" +
+            encodeURIComponent(id),
+          {
+            method: "DELETE",
+          },
+        );
         acceptModel(await getWorkspace());
       }
       closeModal();
@@ -585,7 +632,16 @@
     if (ui.dateMode !== "overlap") u.searchParams.set("dateMode", ui.dateMode);
     if (ui.done) u.searchParams.set("done", "1");
     if (ui.q) u.searchParams.set("q", ui.q);
-    return u.pathname + u.search;
+    if (ui.searchEverywhere) u.searchParams.set("allSections", "1");
+    else u.searchParams.delete("allSections");
+    const fragment = new URLSearchParams(u.hash.slice(1));
+    for (const key of ["tasks", "except", "taskMode"]) fragment.delete(key);
+    if (hasTaskSelection(ui))
+      fragment.set("taskMode", ui.taskAll ? "all" : "selected");
+    if (ui.taskInclude.length) fragment.set("tasks", ui.taskInclude.join(","));
+    if (ui.taskExclude.length) fragment.set("except", ui.taskExclude.join(","));
+    u.hash = fragment.toString();
+    return u.pathname + u.search + u.hash;
   }
   function syncLocation() {
     history.replaceState(null, "", urlForState());
@@ -597,9 +653,13 @@
         ? "gantt"
         : u.pathname === "/deadlines"
           ? "deadlines"
-          : ["table", "gantt", "deadlines"].includes(u.searchParams.get("view"))
-            ? u.searchParams.get("view")
-            : "table";
+          : u.pathname === "/activities"
+            ? "events"
+            : ["table", "gantt", "deadlines", "events", "calendar"].includes(
+                  u.searchParams.get("view"),
+                )
+              ? u.searchParams.get("view")
+              : "table";
     ui.projects = (u.searchParams.get("projects") || "")
       .split(",")
       .filter((id) => id === "none" || model.projects.some((p) => p.id === id));
@@ -622,6 +682,16 @@
       : "overlap";
     ui.done = u.searchParams.get("done") === "1";
     ui.q = (u.searchParams.get("q") || "").slice(0, 1000);
+    ui.searchEverywhere = u.searchParams.get("allSections") === "1";
+    $("#search-everywhere").checked = ui.searchEverywhere;
+    const fragment = new URLSearchParams(u.hash.slice(1));
+    setTaskSelection(ui, {
+      all:
+        fragment.get("taskMode") === "all" ||
+        (fragment.get("taskMode") !== "selected" && !fragment.has("tasks")),
+      include: (fragment.get("tasks") || "").split(","),
+      exclude: (fragment.get("except") || "").split(","),
+    });
     if (ui.from && ui.to && ui.from > ui.to) ui.from = ui.to = "";
     if (ui.view === "deadlines") {
       ui.dateMode = "deadline";
@@ -730,6 +800,7 @@
     PLANNED: "Запланировано",
     IN_PROGRESS: "В работе",
     PAUSED: "Ожидание",
+    CANCELLED: "Отменено",
     DONE: "Готово",
   };
   const makeTask = (
@@ -770,6 +841,16 @@
   const ui = {
     project: "all",
     projects: [],
+    taskAll: true,
+    taskInclude: [],
+    taskExclude: [],
+    taskPickerCollapsed: new Set(),
+    counterparty: "",
+    includeTags: [],
+    excludeTags: [],
+    tagMode: "any",
+    groupBy: "topics",
+    searchEverywhere: false,
     from: "",
     to: "",
     dateMode: "overlap",
@@ -813,6 +894,7 @@
     toast.timer = setTimeout(() => ($("#toast").style.display = "none"), 2800);
   }
   function dateInfo(t) {
+    if (!t.end) return '<span class="muted">Без срока</span>';
     const delta = Math.round((new Date(t.end) - new Date(TODAY)) / DAY);
     const label = new Date(t.end + "T12:00:00")
       .toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
@@ -832,6 +914,14 @@
   function blankQuery() {
     return {
       projects: [],
+      taskAll: true,
+      taskInclude: [],
+      taskExclude: [],
+      scope: "work",
+      counterparty: "",
+      includeTags: [],
+      excludeTags: [],
+      tagMode: "any",
       executor: "",
       responsible: "",
       status: "",
@@ -847,10 +937,26 @@
     ...blankQuery(),
     ...q,
     projects: [...(q.projects || [])],
+    taskInclude: [...(q.taskInclude || [])],
+    taskExclude: [...(q.taskExclude || [])],
+    includeTags: [...(q.includeTags || [])],
+    excludeTags: [...(q.excludeTags || [])],
   });
   function queryFromUi() {
     return {
       projects: [...ui.projects],
+      taskAll: ui.taskAll,
+      taskInclude: [...ui.taskInclude],
+      taskExclude: [...ui.taskExclude],
+      scope: ui.searchEverywhere
+        ? "all"
+        : ["events", "calendar"].includes(ui.view)
+          ? "events"
+          : "work",
+      counterparty: ui.counterparty,
+      includeTags: [...ui.includeTags],
+      excludeTags: [...ui.excludeTags],
+      tagMode: ui.tagMode,
       executor: ui.executor,
       responsible: ui.responsible,
       status: ui.status,
@@ -863,28 +969,72 @@
     };
   }
   function queryMatches(t, q) {
+    if (!t || !productUI.beforeQuery(t, q)) return false;
     if (!q.showDone && t.status === "DONE" && q.status !== "DONE") return false;
-    if (q.projects.length && !q.projects.includes(t.project || "none"))
-      return false;
-    if (q.executor && !t.executors.includes(q.executor)) return false;
-    if (q.responsible && t.responsible !== q.responsible) return false;
-    if (q.status && t.status !== q.status) return false;
+    const topics =
+      t.kind === "event"
+        ? t.topics
+        : t.activityId && t.kind !== "reference"
+          ? task(t.activityId)?.topics || []
+          : t.project
+            ? [t.project]
+            : [];
     if (
-      q.text &&
-      !`${t.title} ${t.description} ${t.comments.map((c) => c.text).join(" ")}`
-        .toLowerCase()
-        .includes(q.text.trim().toLowerCase())
+      q.projects.length &&
+      !(topics.length
+        ? topics.some((id) => q.projects.includes(id))
+        : q.projects.includes("none"))
     )
       return false;
-    if (q.dateMode === "overlap") {
-      if (q.from && t.end < q.from) return false;
-      if (q.to && t.start > q.to) return false;
-    } else {
-      const date = q.dateMode === "start" ? t.start : t.end;
-      if (q.from && date < q.from) return false;
-      if (q.to && date > q.to) return false;
+    const roles = t.kind === "event" ? t.rolePeople : null;
+    if (
+      q.counterparty &&
+      !(roles?.counterparty || t.counterparties || []).includes(q.counterparty)
+    )
+      return false;
+    if (q.executor && !(roles?.executor || t.executors).includes(q.executor))
+      return false;
+    if (
+      q.responsible &&
+      !(roles?.responsible || [t.responsible]).includes(q.responsible)
+    )
+      return false;
+    if (q.status && t.status !== q.status) return false;
+    const tags = t.allTagIds || t.tagIds || [];
+    if (
+      q.includeTags?.length &&
+      !(q.tagMode === "all"
+        ? q.includeTags.every((id) => tags.includes(id))
+        : q.includeTags.some((id) => tags.includes(id)))
+    )
+      return false;
+    if (q.excludeTags?.some((id) => tags.includes(id))) return false;
+    if (
+      q.text &&
+      !searchKey(
+        `${t.title} ${t.description} ${productUI.extraSearch(t)}`,
+      ).includes(searchKey(q.text))
+    )
+      return false;
+    if (
+      hasTaskSelection(q) &&
+      t.kind === "task" &&
+      !taskSelection(q).selected.has(t.id)
+    )
+      return false;
+    if (q.from || q.to) {
+      if (q.dateMode === "overlap") {
+        const first = t.start || t.end,
+          last = t.end || t.start;
+        if (!first || (q.from && last < q.from) || (q.to && first > q.to))
+          return false;
+      } else {
+        const date = q.dateMode === "start" ? t.start : t.end;
+        if (!date || (q.from && date < q.from) || (q.to && date > q.to))
+          return false;
+      }
     }
-    if (q.due === "late" && !(t.end < TODAY && t.status !== "DONE"))
+    if (q.due === "late" && !(t.end && t.end < TODAY && t.status !== "DONE"))
       return false;
     if (
       q.due === "week" &&
@@ -898,6 +1048,235 @@
       .toISOString()
       .slice(0, 10);
   }
+  let hierarchyCache;
+  function hierarchy() {
+    if (!hierarchyCache || hierarchyCache.tasks !== model.tasks) {
+      hierarchyCache = {
+        ...TaskFilter.createIndex(model.tasks),
+        tasks: model.tasks,
+        branches: new Map(),
+        paths: new Map(),
+        selection: null,
+      };
+    }
+    return hierarchyCache;
+  }
+  function selectionInput(q) {
+    return {
+      all: q.taskAll !== false,
+      include: q.taskInclude || [],
+      exclude: q.taskExclude || [],
+    };
+  }
+  function setTaskSelection(q, input) {
+    const value = TaskFilter.normalize(input);
+    q.taskAll = value.all;
+    q.taskInclude = value.include;
+    q.taskExclude = value.exclude;
+  }
+  function hasTaskSelection(q) {
+    return (
+      q.taskAll === false || q.taskInclude?.length || q.taskExclude?.length
+    );
+  }
+  function taskSelection(q) {
+    const index = hierarchy(),
+      input = selectionInput(q),
+      key = JSON.stringify(input);
+    if (index.selection?.key !== key)
+      index.selection = { key, ...TaskFilter.resolve(index, input) };
+    return index.selection;
+  }
+  function taskPath(id) {
+    const index = hierarchy();
+    if (index.paths.has(id)) return index.paths.get(id);
+    const first = index.byId.get(id);
+    if (!first) return "Задача удалена";
+    const names = [];
+    for (let current = id; current; current = index.parents.get(current))
+      names.unshift(index.byId.get(current).title);
+    const value = [themeName(first.project || "none"), ...names].join(" › ");
+    index.paths.set(id, value);
+    return value;
+  }
+  const searchKey = (value) =>
+    String(value || "")
+      .normalize("NFC")
+      .toLocaleLowerCase("ru-RU")
+      .replace(/ё/g, "е")
+      .trim();
+  function taskSelectionLabel(q) {
+    if (!hasTaskSelection(q)) return "Все задачи выбранных тем";
+    if (!q.taskAll && q.taskInclude.length === 1 && !q.taskExclude.length)
+      return task(q.taskInclude[0])?.title || "Задача удалена";
+    const count = [...taskSelection(q).selected].filter(
+      (id) =>
+        !q.projects.length || q.projects.includes(task(id).project || "none"),
+    ).length;
+    return count ? `Отмечено задач: ${count}` : "Задачи не выбраны";
+  }
+  function taskPickerRows(q, text = "") {
+    const index = hierarchy(),
+      selection = taskSelection(q),
+      words = searchKey(text).split(/\s+/).filter(Boolean);
+    const eligible = new Set(
+      model.tasks
+        .filter((t) => t.kind === "task")
+        .filter(
+          (t) => !q.projects.length || q.projects.includes(t.project || "none"),
+        )
+        .map((t) => t.id),
+    );
+    let visible = eligible;
+    if (words.length) {
+      visible = new Set();
+      for (const id of eligible)
+        if (words.every((word) => searchKey(taskPath(id)).includes(word))) {
+          let current = id;
+          while (current && eligible.has(current) && !visible.has(current)) {
+            visible.add(current);
+            current = index.parents.get(current);
+          }
+        }
+    }
+    const rows = [],
+      hidden = new Set();
+    for (const entry of index.order) {
+      if (!visible.has(entry.id)) continue;
+      if (
+        !words.length &&
+        entry.parent &&
+        (hidden.has(entry.parent) || ui.taskPickerCollapsed.has(entry.parent))
+      ) {
+        hidden.add(entry.id);
+        continue;
+      }
+      rows.push(entry);
+    }
+    const header = `<div class="task-picker-count" role="status">${rows.length ? `Показано: ${Math.min(rows.length, 200)}${rows.length > 200 ? ` из ${rows.length}. Уточните поиск.` : ""}` : "В выбранных темах совпадений нет"}</div>`;
+    return (
+      header +
+      rows
+        .slice(0, 200)
+        .map((entry) => {
+          const t = entry.task,
+            count = selection.stats.get(t.id),
+            children = index.children.has(t.id),
+            full = count.selected === count.total,
+            partial = count.selected > 0 && !full;
+          return `<div class="task-option-row" data-task-option="${E(t.id)}" style="--task-depth:${Math.min(entry.level, 6)}">${children ? `<button type="button" class="task-tree-toggle" data-action="task-picker-toggle" data-id="${E(t.id)}" aria-label="${ui.taskPickerCollapsed.has(t.id) && !words.length ? "Раскрыть" : "Свернуть"} подзадачи: ${E(t.title)}" aria-expanded="${!ui.taskPickerCollapsed.has(t.id) || !!words.length}">${icon("chevron", true)}</button>` : '<span class="task-tree-spacer"></span>'}<label><input type="checkbox" data-task-choice="${E(t.id)}" aria-label="Выбрать задачу: ${E(taskPath(t.id))}" ${full ? "checked" : ""} data-partial="${partial}"><span><strong>${E(t.title)}</strong><small>${E(taskPath(t.id))}</small></span></label>${children ? `<button type="button" class="textbtn only-task-branch" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Только эта ветка: ${E(t.title)}">Только ветка</button>` : ""}</div>`;
+        })
+        .join("")
+    );
+  }
+  function taskPicker(q) {
+    return `<div class="query-field query-task-field"><label>Задачи <span class="task-field-hint">· дерево и галочки</span></label><details class="task-picker"><summary aria-label="Выбрать задачи темы"><span class="task-summary-label">${E(taskSelectionLabel(q))}</span>${icon("chevron", true)}</summary><div class="task-picker-body"><label>Поиск по названию или пути<input class="task-picker-search" aria-label="Найти задачу в дереве" placeholder="Например: выруб, посадка…" maxlength="1000"></label><p>Галочка у родителя выбирает все подзадачи. Ненужные подзадачи можно снять отдельно.</p><div class="task-picker-tools"><button type="button" class="textbtn" data-action="tasks-all">Все задачи</button><button type="button" class="textbtn" data-action="tasks-none">Снять все</button></div><div class="task-options" role="group" aria-label="Дерево задач выбранных тем">${taskPickerRows(q)}</div><div class="task-picker-footer"><span>После выбора нажмите «Применить»</span><button class="btn primary" type="button" data-action="query-apply" data-scope="main">Применить</button></div></div></details></div>`;
+  }
+  function placeTaskPicker() {
+    const picker = $("#filters .task-picker[open]");
+    if (!picker) return;
+    const summary = picker.querySelector("summary").getBoundingClientRect(),
+      body = picker.querySelector(".task-picker-body");
+    const width = Math.min(560, innerWidth - 24);
+    body.style.width = width + "px";
+    body.style.maxWidth = Math.max(0, innerWidth - 24) + "px";
+    body.style.maxHeight =
+      Math.max(180, Math.min(560, innerHeight - 32)) + "px";
+    body.style.left =
+      Math.max(12, Math.min(summary.left, innerWidth - width - 12)) + "px";
+    body.style.top =
+      Math.max(
+        16,
+        Math.min(summary.bottom + 6, innerHeight - body.offsetHeight - 16),
+      ) + "px";
+  }
+  window.addEventListener("resize", placeTaskPicker);
+  document.addEventListener("scroll", placeTaskPicker, true);
+  function refreshTaskPicker() {
+    const picker = $("#filters .task-picker");
+    if (!picker) return;
+    const q = queryDraft("main");
+    picker.querySelector(".task-summary-label").textContent =
+      taskSelectionLabel(q);
+    picker.querySelector(".task-options").innerHTML = taskPickerRows(
+      q,
+      picker.querySelector(".task-picker-search").value,
+    );
+    for (const checkbox of picker.querySelectorAll('[data-partial="true"]'))
+      checkbox.indeterminate = true;
+    placeTaskPicker();
+  }
+  function taskPickerPending() {
+    const feedback = $("#query-feedback-main");
+    feedback.textContent = "Выбор задач изменён — нажмите «Применить»";
+    feedback.classList.remove("error");
+    markQueryButtons("main");
+  }
+  function outputBranchRows(text = "") {
+    const q = meeting.queryDraft,
+      words = searchKey(text).split(/\s+/).filter(Boolean);
+    const candidates = model.tasks.filter(
+      (t) =>
+        t.kind === "task" &&
+        (!q.projects.length || q.projects.includes(t.project || "none")) &&
+        words.every((word) => searchKey(taskPath(t.id)).includes(word)),
+    );
+    candidates.sort(
+      (a, b) =>
+        Number(words.every((word) => searchKey(b.title).includes(word))) -
+          Number(words.every((word) => searchKey(a.title).includes(word))) ||
+        Number(hierarchy().children.has(b.id)) -
+          Number(hierarchy().children.has(a.id)),
+    );
+    return `<div class="task-picker-count">Найдено: ${candidates.length}${candidates.length > 60 ? ". Уточните поиск — показаны первые 60." : ""}</div>${candidates
+      .slice(0, 60)
+      .map(
+        (t) =>
+          `<button type="button" class="branch-result" data-action="output-branch-select" data-id="${E(t.id)}"><strong>${E(t.title)}</strong><small>${E(taskPath(t.id))}</small></button>`,
+      )
+      .join("")}`;
+  }
+  function outputBranchPicker() {
+    return `<div class="field"><label>Задача со всеми подзадачами</label><details class="branch-picker"><summary aria-label="Выбрать ветку для вывода"><span>${E(task(meeting.root)?.title || "Выберите ветку")}</span>${icon("chevron", true)}</summary><div class="branch-picker-body"><input class="output-branch-search" aria-label="Найти ветку для вывода" placeholder="Название или путь…"><div class="branch-results">${outputBranchRows()}</div></div></details><small>${E(taskPath(meeting.root))}</small></div>`;
+  }
+  document.addEventListener("input", (event) => {
+    if (event.target.matches(".task-picker-search")) refreshTaskPicker();
+    if (event.target.matches(".output-branch-search"))
+      event.target
+        .closest(".branch-picker")
+        .querySelector(".branch-results").innerHTML = outputBranchRows(
+        event.target.value,
+      );
+  });
+  document.addEventListener("change", (event) => {
+    if (!event.target.matches("[data-task-choice]")) return;
+    const q = queryDraft("main");
+    setTaskSelection(
+      q,
+      TaskFilter.toggle(
+        hierarchy(),
+        selectionInput(q),
+        event.target.dataset.taskChoice,
+        event.target.checked,
+      ),
+    );
+    refreshTaskPicker();
+    taskPickerPending();
+  });
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      if (!event.target.open) return;
+      if (event.target.matches?.(".task-picker")) {
+        refreshTaskPicker();
+        event.target.querySelector(".task-picker-search")?.focus();
+      }
+      if (event.target.matches?.(".branch-picker"))
+        event.target.querySelector(".output-branch-search")?.focus();
+    },
+    true,
+  );
+
   function queryError(q) {
     return q.from && q.to && q.from > q.to
       ? "Дата «По» должна быть не раньше даты «С»."
@@ -906,6 +1285,10 @@
   function activeQuery(q) {
     return !!(
       q.projects.length ||
+      hasTaskSelection(q) ||
+      q.counterparty ||
+      q.includeTags?.length ||
+      q.excludeTags?.length ||
       q.executor ||
       q.responsible ||
       q.status ||
@@ -924,6 +1307,25 @@
         ? "Темы: " + q.projects.map(themeName).join(", ")
         : "Все темы",
     ];
+    if (hasTaskSelection(q)) parts.push(taskSelectionLabel(q));
+    if (q.counterparty)
+      parts.push(
+        "Контрагент: " + (person(q.counterparty)?.name || "не найден"),
+      );
+    for (const [key, label] of [
+      ["includeTags", "Теги"],
+      ["excludeTags", "Без тегов"],
+    ])
+      if (q[key]?.length)
+        parts.push(
+          label +
+            ": " +
+            q[key]
+              .map(
+                (id) => model.tags.find((t) => t.id === id)?.name || "удалён",
+              )
+              .join(", "),
+        );
     if (q.executor)
       parts.push("Исполнитель: " + (person(q.executor)?.name || "не найден"));
     if (q.responsible)
@@ -967,6 +1369,7 @@
       scope === "main"
         ? {
             executor: "executor-filter",
+            counterparty: "counterparty-filter",
             responsible: "responsible-filter",
             status: "status-filter",
             from: "filter-from",
@@ -977,8 +1380,8 @@
     const field = (key, label, inner) =>
       `<div class="query-field"><label for="${id(key)}">${label}</label>${inner}</div>`;
     const select = (key, items, first) =>
-      `<select id="${id(key)}" data-query-key="${key}" aria-label="${E({ executor: "Исполнитель", responsible: "Ответственный", status: "Статус" }[key] || key)}">${options(items, q[key], first)}</select>`;
-    return `<section class="query-panel ${scope === "output" ? "query-output" : ""}" data-query-scope="${scope}"><div class="query-main-row"><div class="query-field"><label>Темы / проекты <span style="font-weight:400;color:#95a2b5">· выбор галочками</span></label>${themePicker(q, scope)}</div>${field("executor", "Исполнитель", select("executor", contacts, "Все исполнители"))}${field(
+      `<select id="${id(key)}" data-query-key="${key}" aria-label="${E({ executor: "Исполнитель", responsible: "Ответственный", status: "Статус", counterparty: "Контрагент" }[key] || key)}">${options(items, q[key], first)}</select>`;
+    return `<section class="query-panel ${scope === "output" ? "query-output" : ""}" data-query-scope="${scope}"><div class="query-main-row ${scope === "main" ? "with-task-picker" : ""}"><div class="query-field"><label>Темы / проекты <span style="font-weight:400;color:#95a2b5">· выбор галочками</span></label>${themePicker(q, scope)}</div>${scope === "main" && !["events", "calendar"].includes(ui.view) ? taskPicker(q) : ""}${field("counterparty", "Контрагент", select("counterparty", contacts, "Все контрагенты"))}${field("executor", "Исполнитель", select("executor", contacts, "Все исполнители"))}${field(
       "responsible",
       "Ответственный",
       select(
@@ -999,7 +1402,23 @@
         Object.entries(statuses).map(([id, name]) => ({ id, name })),
         "Все статусы",
       ),
-    )}</div><div class="query-period-row">${field("dateMode", "Период — по какой дате", `<select id="${id("dateMode")}" data-query-key="dateMode" ${scope === "main" && ui.view === "deadlines" ? "disabled" : ""}><option value="overlap" ${q.dateMode === "overlap" ? "selected" : ""}>Задачи в периоде</option><option value="deadline" ${q.dateMode === "deadline" ? "selected" : ""}>Дедлайн</option><option value="start" ${q.dateMode === "start" ? "selected" : ""}>Начало задачи</option></select>`)}${field("from", "С", `<input id="${id("from")}" data-query-key="from" type="date" value="${E(q.from)}">`)}${field("to", "По включительно", `<input id="${id("to")}" data-query-key="to" type="date" value="${E(q.to)}">`)}<div class="query-buttons"><button class="btn primary" data-action="query-apply" data-scope="${scope}">Применить</button><button class="btn" data-action="query-reset" data-scope="${scope}">Сбросить</button></div></div><div class="query-date-hint">${q.dateMode === "overlap" ? "Задача попадёт в выборку, если хотя бы часть её срока пересекается с периодом." : q.dateMode === "deadline" ? "В выборку попадут задачи с дедлайном в выбранном диапазоне." : "В выборку попадут задачи, начинающиеся в выбранном диапазоне."}</div><div class="query-presets"><span>Быстрый период:</span>${[
+    )}</div><details class="tag-filter-details"><summary>Теги ${q.includeTags.length || q.excludeTags.length ? "· выбраны" : ""}</summary><div class="tag-filter-grid"><div><span>Включить теги</span>${
+      model.tags
+        .filter((t) => !t.archived || q.includeTags.includes(t.id))
+        .map(
+          (t) =>
+            `<label><input type="checkbox" data-query-tag="includeTags" value="${E(t.id)}" ${q.includeTags.includes(t.id) ? "checked" : ""}>${E(t.name)}</label>`,
+        )
+        .join("") || "<small>Теги создаются в карточках</small>"
+    }<select data-query-key="tagMode" aria-label="Режим тегов"><option value="any" ${q.tagMode === "any" ? "selected" : ""}>Любой выбранный тег</option><option value="all" ${q.tagMode === "all" ? "selected" : ""}>Все выбранные теги</option></select></div><div><span>Исключить теги</span>${model.tags
+      .filter((t) => !t.archived || q.excludeTags.includes(t.id))
+      .map(
+        (t) =>
+          `<label><input type="checkbox" data-query-tag="excludeTags" value="${E(t.id)}" ${q.excludeTags.includes(t.id) ? "checked" : ""}>${E(t.name)}</label>`,
+      )
+      .join(
+        "",
+      )}</div></div></details><div class="query-period-row">${field("dateMode", "Период — по какой дате", `<select id="${id("dateMode")}" data-query-key="dateMode" ${scope === "main" && ui.view === "deadlines" ? "disabled" : ""}><option value="overlap" ${q.dateMode === "overlap" ? "selected" : ""}>Задачи в периоде</option><option value="deadline" ${q.dateMode === "deadline" ? "selected" : ""}>Дедлайн</option><option value="start" ${q.dateMode === "start" ? "selected" : ""}>Начало задачи</option></select>`)}${field("from", "С", `<input id="${id("from")}" data-query-key="from" type="date" value="${E(q.from)}">`)}${field("to", "По включительно", `<input id="${id("to")}" data-query-key="to" type="date" value="${E(q.to)}">`)}<div class="query-buttons"><button class="btn primary" data-action="query-apply" data-scope="${scope}">Применить</button><button class="btn" data-action="query-reset" data-scope="${scope}">Сбросить</button></div></div><div class="query-date-hint">${q.dateMode === "overlap" ? "Задача попадёт в выборку, если хотя бы часть её срока пересекается с периодом." : q.dateMode === "deadline" ? "В выборку попадут задачи с дедлайном в выбранном диапазоне." : "В выборку попадут задачи, начинающиеся в выбранном диапазоне."}</div><div class="query-presets"><span>Быстрый период:</span>${[
       ["today", "Сегодня"],
       ["week", "7 дней"],
       ["month", "30 дней"],
@@ -1052,6 +1471,11 @@
       q.showDone = ui.done;
       ui.projects = [...q.projects];
       ui.project = q.projects.length === 1 ? q.projects[0] : "all";
+      setTaskSelection(ui, selectionInput(q));
+      ui.counterparty = q.counterparty;
+      ui.includeTags = [...q.includeTags];
+      ui.excludeTags = [...q.excludeTags];
+      ui.tagMode = q.tagMode;
       for (const key of [
         "executor",
         "responsible",
@@ -1135,10 +1559,19 @@
       q.projects = target.checked
         ? [...new Set([...q.projects, id])]
         : q.projects.filter((p) => p !== id);
+      if (scope === "main") {
+        setTaskSelection(q, { all: true });
+        refreshTaskPicker();
+      }
       panel.querySelector(".theme-summary-label").textContent = q.projects
         .length
         ? q.projects.map(themeName).join(", ")
         : "Все темы";
+    } else if (target.dataset.queryTag) {
+      const key = target.dataset.queryTag;
+      q[key] = target.checked
+        ? [...new Set([...q[key], target.value])]
+        : q[key].filter((id) => id !== target.value);
     } else if (target.dataset.queryKey)
       q[target.dataset.queryKey] =
         target.type === "checkbox" ? target.checked : target.value;
@@ -1161,9 +1594,13 @@
     if (event.target.tagName === "SELECT") queryInput(event);
   });
   document.addEventListener("click", (event) => {
-    document.querySelectorAll(".query-theme-picker[open]").forEach((p) => {
-      if (!p.contains(event.target)) p.open = false;
-    });
+    document
+      .querySelectorAll(
+        ".query-theme-picker[open], .task-picker[open], .branch-picker[open]",
+      )
+      .forEach((p) => {
+        if (!p.contains(event.target)) p.open = false;
+      });
   });
   function updateQuerySummary() {
     const q = queryFromUi(),
@@ -1178,6 +1615,7 @@
       `<div class="query-view-options"><label><input id="show-done" type="checkbox" ${ui.done ? "checked" : ""}>Показывать завершённые</label><label><input id="expand-all" type="checkbox" ${ui.expand ? "checked" : ""}>Раскрыть подзадачи</label><div class="view-switch"><button class="${ui.view === "table" ? "active" : ""}" data-action="view" data-id="table" title="Таблица">${icon("lines", true)}</button><button class="${ui.view === "gantt" ? "active" : ""}" data-action="view" data-id="gantt" title="Гант">${icon("gantt", true)}</button></div></div>`;
     updateQuerySummary();
     markQueryButtons("main");
+    productUI.afterFilters();
   }
   function matches(t) {
     return queryMatches(t, queryFromUi());
@@ -1187,17 +1625,10 @@
     return { direct, set: new Set(direct.map((t) => t.id)), rows: direct };
   }
   function descendants(id) {
-    const set = new Set([id]);
-    let added = true;
-    while (added) {
-      added = false;
-      for (const t of model.tasks)
-        if (t.parent && set.has(t.parent) && !set.has(t.id)) {
-          set.add(t.id);
-          added = true;
-        }
-    }
-    return set;
+    const index = hierarchy();
+    if (!index.branches.has(id))
+      index.branches.set(id, TaskFilter.descendants(index, id));
+    return index.branches.get(id);
   }
   function treeRows(items) {
     const ids = new Set(items.map((t) => t.id)),
@@ -1218,7 +1649,9 @@
     return out;
   }
   function renderSide() {
-    const active = model.tasks.filter((t) => t.status !== "DONE");
+    const active = model.tasks.filter(
+      (t) => t.kind === "task" && t.status !== "DONE",
+    );
     $("#all-count").textContent = active.length;
     $("#none-count").textContent = active.filter((t) => !t.project).length;
     $("#all-link").classList.toggle("selected", ui.projects.length === 0);
@@ -1453,7 +1886,15 @@
       : "Исполнители";
   }
   function deadlineHeading(date) {
-    if (date === TODAY) return "Сегодня · 31 октября";
+    if (!date) return "Без срока";
+    if (date === TODAY)
+      return (
+        "Сегодня · " +
+        new Date(date + "T12:00:00").toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "long",
+        })
+      );
     const delta = Math.round((new Date(date) - new Date(TODAY)) / DAY);
     return `${delta === 1 ? "Завтра · " : ""}${new Date(date + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "short" })}`;
   }
@@ -1465,8 +1906,12 @@
       all = model.tasks
         .filter((t) => queryMatches(t, q))
         .sort((a, b) => a.end.localeCompare(b.end));
-    const late = all.filter((t) => t.end < TODAY && t.status !== "DONE"),
-      upcoming = all.filter((t) => t.end >= TODAY || t.status === "DONE");
+    const late = all.filter(
+        (t) => t.end && t.end < TODAY && t.status !== "DONE",
+      ),
+      upcoming = all.filter(
+        (t) => t.end && (t.end >= TODAY || t.status === "DONE"),
+      );
     $("#page-title").textContent = "Дедлайны";
     $("#breadcrumb").textContent = "Рабочее пространство / Дедлайны";
     $("#page-subtitle").textContent =
@@ -1478,6 +1923,8 @@
         deadlineHeading(date),
         upcoming.filter((t) => t.end === date),
       );
+    const undated = all.filter((t) => !t.end);
+    if (undated.length) html += deadlineSection("Без срока", undated);
     if (!all.length)
       html =
         '<div class="section empty"><h3>В выбранном периоде дедлайнов нет</h3><p>Измените даты, темы или человека в фильтрах.</p></div>';
@@ -1487,8 +1934,8 @@
   }
 
   function renderTaskRow(t, level, matched, showProject = false) {
-    const kids = model.tasks.filter((c) => c.parent === t.id).length;
-    return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${t.parent && task(t.parent) && !matches(task(t.parent)) ? `<small class="task-parent-path">Внутри: ${E(task(t.parent).title)}</small>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
+    const kids = hierarchy().children.get(t.id)?.length || 0;
+    return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span><button type="button" class="branch-shortcut" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Вся ветка: ${E(t.title)}">Вся ветка</button>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${t.parent && task(t.parent) && !matches(task(t.parent)) ? `<small class="task-parent-path">Внутри: ${E(taskPath(t.parent))}</small>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
   }
   function section(p, rows, directSet) {
     const id = p?.id || "",
@@ -1520,10 +1967,10 @@
       rows,
     )
       .map(({ t, level }) => {
-        const from = Math.round((new Date(t.start) - start) / DAY),
-          to = Math.round((new Date(t.end) - start) / DAY),
+        const from = Math.round((new Date(t.start || t.end) - start) / DAY),
+          to = Math.round((new Date(t.end || t.start) - start) / DAY),
           visible = to >= 0 && from < 21;
-        return `<div class="gantt-row"><div class="gantt-label" style="padding-left:${16 + level * 18}px"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button></div><div class="gantt-days">${'<span class="day"></span>'.repeat(21)}${visible ? `<button class="bar" style="left:${(Math.max(0, from) / 21) * 100}%;width:${((Math.min(20, to) - Math.max(0, from) + 1) / 21) * 100}%" data-action="edit-task" data-id="${E(t.id)}" aria-label="${E(t.title)}"><span style="width:${t.percent}%"></span><b>${t.percent}%</b></button>` : '<span class="off-range">Вне диапазона</span>'}</div></div>`;
+        return `<div class="gantt-row"><div class="gantt-label" style="padding-left:${16 + level * 18}px"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button></div><div class="gantt-days">${'<span class="day"></span>'.repeat(21)}${visible ? `<button class="bar" style="left:${(Math.max(0, from) / 21) * 100}%;width:${((Math.min(20, to) - Math.max(0, from) + 1) / 21) * 100}%" data-action="edit-task" data-id="${E(t.id)}" aria-label="${E(t.title)}"><span style="width:${t.percent}%"></span><b>${t.percent}%</b></button>` : `<span class="off-range">${t.start || t.end ? "Вне диапазона" : "Без срока"}</span>`}</div></div>`;
       })
       .join("")}</div>`;
   }
@@ -1538,6 +1985,11 @@
     $("#nav-deadlines").classList.toggle("active", ui.view === "deadlines");
     $("#nav-table").classList.toggle("active", ui.view === "table");
     $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
+    $("#nav-events")?.classList.toggle(
+      "active",
+      ["events", "calendar"].includes(ui.view),
+    );
+    if (productUI.renderView()) return;
     if (ui.view === "deadlines") {
       renderDeadlines();
       return;
@@ -1557,10 +2009,20 @@
         : "Темы / " + $("#page-title").textContent;
     $("#page-subtitle").textContent =
       ui.project === "all"
-        ? "Задачи и мероприятия, сгруппированные по темам"
+        ? "Рабочие задачи и подзадачи, сгруппированные по темам"
         : "Задачи, подзадачи и мероприятия этой темы";
+    if (!ui.taskAll && ui.taskInclude.length === 1 && !ui.taskExclude.length) {
+      const root = task(ui.taskInclude[0]);
+      $("#page-title").textContent = root?.title || "Выбранная задача удалена";
+      $("#breadcrumb").textContent = taskPath(ui.taskInclude[0]);
+      $("#page-subtitle").textContent =
+        "Выбранная задача и все подзадачи · остальные фильтры действуют внутри выборки";
+    }
     $("#result-count").textContent =
-      `В выборке: ${direct.length} · Из них просрочено: ${direct.filter((t) => t.end < TODAY && t.status !== "DONE").length}`;
+      `В выборке: ${direct.length} · Из них просрочено: ${direct.filter((t) => t.end && t.end < TODAY && t.status !== "DONE").length}`;
+    const topic = ui.projects.length === 1 ? proj(ui.projects[0]) : null;
+    if (topic?.description) $("#page-subtitle").textContent = topic.description;
+    if (productUI.renderGrouped(rows)) return;
     let html =
       ui.view === "gantt"
         ? '<div class="gantt-navigation"><button class="btn" data-action="gantt-previous">← 3 недели</button><button class="btn" data-action="gantt-today">Сегодня</button><button class="btn" data-action="gantt-next">3 недели →</button></div>'
@@ -1574,7 +2036,7 @@
     }
     $("#task-content").innerHTML =
       html ||
-      `<div class="section empty"><div class="empty-icon">${icon("folder")}</div><h3>${activeQuery(queryFromUi()) ? "Задач по этим условиям нет" : "В этой теме пока нет задач"}</h3><p>${activeQuery(queryFromUi()) ? "Попробуйте снять один из фильтров." : "Создайте первую задачу или мероприятие."}</p><button class="btn ${activeQuery(queryFromUi()) ? "" : "primary"}" data-action="${activeQuery(queryFromUi()) ? "reset-filters" : "create-task"}">${activeQuery(queryFromUi()) ? "Сбросить фильтры" : "+ Создать задачу"}</button></div>`;
+      `<div class="section empty"><div class="empty-icon">${icon("folder")}</div><h3>${activeQuery(queryFromUi()) ? "Задач по этим условиям нет" : "В этой теме пока нет задач"}</h3><p>${activeQuery(queryFromUi()) ? "Попробуйте снять один из фильтров." : "Создайте первую рабочую задачу."}</p><button class="btn ${activeQuery(queryFromUi()) ? "" : "primary"}" data-action="${activeQuery(queryFromUi()) ? "reset-filters" : "create-task"}">${activeQuery(queryFromUi()) ? "Сбросить фильтры" : "+ Создать задачу"}</button></div>`;
     $("#nav-table").classList.toggle("active", ui.view === "table");
     $("#nav-gantt").classList.toggle("active", ui.view === "gantt");
   }
@@ -1594,103 +2056,35 @@
     $("#modal-root").innerHTML = "";
     const url = new URL(location.href);
     url.searchParams.delete("manage");
-    history.replaceState(null, "", url.pathname + url.search);
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
   function modal(title, body, footer = "", small = false) {
     $("#modal-root").innerHTML =
       `<div class="modal-backdrop"><section class="modal ${small ? "small" : ""}" role="dialog" aria-modal="true" aria-label="${E(title)}"><div class="modal-head"><h2>${E(title)}</h2><button class="tinybtn" data-action="close-modal" aria-label="Закрыть">${icon("close")}</button></div><div class="modal-body">${body}</div>${footer ? `<div class="modal-foot">${footer}</div>` : ""}</section></div>`;
   }
-  function openTask(id = null, parent = null, project = null, kind = "task") {
-    if (ui.drawer) {
-      if (drawerDirty()) return;
-      closeDrawer(true);
-    }
-    const original = id ? task(id) : null;
-    if (id && !original) return;
-    const data = original
-      ? structuredClone(original)
-      : makeTask(
-          uid(),
-          "",
-          parent
-            ? task(parent).project
-            : (project ??
-                (ui.project === "all" || ui.project === "none"
-                  ? ""
-                  : ui.project)),
-          parent,
-          ui.responsible,
-          [],
-          TODAY,
-          addDays(TODAY, 5),
-          0,
-          "PLANNED",
-          kind,
-        );
-    if (!original) data.timeZone = model.timeZone;
-    ui.drawer = { id, parent, project, kind, data };
-    const exclude = id ? descendants(id) : new Set(),
-      available = model.tasks.filter(
-        (t) => t.project === data.project && !exclude.has(t.id),
-      );
-    const contacts = model.contacts.filter(
-      (c) => !c.archived || data.executors.includes(c.id),
-    );
-    const responsible = model.contacts.filter(
-      (c) => (c.responsible && !c.archived) || c.id === data.responsible,
-    );
-    const current = original || data;
-    $("#drawer-root").innerHTML =
-      `<div class="backdrop" data-action="close-drawer"></div>
-          <section class="drawer" role="dialog" aria-modal="true" aria-label="${id ? "Карточка задачи" : "Новая задача"}">
-          <div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${data.kind === "event" ? "МЕРОПРИЯТИЕ" : "ЗАДАЧА"}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : parent ? "Новая подзадача" : kind === "event" ? "Новое мероприятие" : "Новая задача")}</h2></div>
-          <form id="task-form" class="drawer-body"><div id="task-error"></div>
-          <div class="field"><label for="task-title">Название</label><input id="task-title" name="title" required maxlength="1000" placeholder="Что нужно сделать?" value="${E(data.title)}"></div>
-          <div class="twocol"><div class="field"><label for="task-project">Тема / проект</label><select id="task-project" name="project" ${data.parent ? "disabled" : ""}><option value="">Без темы</option>${model.projects
-            .filter((p) => !p.archived || p.id === data.project)
-            .map(
-              (p) =>
-                `<option value="${E(p.id)}" ${p.id === data.project ? "selected" : ""}>${E(p.name)}</option>`,
-            )
-            .join(
-              "",
-            )}</select>${data.parent ? "<small>Наследуется от родительской задачи</small>" : ""}</div>
-          <div class="field"><label for="task-kind">Тип</label><select id="task-kind" name="kind"><option value="task" ${data.kind === "task" ? "selected" : ""}>Задача</option><option value="event" ${data.kind === "event" ? "selected" : ""}>Мероприятие</option></select></div></div><div id="kind-hint"></div>
-          <section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы к задаче</div><div id="drawer-files">${attachmentList(current)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>Word, Excel, PDF, изображения и текст — просмотр здесь. Оригинал всегда можно скачать.</small><p class="activity-empty">${id ? "Файлы и записи обсуждения сохраняются сразу." : "Файлы и записи сохранятся вместе с новой задачей."}</p></section>
-          <section class="activity-section"><div class="activity-heading">${icon("message", true)} Комментарии и вопросы</div><div id="comment-list">${notesHtml(current)}</div>${noteComposer(current, "drawer")}</section>
-          <div class="field"><label for="task-parent">Родительская задача</label><select id="task-parent" name="parent"><option value="">Самостоятельная задача</option>${available.map((t) => `<option value="${E(t.id)}" ${t.id === data.parent ? "selected" : ""}>${E(t.title)}</option>`).join("")}</select></div>
-          <div class="field"><label for="task-description">Описание</label><textarea id="task-description" name="description" placeholder="Детали, договорённости, ожидаемый результат">${E(data.description)}</textarea>${data.legacyTags ? `<details><summary class="activity-empty">Исходные теги</summary><p class="activity-empty">${E(data.legacyTags)}</p></details>` : ""}</div>
-          <div class="field"><span class="field-label" id="executor-label">Исполнители</span><div class="multi">${contacts.map((c) => `<label><input type="checkbox" name="executors" value="${E(c.id)}" ${data.executors.includes(c.id) ? "checked" : ""}>${E(c.name)}</label>`).join("")}</div><small>Можно выбрать несколько людей или организаций</small></div>
-          <div class="field"><label for="task-responsible">Ответственный</label><select id="task-responsible" name="responsible">${options(responsible, data.responsible, "Не назначен")}</select></div>
-          <div class="twocol"><div class="field"><label for="task-start">Начало</label><input id="task-start" type="date" name="start" value="${E(data.start)}" required></div><div class="field"><label for="task-end">Окончание / дедлайн</label><input id="task-end" type="date" name="end" value="${E(data.end)}" required></div></div>
-          <div id="event-fields"><div class="twocol"><div class="field"><label for="event-start-time">Время начала</label><input id="event-start-time" type="time" name="startTime" value="${E(data.startTime || "")}"></div><div class="field"><label for="event-end-time">Время окончания</label><input id="event-end-time" type="time" name="endTime" value="${E(data.endTime || "")}"></div></div><div class="field"><label for="event-location">Место / ссылка на встречу</label><input id="event-location" name="location" value="${E(data.location || "")}" placeholder="Адрес или ссылка"></div><div class="field"><label for="task-timezone">Часовой пояс мероприятия</label><select id="task-timezone" name="timeZone">${[...new Set([data.timeZone || model.timeZone, "Asia/Jerusalem", "Europe/Bratislava", "UTC"])].map((zone) => `<option ${zone === (data.timeZone || model.timeZone) ? "selected" : ""}>${E(zone)}</option>`).join("")}</select></div><p class="activity-empty">Без времени — мероприятие на весь день.</p></div>
-          <div class="twocol"><div class="field"><label for="task-status">Статус</label><select id="task-status" name="status">${Object.entries(
-            statuses,
-          )
-            .map(
-              ([k, v]) =>
-                `<option value="${k}" ${data.status === k ? "selected" : ""}>${v}</option>`,
-            )
-            .join(
-              "",
-            )}</select></div><div class="field" id="percent-field"><label for="task-percent">Выполнение, %</label><input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}" required></div></div>
-          </form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" data-action="meeting-open" data-id="${E(id)}" title="Печать и экспорт этой ветки">${icon("printer", true)}Вывод</button><button class="btn danger" data-action="delete-task" data-id="${E(id)}">${icon("trash", true)}Удалить</button>` : ""}</div></section>`;
-    updateEventFields();
-    ui.drawer.baseline = taskFormSignature();
-    const url = new URL(location.href);
-    if (id) url.searchParams.set("task", id);
-    else url.searchParams.set("new", kind);
-    history.replaceState(null, "", url.pathname + url.search);
-    $("#task-title")?.focus();
+  function openTask(
+    id = null,
+    parent = null,
+    project = null,
+    kind = "task",
+    extra = {},
+  ) {
+    productUI.openCard(id, parent, project, kind, extra);
   }
   function deleteTask(id) {
-    pendingTaskDeletion = { id, revision: task(id).revision };
-    const t = task(id),
-      count = model.tasks.filter((c) => c.parent === id).length;
+    const t = task(id);
+    if (!t) return;
+    pendingTaskDeletion = { id, revision: t.revision };
+    const message =
+      t.kind === "event"
+        ? "Мероприятие и его собственные вопросы и подготовка будут удалены. Рабочие задачи останутся в темах. Вложенные мероприятия сохранятся самостоятельно."
+        : t.kind === "task"
+          ? "Подзадачи сохранятся и перейдут к родителю удалённой задачи. Связанные мероприятия и их собственные материалы сохранятся."
+          : "Удалится этот пункт с собственным обсуждением. Вложенные пункты сохранятся. Связанная рабочая задача останется в своей теме.";
     modal(
-      "Удалить задачу?",
-      `<p style="font-size:13px">${E(t.title)}</p><p class="muted" style="font-size:12px">${count ? `Подзадач: ${count}. Они останутся в теме и сохранят свои назначения.` : "Будет удалена только эта задача из макета."}</p>`,
-      `<button class="btn" data-action="close-modal">Отмена</button><button class="btn danger" data-action="confirm-task-delete" data-id="${E(id)}">Удалить задачу</button>`,
+      "Удалить запись?",
+      `<p>${E(t.title)}</p><p class="activity-empty">${message}</p>`,
+      `<button class="btn" data-action="close-modal">Отмена</button><button class="btn danger" data-action="confirm-task-delete" data-id="${E(id)}">Удалить запись</button>`,
       true,
     );
   }
@@ -1701,6 +2095,7 @@
         ["projects", "Темы / проекты"],
         ["contacts", "Контрагенты"],
         ["responsibles", "Ответственные"],
+        ["tags", "Теги"],
       ]
         .map(
           ([id, label]) =>
@@ -1708,7 +2103,7 @@
         )
         .join(
           "",
-        )}</div><div class="modal-body"><div class="manage-top"><label style="display:flex;gap:7px;font-size:11px;color:#8b9aaf;align-items:center"><input id="manager-archived" type="checkbox" ${ui.managerArchived ? "checked" : ""}>Показывать скрытые</label><button class="btn primary" data-action="directory-add">${icon("plus", true)}${tab === "projects" ? "Тема" : tab === "responsibles" ? "Ответственный" : "Контрагент"}</button></div><div id="directory-list"></div></div><div class="modal-foot"><button class="btn" data-action="close-modal">Готово</button></div></section></div>`;
+        )}</div><div class="modal-body"><div class="manage-top"><label style="display:flex;gap:7px;font-size:11px;color:#8b9aaf;align-items:center"><input id="manager-archived" type="checkbox" ${ui.managerArchived ? "checked" : ""}>Показывать скрытые</label><button class="btn primary" data-action="directory-add">${icon("plus", true)}${tab === "projects" ? "Тема" : tab === "responsibles" ? "Ответственный" : tab === "tags" ? "Тег" : "Контрагент"}</button></div><div id="directory-list"></div></div><div class="modal-foot"><button class="btn" data-action="close-modal">Готово</button></div></section></div>`;
     renderDirectory();
   }
   function renderDirectory() {
@@ -1716,9 +2111,11 @@
     let items =
       mode === "projects"
         ? model.projects
-        : model.contacts.filter(
-            (c) => mode !== "responsibles" || c.responsible,
-          );
+        : mode === "tags"
+          ? model.tags
+          : model.contacts.filter(
+              (c) => mode !== "responsibles" || c.responsible,
+            );
     items = items.filter((item) => !item.archived || ui.managerArchived);
     $("#directory-list").innerHTML =
       `<div class="dir-head"><span>Название</span><span>${mode === "projects" ? "Состояние" : "Роли"}</span><span>Задач</span><span style="text-align:right">Действия</span></div>${
@@ -1729,7 +2126,11 @@
                 ? t.project === item.id
                 : mode === "responsibles"
                   ? t.responsible === item.id
-                  : t.executors.includes(item.id) || t.responsible === item.id,
+                  : mode === "tags"
+                    ? t.tagIds.includes(item.id)
+                    : t.counterparties.includes(item.id) ||
+                      t.executors.includes(item.id) ||
+                      t.responsible === item.id,
             ).length;
             return `<div class="dir-row"><div style="display:flex;gap:9px;align-items:center" class="${item.archived ? "muted" : ""}">${mode === "projects" ? `<span class="dot" style="--dot:${item.color}"></span>` : `<span class="avatar">${E(initials(item.name))}</span>`}<span>${E(item.name)}</span></div><div class="roles">${mode === "projects" ? `<span class="badge">${item.archived ? "Скрыта" : "Активна"}</span>` : `<span class="badge">${E(item.type)}</span>${item.responsible ? '<span class="badge role">Ответственный</span>' : ""}${item.archived ? '<span class="badge">Скрыт</span>' : ""}`}</div><span class="muted" style="font-size:11px">${count}</span><div class="dir-actions"><button class="tinybtn" data-action="directory-edit" data-id="${E(item.id)}" title="Переименовать" aria-label="Переименовать ${E(item.name)}">${icon("edit", true)}</button><button class="tinybtn" data-action="directory-hide" data-id="${E(item.id)}" data-revision="${item.revision}" data-archived="${!item.archived}" title="${item.archived ? "Вернуть в выбор" : "Скрыть из выбора"}" aria-label="${item.archived ? "Вернуть" : "Скрыть"} ${E(item.name)}">${icon("eye", true)}</button><button class="tinybtn" data-action="directory-delete" data-id="${E(item.id)}" title="${mode === "responsibles" ? "Убрать из ответственных" : "Удалить"}" aria-label="Удалить ${E(item.name)}">${icon("trash", true)}</button></div></div>`;
           })
@@ -1739,7 +2140,13 @@
   let directoryContext = null;
   function directoryEdit(id = null, forceProject = false) {
     const mode = forceProject ? "projects" : ui.manager,
-      item = id ? (mode === "projects" ? proj(id) : person(id)) : null;
+      item = id
+        ? mode === "projects"
+          ? proj(id)
+          : mode === "tags"
+            ? model.tags.find((t) => t.id === id)
+            : person(id)
+        : null;
     directoryContext = { mode, id, revision: item?.revision, newId: uid() };
     if (mode === "responsibles" && !id) {
       const available = model.contacts.filter(
@@ -1757,38 +2164,56 @@
           ? "Редактировать запись"
           : mode === "projects"
             ? "Новая тема"
-            : "Новый контрагент",
-        `<div class="field"><label for="directory-name">${mode === "projects" ? "Название темы" : "Название / имя"}</label><input id="directory-name" value="${E(item?.name || "")}" placeholder="Введите название" maxlength="100"></div>${mode !== "projects" ? `<div class="field"><label for="contact-type">Тип</label><select id="contact-type">${["Человек", "Организация", "Группа"].map((type) => `<option ${item?.type === type ? "selected" : ""}>${type}</option>`).join("")}</select></div><label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="contact-responsible" ${item?.responsible ? "checked" : ""}>Доступен в списке ответственных</label>` : '<div class="info-box">Тема объединяет задачи и мероприятия. Людей назначают на конкретные задачи.</div>'}<div id="directory-error"></div>`,
+            : mode === "tags"
+              ? "Новый тег"
+              : "Новый контрагент",
+        `<div class="field"><label for="directory-name">${mode === "projects" ? "Название темы" : "Название / имя"}</label><input id="directory-name" value="${E(item?.name || "")}" placeholder="Введите название" maxlength="100"></div>${!["projects", "tags"].includes(mode) ? `<div class="field"><label for="contact-type">Тип</label><select id="contact-type">${["Человек", "Организация", "Группа"].map((type) => `<option ${item?.type === type ? "selected" : ""}>${type}</option>`).join("")}</select></div><label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="contact-responsible" ${item?.responsible ? "checked" : ""}>Доступен в списке ответственных</label>` : mode === "projects" ? '<div class="info-box">Тема объединяет задачи и мероприятия. Людей назначают на конкретные задачи.</div>' : '<div class="info-box">Свободная метка для поиска и группировки любых записей.</div>'}<div id="directory-error"></div>`,
         `<button class="btn" data-action="manage">Отмена</button><button class="btn primary" data-action="directory-save">Сохранить</button>`,
         true,
+      );
+    if (mode === "projects")
+      $("#modal-root .modal-body").insertAdjacentHTML(
+        "beforeend",
+        `<div class="field"><label for="directory-description">Описание / проблематика</label><textarea id="directory-description">${E(item?.description || "")}</textarea></div>`,
       );
     setTimeout(() => $("#directory-name")?.focus(), 30);
   }
   let deleteContext = null;
   function directoryDelete(id) {
     const mode = ui.manager,
-      item = mode === "projects" ? proj(id) : person(id),
+      item =
+        mode === "projects"
+          ? proj(id)
+          : mode === "tags"
+            ? model.tags.find((t) => t.id === id)
+            : person(id),
       affected = model.tasks.filter((t) =>
         mode === "projects"
           ? t.project === id
           : mode === "responsibles"
             ? t.responsible === id
-            : t.executors.includes(id) || t.responsible === id,
+            : mode === "tags"
+              ? t.tagIds.includes(id)
+              : t.executors.includes(id) ||
+                t.responsible === id ||
+                t.counterparties.includes(id),
       );
     deleteContext = { mode, id, revision: item.revision };
     const choices =
       mode === "projects"
         ? model.projects.filter((p) => p.id !== id && !p.archived)
-        : model.contacts.filter(
-            (c) =>
-              c.id !== id &&
-              !c.archived &&
-              (!(
-                mode === "responsibles" ||
-                affected.some((t) => t.responsible === id)
-              ) ||
-                c.responsible),
-          );
+        : mode === "tags"
+          ? model.tags.filter((t) => t.id !== id && !t.archived)
+          : model.contacts.filter(
+              (c) =>
+                c.id !== id &&
+                !c.archived &&
+                (!(
+                  mode === "responsibles" ||
+                  affected.some((t) => t.responsible === id)
+                ) ||
+                  c.responsible),
+            );
     modal(
       mode === "responsibles" ? "Убрать из ответственных?" : "Удалить запись?",
       `<p style="font-size:14px;margin-top:0">${E(item.name)}</p><div class="info-box">${affected.length ? `Связанных задач: <strong>${affected.length}</strong>. ` : ""}Сами задачи сохранятся.${mode === "responsibles" ? " Карточка останется среди контрагентов." : ""}</div>${affected.length ? `<div class="field"><label for="replacement">${mode === "projects" ? "Куда перенести задачи" : "Заменить назначение на"}</label><select id="replacement">${options(choices, "", mode === "projects" ? "Без темы" : "Снять назначение")}</select></div>` : ""}`,
@@ -1804,6 +2229,8 @@
     questions: "open",
     comments: "last",
     description: false,
+    images: true,
+    generalItems: true,
     people: true,
     dates: true,
     status: false,
@@ -1813,9 +2240,75 @@
   };
   let meeting = null,
     meetingTimer;
+  const printImageUrls = new Map();
+  function printTask(id) {
+    const value = task(id);
+    return value ? productUI.printItem(value) : null;
+  }
+  function imageMaterial(file) {
+    return (
+      /^image\//.test(file.type) ||
+      /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name)
+    );
+  }
+  function ensurePrintImages() {
+    if (!meeting?.images || meeting.loadingImages) return;
+    const active = meeting,
+      files = [
+        ...new Map(
+          active.order
+            .filter((id) => active.selected.has(id))
+            .flatMap((id) => printTask(id)?.attachments || [])
+            .filter(imageMaterial)
+            .map((f) => [f.id, f]),
+        ).values(),
+      ].filter((f) => !printImageUrls.has(f.id));
+    if (!files.length) return;
+    active.loadingImages = true;
+    active.valid = false;
+    void (async () => {
+      for (const file of files) {
+        let url = null;
+        try {
+          let blob = await attachmentBlob(file);
+          if (!/^image\//.test(blob.type)) {
+            const ext = file.name.split(".").at(-1).toLowerCase(),
+              types = {
+                jpg: "image/jpeg",
+                jpeg: "image/jpeg",
+                png: "image/png",
+                gif: "image/gif",
+                webp: "image/webp",
+                bmp: "image/bmp",
+                svg: "image/svg+xml",
+              };
+            blob = new Blob([blob], { type: types[ext] || "image/png" });
+          }
+          url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          if (meeting !== active) {
+            URL.revokeObjectURL(url);
+            continue;
+          }
+          printImageUrls.set(file.id, url);
+        } catch {
+          if (url) URL.revokeObjectURL(url);
+          if (meeting === active) printImageUrls.set(file.id, null);
+        }
+      }
+      if (meeting === active) {
+        active.loadingImages = false;
+        renderMeetingPreview();
+      }
+    })();
+  }
   const OUTPUT_COLUMNS = {
     title: "Задача",
     project: "Тема",
+    counterparties: "Контрагенты",
+    tags: "Теги",
     executor: "Исполнитель",
     responsible: "Ответственный",
     start: "Начало",
@@ -1861,7 +2354,7 @@
   }
   function outputTitle() {
     return meeting.format === "meeting"
-      ? task(meeting.root)?.title || "Лист на встречу"
+      ? printTask(meeting.root)?.title || "Лист на встречу"
       : "Список задач";
   }
   function refreshOutputCandidates() {
@@ -1869,9 +2362,20 @@
       meeting.sourceMode === "branch" && meeting.root
         ? [meeting.root, ...branchOrder(meeting.root).map((r) => r.id)]
         : model.tasks.map((t) => t.id);
-    meeting.order = candidates.filter((id) =>
-      queryMatches(task(id), meeting.query),
-    );
+    const query = cloneQuery(meeting.query);
+    if (meeting.sourceMode === "branch") setTaskSelection(query, { all: true });
+    meeting.order = candidates.filter((id) => {
+      const value = printTask(id);
+      if (!value) return false;
+      if (
+        query.scope === "agenda" &&
+        ["preparation", "question", "note"].includes(value.kind)
+      ) {
+        if (!meeting.generalItems) return false;
+        return queryMatches(value, { ...query, projects: [] });
+      }
+      return queryMatches(value, query);
+    });
     meeting.selected = new Set(
       meeting.order.filter((id) => !meeting.excluded.has(id)),
     );
@@ -1879,8 +2383,10 @@
       meeting.query.showDone || meeting.query.status === "DONE";
   }
   function setMeetingRoot(id) {
-    if (!task(id)) return;
+    if (!printTask(id)) return;
     meeting.root = id;
+    meeting.query.scope = printTask(id)?.kind === "task" ? "work" : "agenda";
+    meeting.queryDraft.scope = meeting.query.scope;
     meeting.sourceMode = "branch";
     meeting.excluded = new Set();
     meeting.breaks = new Set();
@@ -1890,6 +2396,14 @@
   function openMeeting(id) {
     const format = id ? "meeting" : "list",
       query = cloneQuery(queryFromUi());
+    if (id) {
+      query.scope = printTask(id)?.kind === "task" ? "work" : "agenda";
+      query.projects = [];
+      query.text = "";
+      query.from = "";
+      query.to = "";
+      query.due = "";
+    }
     meeting = {
       ...outputProfile(format),
       root: id || null,
@@ -1905,6 +2419,14 @@
       pages: 0,
       previewZoom: "page",
     };
+    if (id && printTask(id)?.kind === "event") {
+      meeting.description = true;
+      meeting.files = true;
+      meeting.images = true;
+      meeting.generalItems = true;
+      meeting.query = { ...blankQuery(), scope: "agenda", showDone: true };
+      meeting.queryDraft = cloneQuery(meeting.query);
+    }
     meeting.title = outputTitle();
     refreshOutputCandidates();
     renderMeetingControls();
@@ -1927,7 +2449,7 @@
       meeting.root =
         roots.find((t) =>
           [t.id, ...descendants(t.id)].some((id) =>
-            queryMatches(task(id), meeting.query),
+            queryMatches(printTask(id), meeting.query),
           ),
         )?.id ||
         roots[0]?.id ||
@@ -1969,13 +2491,7 @@
             `<button class="${meeting.sourceMode === id ? "active" : ""}" data-action="output-source" data-id="${id}">${label}</button>`,
         )
         .join("")}</div>${
-        meeting.sourceMode === "branch"
-          ? `<div class="field"><label for="meeting-source">Задача со всеми подзадачами</label><select id="meeting-source">${options(
-              roots.map((t) => ({ id: t.id, name: t.title })),
-              meeting.root,
-              "Выберите ветку",
-            )}</select></div>`
-          : ""
+        meeting.sourceMode === "branch" ? outputBranchPicker() : ""
       }${queryControls(meeting.queryDraft, "output")}<div class="output-summary" id="output-summary"></div><details ${meeting.format === "list" ? "open" : ""}><summary>${meeting.format === "list" ? "Столбцы списка" : "Содержимое листа"}</summary>${meeting.format === "list" ? `<div class="meeting-checks">${columns}</div>` : ""}<div class="twocol"><div class="field"><label>Вопросы</label>${meetingSelect(
         "questions",
         [
@@ -1990,7 +2506,7 @@
           ["all", "Все"],
           ["none", "Не печатать"],
         ],
-      )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("files", "Названия файлов")}${meeting.format === "meeting" ? meetingCheckbox("people", "Ответственные") + meetingCheckbox("dates", "Сроки / время") + meetingCheckbox("status", "Статусы") + meetingCheckbox("finalNotes", "Общие итоги") : ""}</div></details><details><summary>Лист и оформление</summary>${
+      )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("files", "Названия файлов")}${meetingCheckbox("images", "Графики и изображения")}${meeting.query.scope === "agenda" ? meetingCheckbox("generalItems", "Общие вопросы, подготовка и материалы") : ""}${meeting.format === "meeting" ? meetingCheckbox("people", "Ответственные") + meetingCheckbox("dates", "Сроки / время") + meetingCheckbox("status", "Статусы") + meetingCheckbox("finalNotes", "Общие итоги") : ""}</div></details><details><summary>Лист и оформление</summary>${
         meeting.format === "meeting"
           ? `<div class="meeting-presets">${[
               ["compact", "Компактно"],
@@ -2040,7 +2556,7 @@
   function updateOutputSummary() {
     if ($("#output-summary"))
       $("#output-summary").textContent =
-        `Найдено: ${meeting.order.length} · Выбрано: ${meeting.selected.size}. ${querySummary(meeting.query)}${meeting.sourceMode === "branch" ? " · Ветка: " + task(meeting.root)?.title : ""}`;
+        `Найдено: ${meeting.order.length} · Выбрано: ${meeting.selected.size}. ${querySummary(meeting.sourceMode === "branch" ? { ...meeting.query, taskAll: true, taskInclude: [], taskExclude: [] } : meeting.query)}${meeting.sourceMode === "branch" ? " · Ветка: " + printTask(meeting.root)?.title : ""}`;
   }
   function renderMeetingTree() {
     const levels = new Map(
@@ -2056,8 +2572,10 @@
     $("#meeting-tree").innerHTML =
       meeting.order
         .map((id) => {
-          const t = task(id),
-            siblings = meeting.order.filter((s) => task(s).parent === t.parent),
+          const t = printTask(id),
+            siblings = meeting.order.filter(
+              (s) => printTask(s).parent === t.parent,
+            ),
             index = siblings.indexOf(id);
           return `<div class="meeting-tree-row ${meeting.selected.has(id) ? "" : "off"}" style="margin-left:${Math.min(3, levels.get(id) || 0) * 8}px"><label class="meeting-tree-name"><input type="checkbox" data-meeting-task="${E(id)}" ${meeting.selected.has(id) ? "checked" : ""}><span>${E(t.title)}</span></label><div class="meeting-tree-tools"><button class="tinybtn" data-action="meeting-up" data-id="${E(id)}" ${index === 0 ? "disabled" : ""}>↑</button><button class="tinybtn" data-action="meeting-down" data-id="${E(id)}" ${index === siblings.length - 1 ? "disabled" : ""}>↓</button><button class="page-break-toggle ${meeting.breaks.has(id) ? "active" : ""}" data-action="meeting-break" data-id="${E(id)}">${meeting.breaks.has(id) ? "✓ " : ""}Новая страница</button></div></div>`;
         })
@@ -2075,11 +2593,18 @@
           .filter(Boolean)
           .join(", ") || "Не назначен"
       );
+    if (key === "counterparties")
+      return t.counterparties
+        .map((id) => person(id)?.name)
+        .filter(Boolean)
+        .join(", ");
+    if (key === "tags") return (t.tags || []).join(", ");
     if (key === "responsible")
       return person(t.responsible)?.name || "Не назначен";
     if (key === "status") return statuses[t.status];
     if (key === "percent") return t.percent + "%";
-    if (key === "parent") return task(t.parent)?.title || "";
+    if (key === "parent") return printTask(t.parent)?.title || "";
+    if ((key === "start" || key === "end") && !t[key]) return "Без даты";
     if (key === "start" || key === "end")
       return new Date(t[key] + "T12:00:00").toLocaleDateString("ru-RU");
     return "";
@@ -2090,13 +2615,14 @@
         .filter((id) => meeting.selected.has(id))
         .map((id) => ({
           id,
-          title: task(id).title,
+          title: printTask(id).title,
           kind: "list",
-          parts: meetingParts(task(id)),
+          parts: meetingParts(printTask(id)),
           notes: false,
           breakBefore: meeting.breaks.has(id),
         }));
-    const root = meeting.sourceMode === "branch" ? task(meeting.root) : null,
+    const root =
+        meeting.sourceMode === "branch" ? printTask(meeting.root) : null,
       blocks = [];
     if (root && meeting.selected.has(root.id)) {
       const parts = meetingParts(root);
@@ -2111,19 +2637,19 @@
     }
     const include = new Set(meeting.selected);
     for (const id of meeting.selected) {
-      let p = task(id)?.parent;
+      let p = printTask(id)?.parent;
       const seen = new Set([id]);
       while (p && p !== root?.id && !seen.has(p)) {
         seen.add(p);
         if (meeting.order.includes(p)) include.add(p);
-        p = task(p)?.parent;
+        p = printTask(p)?.parent;
       }
     }
     const counters = new Map(),
       numbers = new Map();
     for (const id of meeting.order) {
       if (id === root?.id || !include.has(id)) continue;
-      const t = task(id),
+      const t = printTask(id),
         context = !meeting.selected.has(id),
         group = numbers.has(t.parent) ? t.parent : "__top",
         n = (counters.get(group) || 0) + 1;
@@ -2134,7 +2660,18 @@
       const metadata = [];
       if (!context && meeting.people)
         metadata.push(
-          "Ответственный: " + (person(t.responsible)?.name || "не назначен"),
+          "Контрагенты: " +
+            (t.counterparties
+              .map((id) => person(id)?.name)
+              .filter(Boolean)
+              .join(", ") || "не назначены") +
+            " · Исполнители: " +
+            (t.executors
+              .map((id) => person(id)?.name)
+              .filter(Boolean)
+              .join(", ") || "не назначены") +
+            " · Ответственный: " +
+            (person(t.responsible)?.name || "не назначен"),
         );
       if (!context && meeting.dates)
         metadata.push(
@@ -2153,7 +2690,8 @@
         notes: !context,
         context,
         metadata: metadata.join(" · "),
-        path: t.parent && t.parent !== root?.id ? task(t.parent)?.title : "",
+        path:
+          t.parent && t.parent !== root?.id ? printTask(t.parent)?.title : "",
         breakBefore: meeting.breaks.has(id),
       });
     }
@@ -2169,11 +2707,11 @@
     return blocks;
   }
   function listMeetingEntry(block, parts, continued) {
-    const t = task(block.id),
+    const t = printTask(block.id),
       node = document.createElement("article");
     node.className = "meeting-entry ordinary-row";
     node.dataset.sheetTask = block.id;
-    node.innerHTML = `<div class="sheet-table-cells">${meeting.columns.map((key) => `<div class="${key === "title" ? "list-task-title" : ""}">${E(outputCell(t, key))}${key === "title" && continued ? " · продолжение" : ""}${key === "title" && t.parent ? `<div class="list-task-parent">Внутри: ${E(task(t.parent)?.title || "")}</div>` : ""}</div>`).join("")}</div>${parts.length ? `<div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${E(p.text)}</div>`).join("")}</div>` : ""}`;
+    node.innerHTML = `<div class="sheet-table-cells">${meeting.columns.map((key) => `<div class="${key === "title" ? "list-task-title" : ""}">${E(outputCell(t, key))}${key === "title" && continued ? " · продолжение" : ""}${key === "title" && t.parent ? `<div class="list-task-parent">Внутри: ${E(printTask(t.parent)?.title || "")}</div>` : ""}</div>`).join("")}</div>${parts.length ? `<div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${p.image ? `<figure class="print-image"><img src="${E(p.image)}" alt="${E(p.text)}"><figcaption>${E(p.text)}</figcaption></figure>` : E(p.text)}</div>`).join("")}</div>` : ""}`;
     return node;
   }
   function meetingEntry(
@@ -2199,11 +2737,12 @@
         .map((key) => (key === "title" ? "minmax(0,3fr)" : "minmax(0,1.2fr)"))
         .join(" "),
     );
-    page.innerHTML = `<header class="sheet-heading"><div class="sheet-eyebrow">${meeting.format === "list" ? "Список задач" : "Лист на встречу"}</div><h1>${E(meeting.title)}</h1><div class="sheet-filter-summary">${E(querySummary(meeting.query))}${meeting.sourceMode === "branch" ? " · Ветка: " + E(task(meeting.root)?.title || "") : ""}</div>${meeting.format === "meeting" ? `<div class="sheet-meeting-meta" style="margin-top:3mm"><span>Дата: ${meeting.date ? E(new Date(meeting.date + "T12:00:00").toLocaleDateString("ru-RU")) : "________________"}</span><span>${meeting.participants ? E(meeting.participants) : "Участники: __________________________"}</span></div>` : `<div class="sheet-table-head">${meeting.columns.map((key) => `<span>${OUTPUT_COLUMNS[key]}</span>`).join("")}</div>`}</header><div class="sheet-body"></div><footer class="sheet-footer"><span>${meeting.format === "meeting" ? "Решения и вопросы к встрече" : "Список задач · " + meeting.selected.size + " записей"}</span><span class="sheet-page-number"></span></footer>`;
+    page.innerHTML = `<header class="sheet-heading"><div class="sheet-eyebrow">${meeting.format === "list" ? "Список задач" : "Лист на встречу"}</div><h1>${E(meeting.title)}</h1><div class="sheet-filter-summary">${E(querySummary(meeting.query))}${meeting.sourceMode === "branch" ? " · Ветка: " + E(printTask(meeting.root)?.title || "") : ""}</div>${meeting.format === "meeting" ? `<div class="sheet-meeting-meta" style="margin-top:3mm"><span>Дата: ${meeting.date ? E(new Date(meeting.date + "T12:00:00").toLocaleDateString("ru-RU")) : "________________"}</span><span>${meeting.participants ? E(meeting.participants) : "Участники: __________________________"}</span></div>` : `<div class="sheet-table-head">${meeting.columns.map((key) => `<span>${OUTPUT_COLUMNS[key]}</span>`).join("")}</div>`}</header><div class="sheet-body"></div><footer class="sheet-footer"><span>${meeting.format === "meeting" ? "Решения и вопросы к встрече" : "Список задач · " + meeting.selected.size + " записей"}</span><span class="sheet-page-number"></span></footer>`;
     $("#meeting-pages").append(page);
     return page;
   }
   function renderMeetingPreview() {
+    ensurePrintImages();
     if (!meeting || !$("#meeting-pages")) return;
     clearTimeout(meetingTimer);
     updateOutputSummary();
@@ -2257,7 +2796,7 @@
     const rows = meeting.order
       .filter((id) => meeting.selected.has(id))
       .map((id) => {
-        const t = task(id),
+        const t = printTask(id),
           parts = meetingParts(t);
         return [
           ...meeting.columns.map((key) => outputCell(t, key)),
@@ -2333,6 +2872,14 @@
       renderMeetingPreview();
       return;
     }
+    if (key === "generalItems") {
+      meeting.generalItems = target.checked;
+      meeting.excluded.clear();
+      refreshOutputCandidates();
+      renderMeetingTree();
+      renderMeetingPreview();
+      return;
+    }
     if (target.dataset.meetingTask) {
       const id = target.dataset.meetingTask;
       if (target.checked) {
@@ -2386,9 +2933,12 @@
     return result;
   }
   function closeMeeting() {
+    for (const url of printImageUrls.values())
+      if (url) URL.revokeObjectURL(url);
+    printImageUrls.clear();
     const url = new URL(location.href);
     url.searchParams.delete("output");
-    history.replaceState(null, "", url.pathname + url.search);
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
     document.body.classList.remove("meeting-print");
     clearTimeout(meetingTimer);
     meeting = null;
@@ -2401,11 +2951,11 @@
     return `<select data-sheet-setting="${key}" aria-label="${E(key === "questions" ? "Печатать вопросы" : key === "comments" ? "Печатать комментарии" : key === "lines" ? "Строк для заметок" : key === "font" ? "Размер текста" : key === "orientation" ? "Ориентация листа" : "Расположение заметок")}">${items.map(([value, label]) => `<option value="${value}" ${String(meeting[key]) === String(value) ? "selected" : ""}>${label}</option>`).join("")}</select>`;
   }
   function moveMeetingItem(id, direction) {
-    const t = task(id),
+    const t = printTask(id),
       siblings = meeting.order.filter(
         (s) =>
-          task(s).parent === t.parent &&
-          (meeting.showDone || task(s).status !== "DONE"),
+          printTask(s).parent === t.parent &&
+          (meeting.showDone || printTask(s).status !== "DONE"),
       ),
       next = siblings[siblings.indexOf(id) + direction];
     if (!next) return;
@@ -2454,6 +3004,12 @@
     const parts = [];
     if (meeting.description && t.description)
       parts.push({ type: "description", text: t.description });
+    if (t.outcome)
+      parts.push({
+        type: "comment",
+        label: "Итоги / договорённости",
+        text: t.outcome,
+      });
     const questions = t.comments.filter(
       (c) =>
         c.kind === "question" &&
@@ -2473,6 +3029,23 @@
         ? comments.slice(-1)
         : [])
       parts.push({ type: "comment", label: "Комментарий", text: c.text });
+    if (meeting.images)
+      for (const file of t.attachments.filter(imageMaterial)) {
+        const url = printImageUrls.get(file.id);
+        if (url)
+          parts.push({
+            type: "image",
+            label: "Материал",
+            text: file.name,
+            image: url,
+          });
+        else if (printImageUrls.has(file.id))
+          parts.push({
+            type: "files",
+            label: "Изображение недоступно",
+            text: file.name,
+          });
+      }
     if (meeting.files && t.attachments.length)
       parts.push({
         type: "files",
@@ -2498,7 +3071,7 @@
     const title = continued
       ? block.title.slice(0, 120) + " · продолжение"
       : block.title;
-    node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${E(p.text)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
+    node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${p.image ? `<figure class="print-image"><img src="${E(p.image)}" alt="${E(p.text)}"><figcaption>${E(p.text)}</figcaption></figure>` : E(p.text)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
     return node;
   }
   function shortMeetingParts(parts) {
@@ -2619,10 +3192,11 @@
       all[i].querySelector(".sheet-page-number").textContent =
         `${i + 1} / ${all.length}`;
     meeting.pages = all.length;
-    meeting.valid = !error;
+    meeting.valid = !error && !meeting.loadingImages;
     $("#meeting-count").textContent =
       `Страниц: ${all.length} · Выбрано пунктов: ${meeting.selected.size}`;
-    $('#meeting-root [data-action="meeting-print"]').disabled = !!error;
+    $('#meeting-root [data-action="meeting-print"]').disabled =
+      !!error || !!meeting.loadingImages;
     if (error)
       pages.insertAdjacentHTML(
         "afterbegin",
@@ -2677,6 +3251,35 @@
       id = button.dataset.id;
     $("#popup-root").innerHTML = "";
     switch (a) {
+      case "tasks-all":
+        setTaskSelection(queryDraft("main"), { all: true });
+        refreshTaskPicker();
+        taskPickerPending();
+        break;
+      case "tasks-none":
+        setTaskSelection(queryDraft("main"), { all: false });
+        refreshTaskPicker();
+        taskPickerPending();
+        break;
+      case "task-picker-toggle":
+        ui.taskPickerCollapsed.has(id)
+          ? ui.taskPickerCollapsed.delete(id)
+          : ui.taskPickerCollapsed.add(id);
+        refreshTaskPicker();
+        break;
+      case "only-task-branch":
+        setTaskSelection(queryDraft("main"), { all: false, include: [id] });
+        queryDraft("main").text = "";
+        ui.expand = true;
+        ui.collapsed.clear();
+        if (task(id)) ui.closedProjects.delete(task(id).project || "");
+        applyQuery("main");
+        break;
+      case "output-branch-select":
+        setMeetingRoot(id);
+        renderMeetingControls();
+        renderMeetingPreview();
+        break;
       case "query-apply":
         applyQuery(button.dataset.scope);
         break;
@@ -2689,6 +3292,10 @@
       case "query-all-themes": {
         const q = queryDraft(button.dataset.scope);
         q.projects = [];
+        if (button.dataset.scope === "main") {
+          setTaskSelection(q, { all: true });
+          refreshTaskPicker();
+        }
         button
           .closest("[data-query-scope]")
           .querySelectorAll("[data-query-theme]")
@@ -2757,12 +3364,18 @@
         renderMeetingPreview();
         break;
       case "project":
+        setTaskSelection(ui, { all: true });
         ui.projects = id === "all" ? [] : [id];
         ui.filterDraft = null;
         ui.project = id;
         render();
         break;
       case "view":
+        ui.searchEverywhere = false;
+        $("#search-everywhere").checked = false;
+        if (["events", "calendar"].includes(id))
+          setTaskSelection(ui, { all: true });
+        ui.filterDraft = null;
         if (id === "deadlines") {
           ui.dateMode = "deadline";
           if (!ui.from && !ui.to) {
@@ -2779,6 +3392,7 @@
         render();
         break;
       case "reset-filters":
+        setTaskSelection(ui, { all: true });
         ui.projects = [];
         ui.project = "all";
         ui.from = ui.to = "";
@@ -2790,6 +3404,7 @@
         render();
         break;
       case "all-with-filters":
+        setTaskSelection(ui, { all: true });
         ui.projects = [];
         ui.filterDraft = null;
         ui.project = "all";
@@ -2954,6 +3569,7 @@
         void reloadWorkspace(true);
         break;
       case "unassigned-projects":
+        setTaskSelection(ui, { all: true });
         ui.projects = ["none"];
         ui.project = "none";
         ui.filterDraft = null;
@@ -3011,6 +3627,12 @@
     if (event.target.id === "task-kind") updateEventFields();
     const id = event.target.id,
       value = event.target.value;
+    if (id === "search-everywhere") {
+      ui.searchEverywhere = event.target.checked;
+      setTaskSelection(ui, { all: true });
+      ui.filterDraft = null;
+      render();
+    }
     if (id === "show-done") {
       ui.done = event.target.checked;
       if (ui.filterDraft) ui.filterDraft.showDone = ui.done;
@@ -3035,7 +3657,10 @@
       $("#task-parent").innerHTML =
         '<option value="">Самостоятельная задача</option>' +
         model.tasks
-          .filter((t) => t.project === value && !selected.has(t.id))
+          .filter(
+            (t) =>
+              t.kind === "task" && t.project === value && !selected.has(t.id),
+          )
           .map((t) => `<option value="${E(t.id)}">${E(t.title)}</option>`)
           .join("");
     }
@@ -3120,6 +3745,40 @@
   });
   window.addEventListener("focus", () => {
     if (!requests && !ui.uploads) void reloadWorkspace();
+  });
+  productUI = window.createProductUI({
+    model: () => model,
+    ui: () => ui,
+    E,
+    icon,
+    uid,
+    options,
+    statuses,
+    descendants,
+    path: taskPath,
+    dirty: drawerDirty,
+    closeDrawer,
+    signature: taskFormSignature,
+    saveTask,
+    openTask,
+    today: () => TODAY,
+    attachmentList,
+    notesHtml,
+    noteComposer,
+    activitySummary,
+    manage,
+    modal,
+    closeModal,
+    errorIn,
+    busy: busyButton,
+    mutate,
+    checkedFetch,
+    render,
+    reload: () => reloadWorkspace(true),
+    toast,
+    matches,
+    gantt,
+    row: renderTaskRow,
   });
   const initial = new URL(location.href);
   initialLocation();

@@ -1,6 +1,6 @@
 import { jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
-export const COOKIE_NAME = "taskapp_workspace_session";
+export const COOKIE_NAME = "taskapp_next_session";
 export type SessionUser = {
   id: string;
   role: "ADMIN";
