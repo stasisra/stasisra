@@ -70,7 +70,7 @@ async function updateNext({
   );
   if (
     manifest.format !== "task-gantt-update/v1" ||
-    manifest.version !== "0.4.0" ||
+    manifest.version !== "0.4.1" ||
     !manifest.files ||
     Object.keys(manifest.files).length < 10
   )
@@ -151,7 +151,7 @@ async function updateNext({
     }
     fs.writeFileSync(
       path.join(backup, "manifest.json"),
-      JSON.stringify({ version: "0.4.0", files, existing }, null, 2),
+      JSON.stringify({ version: "0.4.1", files, existing }, null, 2),
     );
     const ready = path.join(target, ".next-setup-ready");
     if (fs.existsSync(ready)) readyBytes = fs.readFileSync(ready);
@@ -205,7 +205,7 @@ async function updateNext({
     } finally {
       check.close();
     }
-    if (build) fs.writeFileSync(ready, "0.4.0\n");
+    if (build) fs.writeFileSync(ready, "0.4.1\n");
     console.log(
       "Update complete. Existing tasks, events, contacts, notes and files retained.",
     );

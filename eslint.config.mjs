@@ -5,7 +5,16 @@ const compat = new FlatCompat({
   baseDirectory: path.dirname(fileURLToPath(import.meta.url)),
 });
 export default [
-  { ignores: [".next/**", "node_modules/**", "_backup/**"] },
+  {
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "_backup/**",
+      "_updates/**",
+      "_ui-backup/**",
+      "exports/**",
+    ],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {

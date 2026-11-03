@@ -199,7 +199,7 @@ function prepareNext({
         stdio: "inherit",
       },
     );
-    fs.writeFileSync(path.join(root, ".next-setup-ready"), "0.4.0\n");
+    fs.writeFileSync(path.join(root, ".next-setup-ready"), "0.4.1\n");
   }
   console.log("Ready: start-next.cmd; http://127.0.0.1:3003.");
   return { database: filename };

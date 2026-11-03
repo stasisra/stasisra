@@ -7,6 +7,7 @@ import Database from "better-sqlite3";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
+import ts from "typescript";
 const { updateNext } = createRequire(import.meta.url)(
   "../scripts/update-next.cjs",
 );
@@ -78,6 +79,8 @@ function fixture() {
   for (const name of [
     "package.json",
     "package-lock.json",
+    "tsconfig.json",
+    "eslint.config.mjs",
     "next.config.mjs",
     "middleware.ts",
     "lib/session.ts",
@@ -101,7 +104,7 @@ function fixture() {
     path.join(source, "update-manifest.json"),
     JSON.stringify({
       format: "task-gantt-update/v1",
-      version: "0.4.0",
+      version: "0.4.1",
       files: Object.fromEntries(
         [...payload].map(([name, b]) => [name, sha(b)]),
       ),
@@ -212,5 +215,58 @@ test("failed update restores old schema, task/file data, code and build; invalid
     );
   } finally {
     fs.rmSync(f.root, { recursive: true, force: true });
+  }
+});
+
+// Backups contain generated imports that become invalid after the build moves.
+test("compiler ignores generated types and source copies in update/data backups but retains active build types", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "backup-types-"));
+  try {
+    fs.copyFileSync("tsconfig.json", path.join(root, "tsconfig.json"));
+    const files = [
+      "app/active.ts",
+      ".next/types/active.ts",
+      "_updates/attempt/previous-build/types/app/(app)/activities/route.ts",
+      "_updates/attempt/files/app/old.ts",
+      "_backup/old.ts",
+      "_ui-backup/old.ts",
+      "exports/review/files/attachment.ts",
+    ];
+    for (const name of files) {
+      const file = path.join(root, name);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(
+        file,
+        name.startsWith("_updates")
+          ? "import value from './nonexistent-old-generated-module'; export {value};"
+          : "export const value = 1;",
+      );
+    }
+    const read = ts.readConfigFile(
+      path.join(root, "tsconfig.json"),
+      ts.sys.readFile,
+    );
+    assert.equal(read.error, undefined);
+    const config = ts.parseJsonConfigFileContent(read.config, ts.sys, root);
+    assert.equal(config.errors.length, 0);
+    const included = config.fileNames.map((name) =>
+      path.relative(root, name).replace(/\\/g, "/"),
+    );
+    assert.deepEqual(included.sort(), [
+      ".next/types/active.ts",
+      "app/active.ts",
+    ]);
+    const program = ts.createProgram(config.fileNames, {
+      ...config.options,
+      incremental: false,
+    });
+    assert.equal(
+      ts
+        .getPreEmitDiagnostics(program)
+        .filter((d) => d.file && d.file.fileName.includes("_updates")).length,
+      0,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
