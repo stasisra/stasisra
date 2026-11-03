@@ -171,8 +171,12 @@ test("new task persists multiple people, draft questions and files; validation c
   expect(saved.comments).toHaveLength(1);
   expect(saved.attachments).toHaveLength(1);
   await open(page, saved.id);
-  await expect(page.locator("#task-description")).toHaveValue(
+  expect(saved.description).toBe(
     "Полное описание\nВторая строка, которую нужно напечатать.",
+  );
+  await expect(page.locator("#task-description")).toHaveText(
+    "Полное описание\nВторая строка, которую нужно напечатать.",
+    { useInnerText: true },
   );
   await page.locator('#drawer-files [data-action="preview-file"]').click();
   await expect(page.locator(".file-text")).toHaveText("Файл задачи");
@@ -1063,4 +1067,305 @@ test("reviewed Excel previews before importing only retained tasks with original
     db.close();
     await fs.rm(root, { recursive: true, force: true });
   }
+});
+
+test("wide event cards edit, navigate, delete and move agenda points, preserve work links and print selected groups", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await login(page);
+  const data = await snapshot(page.request),
+    patrick = data.contacts.find((c: any) => c.name === "Патрик");
+  const root = await create(page.request, {
+    kind: "event",
+    topics: ["sp", "vnz"],
+    title: "Повестка управления " + randomUUID(),
+    description: "Общая повестка",
+  });
+  const a = await create(page.request, {
+    kind: "question",
+    activityId: root,
+    title: "Аркадий — вопросы " + randomUUID(),
+    description: "Полное содержание выбранного вопроса",
+    counterparties: [patrick.id],
+  });
+  const child = await create(page.request, {
+    kind: "preparation",
+    activityId: root,
+    parent: a,
+    title: "Вложенная подготовка",
+  });
+  const other = await create(page.request, {
+    kind: "question",
+    activityId: root,
+    title: "Не выбранный вопрос",
+    description: "Не печатать эту запись",
+  });
+  const work = await create(page.request, {
+    title: "Существующая рабочая задача",
+    project: "vnz",
+    description: "Рабочее описание ВНЖ",
+  });
+  await action(page.request, "linkTasks", {
+    activityId: root,
+    taskIds: [work],
+    requestId: randomUUID(),
+  });
+  const reference = (await snapshot(page.request)).tasks.find(
+    (t: any) => t.activityId === root && t.linkedTaskId === work,
+  );
+  const mentionPrefix = "Участник тем " + randomUUID();
+  for (const [suffix, topic] of [
+    ["A", "sp"],
+    ["B", "vnz"],
+    ["C", "web"],
+  ])
+    await action(page.request, "saveDirectory", {
+      id: randomUUID(),
+      mode: "contacts",
+      name: mentionPrefix + suffix,
+      topics: [topic],
+    });
+  await open(page, root);
+  await page.locator("#task-description").fill("@" + mentionPrefix);
+  await expect(page.locator("#mention-picker .mention-option")).toHaveCount(2);
+  await page
+    .locator("#mention-picker .mention-option")
+    .filter({ hasText: mentionPrefix + "B" })
+    .click();
+  await expect(page.locator("#task-description .mention-link")).toHaveText(
+    "@" + mentionPrefix + "B",
+  );
+  expect((await current(page.request, root)).counterparties).toEqual([]);
+  expect(
+    await page
+      .locator(".wide-card")
+      .evaluate((e) => e.getBoundingClientRect().width),
+  ).toBeGreaterThan(900);
+  await page
+    .locator('[data-tree="open"][data-id="' + a + '"]')
+    .first()
+    .click();
+  await expect(page.locator("#task-title")).toHaveValue(
+    (await current(page.request, a)).title,
+  );
+  await page
+    .locator("#task-description")
+    .fill("Изменённое полное содержание\nВторая строка");
+  await page
+    .locator('[data-tree="open"][data-id="' + child + '"]')
+    .first()
+    .click();
+  await expect(page.locator("#task-title")).toHaveValue("Вложенная подготовка");
+  expect((await current(page.request, a)).description).toBe(
+    "Изменённое полное содержание\nВторая строка",
+  );
+  await page.locator('.drawer-footer [data-action="delete-task"]').click();
+  await page.locator('[data-action="confirm-task-delete"]').click();
+  await expect(page.locator("#task-title")).toHaveValue(
+    (await current(page.request, a)).title,
+  );
+  expect(
+    (await snapshot(page.request)).tasks.some((t: any) => t.id === child),
+  ).toBe(false);
+  await page
+    .locator('[data-tree-row="' + reference.id + '"] .node-menu > summary')
+    .click();
+  await page
+    .locator(
+      '[data-tree-row="' + reference.id + '"] [data-action="delete-task"]',
+    )
+    .click();
+  await page.locator('[data-action="confirm-task-delete"]').click();
+  expect((await current(page.request, work)).title).toBe(
+    "Существующая рабочая задача",
+  );
+  await page.locator("#card-tree-group").selectOption("counterparty");
+  await page.locator('[data-tree-choice="' + a + '"]').check();
+  await page.locator("#card-print-selected").click();
+  await expect(page.locator("#meeting-pages")).toContainText(
+    "Изменённое полное содержание",
+  );
+  await expect(page.locator("#meeting-pages")).toContainText("Патрик");
+  await expect(page.locator("#meeting-pages")).not.toContainText(
+    "Не печатать эту запись",
+  );
+  await page.locator('[data-action="meeting-close"]').click();
+  await page
+    .locator('[data-tree="open"][data-id="' + other + '"]')
+    .first()
+    .click();
+  await page
+    .locator('[data-tree-row="' + other + '"] .node-menu > summary')
+    .click();
+  await page
+    .locator('[data-tree-row="' + other + '"] [data-tree="move"]')
+    .click();
+  await page.locator("#move-parent").selectOption(a);
+  await page.locator('[data-tree="move-apply"]').click();
+  await expect
+    .poll(async () => (await current(page.request, other)).sourceParent)
+    .toBe(a);
+  await page.screenshot({
+    path: test.info().outputPath("wide-event-card.png"),
+    fullPage: true,
+  });
+  expect(errors).toEqual([]);
+});
+
+test("contact profiles, topic search, @ references and optional contact snapshots persist and print cleanly", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await login(page, "/tasks?manage=contacts");
+  await page.locator('[data-action="directory-add"]').click();
+  const name = "Участник " + randomUUID();
+  await page.locator("#directory-name").fill(name);
+  await page.locator("#contact-company").fill("Тестовая компания");
+  await page.locator("#contact-phones").fill("+421 555 123");
+  await page.locator("#contact-emails").fill("person@example.test");
+  await page.locator("#contact-addresses").fill("Адрес встречи");
+  await page.locator("#contact-responsible").check();
+  await page.locator('input[name="contact-topics"][value="sp"]').check();
+  await page.locator('input[name="contact-topics"][value="vnz"]').check();
+  await page.locator('[data-action="directory-save"]').click();
+  await expect(page.locator("#directory-list")).toContainText(name);
+  let model = await snapshot(page.request),
+    c = model.contacts.find((x: any) => x.name === name);
+  expect(c.manualTopics.sort()).toEqual(["sp", "vnz"]);
+  await page.locator("#contact-directory-topic").selectOption("web");
+  await expect(
+    page.locator('[data-action="directory-edit"][data-id="' + c.id + '"]'),
+  ).toBeHidden();
+  await page.locator("#contact-directory-topic").selectOption("sp");
+  await page.locator("#contact-directory-search").fill("555 123");
+  await expect(page.locator("#directory-list")).toContainText(name);
+  await page
+    .locator('#modal-root .modal-foot [data-action="close-modal"]')
+    .click();
+  const id = await create(page.request, {
+    title: "Связанный редактор " + randomUUID(),
+    project: "sp",
+    description: "",
+  });
+  await open(page, id);
+  const editor = page.locator("#task-description");
+  await editor.fill("Первая строка");
+  await editor.press("End");
+  await editor.press("Enter");
+  await page.keyboard.insertText("Уточнить @" + name);
+  await expect(page.locator("#mention-picker .mention-option")).toHaveCount(1);
+  await editor.press("Enter");
+  await expect(editor.locator(".mention-link")).toHaveText("@" + name);
+  expect((await current(page.request, id)).executors).toEqual([]);
+  await page.locator('input[name="executors"][value="' + c.id + '"]').check();
+  await page.locator('[form="task-form"]').click();
+  await expect(page.locator("#modal-root h2")).toContainText(
+    "Добавить контактные данные",
+  );
+  await page.locator('[data-contact-insert-field="addresses"]').check();
+  await page.locator('[data-card="contact-insert-apply"]').click();
+  await expect(page.locator("#task-form")).toHaveCount(0);
+  let saved = await current(page.request, id);
+  expect(saved.description).toContain("Первая строка\nУточнить @[");
+  expect(saved.description).toContain("(contact:" + c.id + ")");
+  expect(saved.description).toContain("+421 555 123");
+  await open(page, id);
+  await page.locator("#task-description .mention-link").first().click();
+  await expect(page.locator("#modal-root")).toContainText("Адрес встречи");
+  await page.locator('#modal-root [data-action="close-modal"]').first().click();
+  c = (await snapshot(page.request)).contacts.find((x: any) => x.id === c.id);
+  await action(page.request, "saveDirectory", {
+    ...c,
+    mode: "contacts",
+    phones: "+421 555 999",
+    topics: c.manualTopics,
+  });
+  await page.reload();
+  await expect(page.locator("#task-description")).toContainText("+421 555 123");
+  await page.locator('[data-card="insert-people"]').click();
+  await page.locator('[data-contact-insert-field="addresses"]').check();
+  await page.locator('[data-card="contact-insert-apply"]').click();
+  await expect(page.locator("#task-description")).toContainText("+421 555 999");
+  await page.locator('[form="task-form"]').click();
+  await expect(page.locator("#task-form")).toHaveCount(0);
+  saved = await current(page.request, id);
+  expect(saved.description.split(":::contact " + c.id + "\n")).toHaveLength(2);
+  await open(page, id);
+  await page.locator('.drawer-footer [data-action="meeting-open"]').click();
+  await page
+    .locator("#meeting-root details")
+    .filter({ has: page.locator("summary", { hasText: "Содержимое листа" }) })
+    .locator("summary")
+    .first()
+    .click();
+  await page.locator('[data-sheet-setting="description"]').check();
+  await expect(page.locator("#meeting-pages")).toContainText("+421 555 999");
+  await expect(page.locator("#meeting-pages")).not.toContainText(":::contact");
+  await expect(page.locator("#meeting-pages")).not.toContainText("(contact:");
+  await page.locator('[data-sheet-setting="contactData"]').uncheck();
+  await expect(page.locator("#meeting-pages")).not.toContainText(
+    "+421 555 999",
+  );
+  await expect(page.locator("#meeting-pages")).toContainText("@" + name);
+  await page.screenshot({
+    path: test.info().outputPath("contact-reference-output.png"),
+    fullPage: true,
+  });
+  expect(errors).toEqual([]);
+});
+
+test("large topic editor retains multiline text on fullscreen transitions and scopes @ choices to the edited topic", async ({
+  page,
+}) => {
+  await login(page);
+  const name = "Только ВНЖ " + randomUUID(),
+    cid = randomUUID();
+  await action(page.request, "saveDirectory", {
+    id: cid,
+    mode: "contacts",
+    name,
+    topics: ["vnz"],
+  });
+  await page.goto("/tasks?manage=projects");
+  await page.locator('[data-action="directory-edit"][data-id="vnz"]').click();
+  await page.locator("#directory-description").fill("Первая строка");
+  await page.locator('[data-card="expand-editor"]').click();
+  await expect(page.locator(".editor-full")).toBeVisible();
+  await expect(page.locator("#directory-description")).toContainText(
+    "Первая строка",
+  );
+  await page.locator("#directory-description").press("End");
+  await page.locator("#directory-description").press("Enter");
+  await page.keyboard.insertText("Связаться @" + name);
+  await expect(page.locator("#directory-description")).toContainText(
+    "Первая строка",
+  );
+  await expect(page.locator("#mention-picker .mention-option")).toHaveCount(1);
+  await page.locator("#directory-description").press("Enter");
+  await page.locator('[data-card="expand-editor"]').click();
+  await expect(page.locator(".editor-full")).toHaveCount(0);
+  await page.locator("#directory-description").press("End");
+  await page.locator("#directory-description").press("Enter");
+  await page.keyboard.insertText("Сохранить этот черновик");
+  await page.locator("#directory-description .mention-link").click();
+  await expect(page.locator("#modal-root h2")).toHaveText(name);
+  await page.locator('[data-card="profile-edit"]').click();
+  await page.locator("#contact-phones").fill("+421 777 777");
+  await page.locator('[data-action="directory-save"]').click();
+  await expect(page.locator("#directory-description")).toContainText(
+    "Сохранить этот черновик",
+  );
+  await expect(page.locator("#directory-name")).toHaveValue("ВНЖ");
+  await page.locator('[data-action="directory-save"]').click();
+  await expect(page.locator("#directory-list")).toBeVisible();
+  const description = (await snapshot(page.request)).projects.find(
+    (p: any) => p.id === "vnz",
+  ).description;
+  expect(description).toContain("Первая строка\nСвязаться @[");
+  expect(description).toContain("(contact:" + cid + ")");
+  await page.locator('[data-action="directory-edit"][data-id="vnz"]').click();
+  await expect(page.locator("#directory-description")).toContainText(name);
 });

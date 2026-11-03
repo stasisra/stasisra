@@ -16,3 +16,6 @@ prisma/.prisma/
 exports/
 
 schema-check.json
+
+_updates/
+.next-update.lock

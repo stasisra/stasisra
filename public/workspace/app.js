@@ -268,7 +268,7 @@
         ? []
         : ui.drawer.data.comments.map((c) => ({
             id: c.id,
-            text: c.text,
+            text: window.WorkspaceMentions.plain(c.text),
             kind: c.kind,
           })),
     };
@@ -316,6 +316,7 @@
   }
   async function saveTask(form) {
     if (form.dataset.busy === "true" || ui.uploads) return;
+    if (!(await productUI.beforeSaveContacts())) return false;
     const button = $('#drawer-root [form="task-form"]'),
       data = captureTaskForm(form),
       wasNew = !ui.drawer.id;
@@ -454,7 +455,7 @@
           id: id || directoryContext.newId,
           mode,
           name,
-          description: $("#directory-description")?.value || "",
+          description: productUI.editorRaw($("#directory-description")),
           type: ["projects", "tags"].includes(mode)
             ? "Человек"
             : mode === "responsibles" && !id
@@ -465,10 +466,11 @@
               ? true
               : !!$("#contact-responsible")?.checked,
           revision,
+          ...productUI.profileData(),
         });
       }
       render();
-      manage(mode);
+      if (!productUI.restoreModal()) manage(mode);
       toast("Справочник сохранён");
     } catch (error) {
       errorIn("#directory-error", error);
@@ -550,14 +552,21 @@
     if (button?.dataset.busy === "true") return;
     busyButton(button, true);
     try {
+      const returnTo = task(id)?.parent;
       await mutate("deleteTask", {
         id,
         revision: pendingTaskDeletion.revision,
       });
       closeModal();
-      closeDrawer(true);
+      if (ui.drawer?.id === id) {
+        closeDrawer(true);
+        if (returnTo && task(returnTo)) openTask(returnTo);
+      } else {
+        productUI.renderChildren();
+        productUI.refreshTree();
+      }
       render();
-      toast("Задача удалена, подзадачи сохранены");
+      toast("Запись удалена, дочерние записи сохранены");
     } catch (error) {
       toast(error.message);
     } finally {
@@ -905,7 +914,7 @@
     const c = person(id);
     if (!c) return '<span class="muted">Не назначен</span>';
     const n = model.contacts.indexOf(c) % 5;
-    return `<div class="person"><span class="avatar a${n}">${E(initials(c.name))}</span><span class="name" title="${E(c.name)}">${E(c.name)}</span></div>`;
+    return `<div class="person"><span class="avatar a${n}">${E(initials(c.name))}</span><button type="button" class="textbtn name" data-card="profile-view" data-id="${E(c.id)}" title="Карточка контакта">${E(c.name)}</button></div>`;
   }
   function executorHtml(ids) {
     const names = ids.map((id) => person(id)?.name).filter(Boolean);
@@ -1100,7 +1109,7 @@
     return value;
   }
   const searchKey = (value) =>
-    String(value || "")
+    window.WorkspaceMentions.plain(String(value || ""))
       .normalize("NFC")
       .toLocaleLowerCase("ru-RU")
       .replace(/ё/g, "е")
@@ -1728,7 +1737,7 @@
       (t.comments || [])
         .map(
           (c) =>
-            `<div class="activity-note ${c.kind === "question" ? (c.resolved ? "resolved-note" : "question-note") : ""}"><div class="note-heading"><strong>${c.kind === "question" ? (c.resolved ? "Вопрос решён" : "Открытый вопрос") : "Комментарий"}</strong><span>Вы · ${E(c.date)}</span>${c.kind === "question" ? `<button type="button" class="textbtn" data-action="resolve-note" data-id="${E(t.id)}" data-note="${E(c.id)}" data-revision="${c.revision || 0}" data-resolved="${!c.resolved}">${c.resolved ? "Открыть снова" : "Отметить решённым"}</button>` : ""}</div><div class="note-body">${E(c.text)}</div></div>`,
+            `<div class="activity-note ${c.kind === "question" ? (c.resolved ? "resolved-note" : "question-note") : ""}"><div class="note-heading"><strong>${c.kind === "question" ? (c.resolved ? "Вопрос решён" : "Открытый вопрос") : "Комментарий"}</strong><span>Вы · ${E(c.date)}</span>${c.kind === "question" ? `<button type="button" class="textbtn" data-action="resolve-note" data-id="${E(t.id)}" data-note="${E(c.id)}" data-revision="${c.revision || 0}" data-resolved="${!c.resolved}">${c.resolved ? "Открыть снова" : "Отметить решённым"}</button>` : ""}</div><div class="note-body">${window.WorkspaceMentions.html(c.text, E)}</div></div>`,
         )
         .join("") ||
       '<p class="activity-empty">Запишите вопрос или договорённость — они будут видны и в списке задач.</p>'
@@ -1935,7 +1944,7 @@
 
   function renderTaskRow(t, level, matched, showProject = false) {
     const kids = hierarchy().children.get(t.id)?.length || 0;
-    return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span><button type="button" class="branch-shortcut" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Вся ветка: ${E(t.title)}">Вся ветка</button>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(t.description)}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${t.parent && task(t.parent) && !matches(task(t.parent)) ? `<small class="task-parent-path">Внутри: ${E(taskPath(t.parent))}</small>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
+    return `<div class="task-row ${kids ? "parent" : ""} ${matched ? "" : "context"}" data-task="${E(t.id)}"><div class="task-cell" style="padding-left:${level * 21}px"><span class="arrow-holder">${kids && !showProject ? `<button class="collapse ${ui.collapsed.has(t.id) || !ui.expand ? "shut" : ""}" data-action="toggle-task" data-id="${E(t.id)}" aria-label="${ui.collapsed.has(t.id) ? "Раскрыть" : "Свернуть"} подзадачи" aria-expanded="${!ui.collapsed.has(t.id) && ui.expand}">${icon("chevron")}</button>` : ""}</span><span class="task-icon ${t.kind === "event" ? "event" : ""}">${icon(t.kind === "event" ? "calendar" : "task", true)}</span><div class="task-label"><button class="task-title" data-action="edit-task" data-id="${E(t.id)}">${E(t.title)}</button>${kids ? `<span class="child-count">${kids}</span><button type="button" class="branch-shortcut" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Вся ветка: ${E(t.title)}">Вся ветка</button>` : ""}${showProject ? `<span class="task-project-label">${E(proj(t.project)?.name || "Без темы")}</span>` : ""}${!matched ? '<small class="task-desc">Родительская задача</small>' : t.description ? `<small class="task-desc">${E(window.WorkspaceMentions.plain(t.description))}</small>` : ""}${t.kind === "event" && (t.startTime || t.location) ? `<div class="event-summary">${E(t.startTime || "Весь день")}${t.endTime ? "–" + E(t.endTime) : ""}${t.location ? " · " + E(t.location) : ""}</div>` : ""}${t.parent && task(t.parent) && !matches(task(t.parent)) ? `<small class="task-parent-path">Внутри: ${E(taskPath(t.parent))}</small>` : ""}${activitySummary(t)}</div></div>${executorHtml(t.executors)}${responsibleHtml(t.responsible)}${dateInfo(t)}<div class="progress-wrap progress-col">${t.kind === "event" ? '<span class="muted">Мероприятие</span>' : `<span class="track"><i style="width:${t.percent}%"></i></span>${t.percent}%`}</div><div><span class="status ${t.status}"><i></i>${statuses[t.status]}</span></div><button class="rowmore" data-action="task-menu" data-id="${E(t.id)}" aria-label="Действия: ${E(t.title)}">⋯</button>${ui.quick === t.id ? `<section class="inline-activity"><div class="activity-heading">Комментарии и вопросы<button type="button" class="tinybtn" data-action="quick-note" data-id="${E(t.id)}" aria-label="Закрыть быстрые записи">${icon("close", true)}</button></div><div class="notes-list">${notesHtml(t)}</div>${noteComposer(t, "row")}</section>` : ""}</div>`;
   }
   function section(p, rows, directSet) {
     const id = p?.id || "",
@@ -2021,7 +2030,10 @@
     $("#result-count").textContent =
       `В выборке: ${direct.length} · Из них просрочено: ${direct.filter((t) => t.end && t.end < TODAY && t.status !== "DONE").length}`;
     const topic = ui.projects.length === 1 ? proj(ui.projects[0]) : null;
-    if (topic?.description) $("#page-subtitle").textContent = topic.description;
+    if (topic?.description)
+      $("#page-subtitle").textContent = window.WorkspaceMentions.plain(
+        topic.description,
+      );
     if (productUI.renderGrouped(rows)) return;
     let html =
       ui.view === "gantt"
@@ -2054,6 +2066,7 @@
     officeView?.cancel?.();
     officeView = null;
     $("#modal-root").innerHTML = "";
+    if (productUI?.restoreModal()) return;
     const url = new URL(location.href);
     url.searchParams.delete("manage");
     history.replaceState(null, "", url.pathname + url.search + url.hash);
@@ -2136,6 +2149,7 @@
           })
           .join("") || '<div class="empty">Записей нет</div>'
       }`;
+    productUI.decorateDirectory();
   }
   let directoryContext = null;
   function directoryEdit(id = null, forceProject = false) {
@@ -2148,6 +2162,11 @@
             : person(id)
         : null;
     directoryContext = { mode, id, revision: item?.revision, newId: uid() };
+    if (
+      ["contacts", "responsibles"].includes(mode) &&
+      !(mode === "responsibles" && !id)
+    )
+      return productUI.profileEdit(id, mode);
     if (mode === "responsibles" && !id) {
       const available = model.contacts.filter(
         (c) => !c.responsible && !c.archived && c.type === "Человек",
@@ -2176,6 +2195,7 @@
         "beforeend",
         `<div class="field"><label for="directory-description">Описание / проблематика</label><textarea id="directory-description">${E(item?.description || "")}</textarea></div>`,
       );
+    productUI.attachEditors($("#modal-root"));
     setTimeout(() => $("#directory-name")?.focus(), 30);
   }
   let deleteContext = null;
@@ -2229,6 +2249,7 @@
     questions: "open",
     comments: "last",
     description: false,
+    contactData: true,
     images: true,
     generalItems: true,
     people: true,
@@ -2359,9 +2380,10 @@
   }
   function refreshOutputCandidates() {
     const candidates =
-      meeting.sourceMode === "branch" && meeting.root
+      meeting.sourceIds ||
+      (meeting.sourceMode === "branch" && meeting.root
         ? [meeting.root, ...branchOrder(meeting.root).map((r) => r.id)]
-        : model.tasks.map((t) => t.id);
+        : model.tasks.map((t) => t.id));
     const query = cloneQuery(meeting.query);
     if (meeting.sourceMode === "branch") setTaskSelection(query, { all: true });
     meeting.order = candidates.filter((id) => {
@@ -2432,6 +2454,20 @@
     renderMeetingControls();
     renderMeetingPreview();
   }
+  function openSelectedOutput(root, ids, groupBy, groupTitle) {
+    openMeeting(root);
+    meeting.sourceIds = [...ids];
+    meeting.query = { ...blankQuery(), scope: "all", showDone: true };
+    meeting.queryDraft = cloneQuery(meeting.query);
+    meeting.description = true;
+    meeting.files = true;
+    meeting.contactData = true;
+    meeting.groupBy = groupBy;
+    meeting.groupTitle = groupTitle;
+    refreshOutputCandidates();
+    renderMeetingControls();
+    renderMeetingPreview();
+  }
   function changeOutputFormat(format) {
     Object.assign(meeting, outputProfile(format));
     meeting.title = outputTitle();
@@ -2440,6 +2476,7 @@
   }
   function outputSource(mode) {
     meeting.sourceMode = mode;
+    delete meeting.sourceIds;
     meeting.excluded.clear();
     meeting.breaks.clear();
     if (mode === "branch" && !meeting.root) {
@@ -2506,7 +2543,7 @@
           ["all", "Все"],
           ["none", "Не печатать"],
         ],
-      )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("files", "Названия файлов")}${meetingCheckbox("images", "Графики и изображения")}${meeting.query.scope === "agenda" ? meetingCheckbox("generalItems", "Общие вопросы, подготовка и материалы") : ""}${meeting.format === "meeting" ? meetingCheckbox("people", "Ответственные") + meetingCheckbox("dates", "Сроки / время") + meetingCheckbox("status", "Статусы") + meetingCheckbox("finalNotes", "Общие итоги") : ""}</div></details><details><summary>Лист и оформление</summary>${
+      )}</div></div><div class="meeting-checks">${meetingCheckbox("description", "Описания")}${meetingCheckbox("contactData", "Контактные данные")}${meetingCheckbox("files", "Названия файлов")}${meetingCheckbox("images", "Графики и изображения")}${meeting.query.scope === "agenda" ? meetingCheckbox("generalItems", "Общие вопросы, подготовка и материалы") : ""}${meeting.format === "meeting" ? meetingCheckbox("people", "Ответственные") + meetingCheckbox("dates", "Сроки / время") + meetingCheckbox("status", "Статусы") + meetingCheckbox("finalNotes", "Общие итоги") : ""}</div></details><details><summary>Лист и оформление</summary>${
         meeting.format === "meeting"
           ? `<div class="meeting-presets">${[
               ["compact", "Компактно"],
@@ -2704,6 +2741,26 @@
         notes: true,
         summary: true,
       });
+    if (meeting.groupBy && meeting.groupBy !== "manual" && meeting.groupTitle) {
+      const grouped = new Map();
+      for (const block of blocks) {
+        const t = printTask(block.id);
+        const title = t ? meeting.groupTitle(t, meeting.groupBy) : "Общее";
+        const values = grouped.get(title) || [];
+        values.push(block);
+        grouped.set(title, values);
+      }
+      return [...grouped].flatMap(([title, values], i) => [
+        {
+          id: "print-group-" + i,
+          title,
+          parts: [],
+          notes: false,
+          kind: "group",
+        },
+        ...values,
+      ]);
+    }
     return blocks;
   }
   function listMeetingEntry(block, parts, continued) {
@@ -3003,12 +3060,19 @@
   function meetingParts(t) {
     const parts = [];
     if (meeting.description && t.description)
-      parts.push({ type: "description", text: t.description });
+      parts.push({
+        type: "description",
+        text: window.WorkspaceMentions.plain(
+          meeting.contactData
+            ? t.description
+            : window.WorkspaceMentions.withoutContacts(t.description),
+        ),
+      });
     if (t.outcome)
       parts.push({
         type: "comment",
         label: "Итоги / договорённости",
-        text: t.outcome,
+        text: window.WorkspaceMentions.plain(t.outcome),
       });
     const questions = t.comments.filter(
       (c) =>
@@ -3020,7 +3084,7 @@
       parts.push({
         type: "question",
         label: c.resolved ? "Вопрос · решён" : "Вопрос к обсуждению",
-        text: c.text,
+        text: window.WorkspaceMentions.plain(c.text),
       });
     const comments = t.comments.filter((c) => c.kind !== "question");
     for (const c of meeting.comments === "all"
@@ -3028,7 +3092,11 @@
       : meeting.comments === "last"
         ? comments.slice(-1)
         : [])
-      parts.push({ type: "comment", label: "Комментарий", text: c.text });
+      parts.push({
+        type: "comment",
+        label: "Комментарий",
+        text: window.WorkspaceMentions.plain(c.text),
+      });
     if (meeting.images)
       for (const file of t.attachments.filter(imageMaterial)) {
         const url = printImageUrls.get(file.id);
@@ -3711,6 +3779,7 @@
     if (
       event.key === "/" &&
       !meeting &&
+      !document.activeElement.isContentEditable &&
       !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)
     ) {
       event.preventDefault();
@@ -3779,6 +3848,12 @@
     matches,
     gantt,
     row: renderTaskRow,
+    directoryEdit,
+    directoryContext: () => directoryContext,
+    restoreDirectoryContext: (value) => {
+      directoryContext = value;
+    },
+    printSelection: openSelectedOutput,
   });
   const initial = new URL(location.href);
   initialLocation();

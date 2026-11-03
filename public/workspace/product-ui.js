@@ -18,6 +18,38 @@ window.createProductUI = function (ctx) {
     note: "Заметка / материал",
     reference: "Вопрос по рабочей задаче",
   };
+  async function navigate(id) {
+    if (!item(id)) {
+      ctx.toast("Запись удалена или недоступна; текст упоминания сохранён");
+      return;
+    }
+    if (ui().drawer && ctx.dirty()) {
+      if (!(await ctx.saveTask($("#task-form")))) return;
+    } else if (ui().drawer) ctx.closeDrawer(true);
+    openCard(id);
+  }
+  const tools = window.createCardTools({
+    ...ctx,
+    navigate,
+    editContact: (id) => {
+      tools.holdModal();
+      ui().manager = "contacts";
+      ctx.directoryEdit(id);
+    },
+    editTopic: (id) => {
+      tools.holdModal();
+      ui().manager = "projects";
+      ctx.directoryEdit(id);
+    },
+  });
+  const tree = window.createCardTree({
+    ...ctx,
+    labels,
+    navigate,
+    openCard,
+    addFromCard,
+    renderChildren,
+  });
   let calendarOffset = 0,
     linkContext = null,
     importContext = null,
@@ -222,9 +254,11 @@ window.createProductUI = function (ctx) {
               `<option value="${id}" ${id === data.status ? "selected" : ""}>${E(name)}</option>`,
           )
           .join("")}</select>`,
-      )}${work ? field("Выполнение, %", "task-percent", `<input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}">`) : ""}</div>${isEvent || agenda ? field("Итоги / договорённости", "item-outcome", `<textarea id="item-outcome" name="outcome" placeholder="Что решили, какие следующие действия">${E(data.outcome)}</textarea>`) : ""}<section class="activity-section"><div class="activity-heading">${isEvent ? "Содержание, вопросы и подготовка" : "Подзадачи и мероприятия"}</div><div class="card-child-actions"><button class="btn" type="button" data-product="child" data-kind="${work ? "task" : "preparation"}">＋ Подзадача</button>${isEvent || agenda ? '<button class="btn" type="button" data-product="child" data-kind="question">＋ Вопрос</button><button class="btn" type="button" data-product="child" data-kind="note">＋ Заметка / материал</button>' : ""}<button class="btn" type="button" data-product="child" data-kind="event">＋ Мероприятие</button>${isEvent ? '<button class="btn" type="button" data-product="link-tasks">Добавить задачи из тем</button>' : ""}</div><small>${id ? "Новые записи можно добавлять прямо из карточки." : "При добавлении дочерней записи сначала сохранится эта карточка."}</small>${isEvent ? `<div class="agenda-filter"><input id="agenda-search" placeholder="Поиск по повестке" aria-label="Поиск по повестке"><select id="agenda-counterparty" aria-label="Контрагент в повестке">${ctx.options(model().contacts, "", "Все контрагенты")}</select></div>` : ""}<div id="card-children"></div></section><section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы и графики</div><div id="drawer-files">${ctx.attachmentList(original || data)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>DOCX, Excel, PDF, изображения и текст — просмотр здесь. Оригиналы сохраняются.</small></section><section class="activity-section"><div class="activity-heading">Комментарии и вопросы</div><div id="comment-list">${ctx.notesHtml(original || data)}</div>${ctx.noteComposer(original || data, "drawer")}</section>${data.legacyTags ? `<details><summary>Исходные теги</summary><p>${E(data.legacyTags)}</p></details>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" type="button" data-action="meeting-open" data-id="${E(id)}">Вывод</button>${agenda && data.kind !== "reference" ? '<button class="btn" type="button" data-product="promote">Добавить в тему</button>' : ""}<button class="btn danger" data-action="delete-task" data-id="${E(id)}">Удалить</button>` : ""}</div></section>`;
+      )}${work ? field("Выполнение, %", "task-percent", `<input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}">`) : ""}</div>${isEvent || agenda ? field("Итоги / договорённости", "item-outcome", `<textarea id="item-outcome" name="outcome" placeholder="Что решили, какие следующие действия">${E(data.outcome)}</textarea>`) : ""}<section class="activity-section"><div class="activity-heading">${isEvent ? "Содержание, вопросы и подготовка" : "Подзадачи и мероприятия"}</div><div class="card-child-actions"><button class="btn" type="button" data-product="child" data-kind="${work ? "task" : "preparation"}">＋ Подзадача</button>${isEvent || agenda ? '<button class="btn" type="button" data-product="child" data-kind="question">＋ Вопрос</button><button class="btn" type="button" data-product="child" data-kind="note">＋ Заметка / материал</button>' : ""}<button class="btn" type="button" data-product="child" data-kind="event">＋ Мероприятие</button>${isEvent ? '<button class="btn" type="button" data-product="link-tasks">Добавить задачи из тем</button>' : ""}</div><small>${id ? "Новые записи можно добавлять прямо из карточки." : "При добавлении дочерней записи сначала сохранится эта карточка."}</small>${isEvent ? `<div class="agenda-filter"><input id="agenda-search" placeholder="Поиск по повестке" aria-label="Поиск по повестке"><select id="agenda-counterparty" aria-label="Контрагент в повестке">${ctx.options(model().contacts, "", "Все контрагенты")}</select></div>` : ""}<div id="card-children"></div></section><section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы и графики</div><div id="drawer-files">${ctx.attachmentList(original || data)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>DOCX, Excel, PDF, изображения и текст — просмотр здесь. Оригиналы сохраняются.</small></section><section class="activity-section"><div class="activity-heading">Комментарии и вопросы</div><div id="comment-list">${ctx.notesHtml(original || data)}</div>${ctx.noteComposer(original || data, "drawer")}</section>${data.legacyTags ? `<details><summary>Исходные теги</summary><p>${E(data.legacyTags)}</p></details>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" type="button" data-action="meeting-open" data-id="${E(id)}">Вывод</button>${agenda && data.kind !== "reference" ? '<button class="btn" type="button" data-product="promote">Добавить в тему</button>' : ""}<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${data.kind === "reference" ? "Убрать из мероприятия" : isEvent ? "Удалить мероприятие" : work ? "Удалить задачу" : "Удалить пункт"}</button>` : ""}</div></section>`;
     renderTags();
     renderChildren();
+    tree.attach(data);
+    tools.attachCard();
     ui().drawer.baseline = ctx.signature();
     $("#task-title").focus();
     const url = new URL(location.href);
@@ -312,7 +346,7 @@ window.createProductUI = function (ctx) {
             : !["task", "event"].includes(c.kind)),
       ),
       index = siblings.findIndex((c) => c.id === t.id);
-    return `<article class="agenda-row" data-agenda-item="${E(t.id)}" style="--agenda-level:${Math.min(4, level)}"><div class="agenda-row-title">${kindBadge(t)}<span class="agenda-order"><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="-1" aria-label="Выше: ${E(t.title)}" ${index <= 0 ? "disabled" : ""}>↑</button><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="1" aria-label="Ниже: ${E(t.title)}" ${index >= siblings.length - 1 ? "disabled" : ""}>↓</button></span><button class="task-title" type="button" data-product="open" data-id="${E(linked?.id || t.id)}">${E(linked?.title || t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span></div>${t.kind === "reference" ? `<button class="textbtn" type="button" data-product="open" data-id="${E(t.id)}">Вопросы и участники этой встречи</button>` : ""}${t.description ? `<p class="agenda-description">${E(t.description)}</p>` : ""}${t.outcome ? `<p class="agenda-outcome"><strong>Итоги:</strong> ${E(t.outcome)}</p>` : ""}<div class="agenda-people">${t.counterparties.length ? `Контрагенты: ${E(names(t.counterparties))} · ` : ""}${t.executors.length ? `Исполнители: ${E(names(t.executors))} · ` : ""}${t.responsible ? `Ответственный: ${E(names([t.responsible]))}` : ""}</div>${t.tags.length ? `<div class="tag-chips">${t.tags.map((tag) => `<span class="tag-chip">${E(tag)}</span>`).join("")}</div>` : ""}${ctx.activitySummary(t)}${children.map((c) => agendaRow(c, level + 1)).join("")}</article>`;
+    return `<article class="agenda-row" data-agenda-item="${E(t.id)}" style="--agenda-level:${Math.min(4, level)}"><div class="agenda-row-title">${kindBadge(t)}<span class="agenda-order"><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="-1" aria-label="Выше: ${E(t.title)}" ${index <= 0 ? "disabled" : ""}>↑</button><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="1" aria-label="Ниже: ${E(t.title)}" ${index >= siblings.length - 1 ? "disabled" : ""}>↓</button></span><button class="task-title" type="button" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span>${tree.actionMenu(t)}</div>${t.kind === "reference" && t.linkedTaskId ? `<button class="textbtn" type="button" data-product="open" data-id="${E(t.linkedTaskId)}">Открыть рабочую задачу ↗</button>` : ""}${t.description ? `<p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p>` : ""}${t.outcome ? `<p class="agenda-outcome"><strong>Итоги:</strong> ${window.WorkspaceMentions.html(t.outcome, E)}</p>` : ""}<div class="agenda-people">${t.counterparties.length ? `Контрагенты: ${E(names(t.counterparties))} · ` : ""}${t.executors.length ? `Исполнители: ${E(names(t.executors))} · ` : ""}${t.responsible ? `Ответственный: ${E(names([t.responsible]))}` : ""}</div>${t.tags.length ? `<div class="tag-chips">${t.tags.map((tag) => `<span class="tag-chip">${E(tag)}</span>`).join("")}</div>` : ""}${ctx.activitySummary(t)}${children.map((c) => agendaRow(c, level + 1)).join("")}</article>`;
   }
   async function addFromCard(kind) {
     let sourceId = ui().drawer?.data.id;
@@ -353,10 +387,11 @@ window.createProductUI = function (ctx) {
         "Не назначен",
       );
     }
+    tools.filterPeople();
     renderChildren();
   }
   function eventCard(t) {
-    return `<article class="event-card" data-event="${E(t.id)}"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span></div><p>${E(byDate(t))}${t.startTime ? " · " + E(t.startTime) : ""}${t.location ? " · " + E(t.location) : ""}</p><p class="agenda-description">${E(t.description)}</p><div class="tag-chips">${t.topics.map((id) => `<span class="tag-chip">${E(project(id)?.name || "")}</span>`).join("")}</div><p class="agenda-people">${E(names(t.participants || []))}</p><div class="card-child-actions"><button class="textbtn" data-product="open" data-id="${E(t.id)}">Открыть повестку</button><button class="textbtn" data-action="meeting-open" data-id="${E(t.id)}">Печать / PDF</button></div></article>`;
+    return `<article class="event-card" data-event="${E(t.id)}"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span></div><p>${E(byDate(t))}${t.startTime ? " · " + E(t.startTime) : ""}${t.location ? " · " + E(t.location) : ""}</p><p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p><div class="tag-chips">${t.topics.map((id) => `<span class="tag-chip">${E(project(id)?.name || "")}</span>`).join("")}</div><p class="agenda-people">${E(names(t.participants || []))}</p><div class="card-child-actions"><button class="textbtn" data-product="open" data-id="${E(t.id)}">Открыть повестку</button><button class="textbtn" data-action="meeting-open" data-id="${E(t.id)}">Печать / PDF</button></div></article>`;
   }
   function renderView() {
     const view = ui().view;
@@ -370,7 +405,7 @@ window.createProductUI = function (ctx) {
         results
           .map(
             (t) =>
-              `<article class="event-card"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button></div><p>${E(ctx.path(t.id))}</p><p class="agenda-description">${E(t.description)}</p><p class="agenda-people">Контрагенты: ${E(names(t.counterparties))} · Исполнители: ${E(names(t.executors))}</p>${ctx.activitySummary(t)}</article>`,
+              `<article class="event-card"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button></div><p>${E(ctx.path(t.id))}</p><p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p><p class="agenda-people">Контрагенты: ${E(names(t.counterparties))} · Исполнители: ${E(names(t.executors))}</p>${ctx.activitySummary(t)}</article>`,
           )
           .join("") ||
         '<div class="section empty">Совпадений нет. Измените поиск или условия.</div>';
@@ -706,7 +741,7 @@ window.createProductUI = function (ctx) {
       ui().drawer.data.tags.splice(Number(button.dataset.index), 1);
       renderTags();
     }
-    if (action === "open") ctx.openTask(id);
+    if (action === "open") void navigate(id);
     if (action === "child") void addFromCard(button.dataset.kind);
     if (action === "contacts") ctx.manage("contacts");
     if (action === "link-tasks") linkTasks();
@@ -806,6 +841,15 @@ window.createProductUI = function (ctx) {
   }
   return {
     printItem,
+    profileView: tools.profileView,
+    profileEdit: (id, mode) => tools.profileEdit(person(id), mode),
+    profileData: tools.profileData,
+    editorRaw: tools.editorRaw,
+    restoreModal: tools.restoreModal,
+    decorateDirectory: tools.decorateDirectory,
+    attachEditors: tools.attachEditors,
+    beforeSaveContacts: tools.beforeSaveContacts,
+    refreshTree: tree.render,
     openCard,
     renderChildren,
     refreshLookups,

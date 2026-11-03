@@ -87,6 +87,16 @@ function prepareNext({
         db.pragma("quick_check", { simple: true }) !== "ok"
       )
         throw Error("Existing database failed verification.");
+      if (
+        !db
+          .prepare(
+            "SELECT 1 FROM WorkspaceMeta WHERE key='contact-profiles' AND value='1'",
+          )
+          .get()
+      )
+        throw Error(
+          "For the existing 0.3 installation use update-next.cmd. The database was retained.",
+        );
     } finally {
       db.close();
     }
@@ -189,7 +199,7 @@ function prepareNext({
         stdio: "inherit",
       },
     );
-    fs.writeFileSync(path.join(root, ".next-setup-ready"), "0.3.0\n");
+    fs.writeFileSync(path.join(root, ".next-setup-ready"), "0.4.0\n");
   }
   console.log("Ready: start-next.cmd; http://127.0.0.1:3003.");
   return { database: filename };

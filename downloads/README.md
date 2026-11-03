@@ -1,7 +1,9 @@
 # Загрузки
 
+**Для уже установленной программы на 3003: task-gantt-update-0.4.zip.** Распаковать отдельно, остановить только 3003, запустить update-next.cmd, затем прежний start-next.cmd. Текущая база сохраняется; повторный импорт Excel не требуется.
+
 - **task-gantt-export-review.zip** — отдельная офлайн-выгрузка актуальной базы Windows в редактируемый Excel и локальный архив с файлами.
-- **task-gantt-app-next.zip** — новая модель 0.3, отдельная папка task-gantt-app-next, setup-next.cmd / start-next.cmd, порт 3003. Нужны библиотеки соседней установленной task-gantt-app-workspace и Node 22.12+ / 24; новая база сначала пустая, прежний вход ADMIN сохраняется.
+- **task-gantt-app-next.zip** — новая установка 0.4, отдельная папка task-gantt-app-next, setup-next.cmd / start-next.cmd, порт 3003. Нужны библиотеки соседней установленной task-gantt-app-workspace и Node 22.12+ / 24; новая база сначала пустая, прежний вход ADMIN сохраняется.
 - task-gantt-app-workspace.zip и task-gantt-app-fixed.zip — прежние выпуски, не содержат новую модель.
 - PDF и ux-prototype.zip — прежние примеры и макет.
 

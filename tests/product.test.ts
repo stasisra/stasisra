@@ -379,3 +379,101 @@ test("linking a branch retains the working subtask structure inside the agenda w
     db.close();
   }
 });
+
+test("contact profiles retain fields across old-style updates, derive topics and merge links transactionally", () => {
+  const db = fixture();
+  try {
+    for (const id of ["sp", "vnz"])
+      act(db, "saveDirectory", { id, mode: "projects", name: id });
+    act(db, "saveDirectory", {
+      id: "profile",
+      mode: "contacts",
+      name: "Contact",
+      phones: "+421 123",
+      emails: "contact@example.test",
+      addresses: "Address",
+      company: "Org",
+      topics: ["sp"],
+      responsible: true,
+    });
+    create(db, "task", {
+      project: "vnz",
+      counterparties: ["profile"],
+      description: "Уточнить @[Contact](contact:profile)",
+    });
+    let model = productSnapshot(db, user),
+      contact = model.contacts.find((c) => c.id === "profile")!;
+    assert.deepEqual(contact.topics.sort(), ["sp", "vnz"]);
+    assert.equal(contact.phones, "+421 123");
+    act(db, "saveDirectory", {
+      id: "profile",
+      mode: "contacts",
+      name: "Renamed",
+      responsible: true,
+      revision: contact.revision,
+    });
+    contact = productSnapshot(db, user).contacts.find(
+      (c) => c.id === "profile",
+    )!;
+    assert.equal(contact.emails, "contact@example.test");
+    assert.deepEqual(contact.manualTopics, ["sp"]);
+    assert.throws(
+      () =>
+        act(db, "saveDirectory", {
+          id: "profile",
+          mode: "contacts",
+          name: "bad",
+          phones: "lost",
+          topics: ["missing"],
+          revision: contact.revision,
+        }),
+      /не найдена/,
+    );
+    assert.equal(
+      productSnapshot(db, user).contacts.find((c) => c.id === "profile")!
+        .phones,
+      "+421 123",
+    );
+    act(db, "saveDirectory", {
+      id: "other",
+      mode: "contacts",
+      name: "Other",
+      emails: "keep@example.test",
+      topics: ["vnz"],
+      responsible: true,
+    });
+    act(db, "removeDirectory", {
+      id: "profile",
+      mode: "contacts",
+      revision: contact.revision,
+      replacement: "other",
+    });
+    model = productSnapshot(db, user);
+    contact = model.contacts.find((c) => c.id === "other")!;
+    assert.equal(
+      model.tasks.find((t) => t.id === "task")!.description,
+      "Уточнить @[Contact](contact:other)",
+    );
+    assert.equal(contact.phones, "+421 123");
+    assert.equal(contact.emails, "keep@example.test");
+    assert.deepEqual(contact.manualTopics.sort(), ["sp", "vnz"]);
+    assert.deepEqual(model.tasks.find((t) => t.id === "task")!.counterparties, [
+      "other",
+    ]);
+    const sp = model.projects.find((p) => p.id === "sp")!;
+    act(db, "removeDirectory", {
+      id: "sp",
+      mode: "projects",
+      revision: sp.revision,
+      replacement: "vnz",
+    });
+    assert.deepEqual(
+      productSnapshot(db, user).contacts.find((c) => c.id === "other")!
+        .manualTopics,
+      ["vnz"],
+    );
+    assert.deepEqual(db.pragma("foreign_key_check"), []);
+  } finally {
+    db.close();
+  }
+});

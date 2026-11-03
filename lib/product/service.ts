@@ -392,6 +392,14 @@ function directory(db: Database.Database, raw: unknown) {
       description: z.string().max(100000).default(""),
       type: z.enum(["Человек", "Организация", "Группа"]).default("Человек"),
       responsible: z.boolean().default(false),
+      company: z.string().max(2000).optional(),
+      position: z.string().max(2000).optional(),
+      phones: z.string().max(10000).optional(),
+      emails: z.string().max(10000).optional(),
+      addresses: z.string().max(10000).optional(),
+      website: z.string().max(4000).optional(),
+      notes: z.string().max(100000).optional(),
+      topics: z.array(ID).max(200).optional(),
       revision: z.number().int().optional(),
     })
     .parse(raw);
@@ -417,7 +425,32 @@ function directory(db: Database.Database, raw: unknown) {
       old.name === data.name &&
       (table !== "Project" || old.description === data.description) &&
       (table !== "Contact" ||
-        (old.type === data.type && !!old.responsible === data.responsible))
+        (old.type === data.type &&
+          !!old.responsible === data.responsible &&
+          [
+            "company",
+            "position",
+            "phones",
+            "emails",
+            "addresses",
+            "website",
+            "notes",
+          ].every(
+            (key) =>
+              (data as Row)[key] === undefined ||
+              (data as Row)[key] === old[key],
+          ) &&
+          (data.topics === undefined ||
+            JSON.stringify([...new Set(data.topics)].sort()) ===
+              JSON.stringify(
+                (
+                  db
+                    .prepare(
+                      "SELECT projectId FROM ContactProject WHERE contactId=? ORDER BY projectId",
+                    )
+                    .all(data.id) as Row[]
+                ).map((r) => r.projectId),
+              ))))
     )
       return;
     checkRevision(old, data.revision);
@@ -471,6 +504,28 @@ function directory(db: Database.Database, raw: unknown) {
         now,
         now,
       );
+    for (const field of [
+      "company",
+      "position",
+      "phones",
+      "emails",
+      "addresses",
+      "website",
+      "notes",
+    ])
+      if ((data as Row)[field] !== undefined)
+        db.prepare(`UPDATE Contact SET ${field}=? WHERE id=?`).run(
+          (data as Row)[field],
+          data.id,
+        );
+    if (data.topics !== undefined) {
+      for (const id of data.topics) need(db, "Project", id);
+      db.prepare("DELETE FROM ContactProject WHERE contactId=?").run(data.id);
+      for (const id of new Set(data.topics))
+        db.prepare(
+          "INSERT INTO ContactProject(contactId,projectId) VALUES(?,?)",
+        ).run(data.id, id);
+    }
   }
 }
 function removeDirectory(db: Database.Database, data: Row) {
@@ -495,6 +550,10 @@ function removeDirectory(db: Database.Database, data: Row) {
     if (replacement)
       db.prepare(
         "INSERT OR IGNORE INTO EventProject(itemId,projectId) SELECT itemId,? FROM EventProject WHERE projectId=?",
+      ).run(replacement, id);
+    if (replacement)
+      db.prepare(
+        "INSERT OR IGNORE INTO ContactProject(contactId,projectId) SELECT contactId,? FROM ContactProject WHERE projectId=?",
       ).run(replacement, id);
     db.prepare("DELETE FROM Project WHERE id=?").run(id);
   } else if (table === "Tag") {
@@ -539,7 +598,47 @@ function removeDirectory(db: Database.Database, data: Row) {
       db.prepare(
         "UPDATE Contact SET responsible=0,revision=revision+1,updatedAt=? WHERE id=?",
       ).run(now, id);
-    else db.prepare("DELETE FROM Contact WHERE id=?").run(id);
+    else {
+      if (replacement) {
+        // A merged identity keeps every selected mention pointing to the survivor.
+        for (const [table, columns] of [
+          ["ContentItem", ["description", "outcome"]],
+          ["Project", ["description"]],
+          ["ContentNote", ["body"]],
+        ] as [string, string[]][]) {
+          for (const column of columns) {
+            const from = "](contact:" + id + ")",
+              to = "](contact:" + replacement + ")";
+            const marker = ":::contact " + id + "\n",
+              nextMarker = ":::contact " + replacement + "\n";
+            db.prepare(
+              `UPDATE ${table} SET ${column}=replace(replace(${column},?,?),?,?),revision=revision+1${table === "ContentNote" ? "" : ",updatedAt=" + now} WHERE instr(${column},?)>0 OR instr(${column},?)>0`,
+            ).run(from, to, marker, nextMarker, from, marker);
+          }
+        }
+        db.prepare(
+          "INSERT OR IGNORE INTO ContactProject(contactId,projectId) SELECT ?,projectId FROM ContactProject WHERE contactId=?",
+        ).run(replacement, id);
+        for (const field of [
+          "company",
+          "position",
+          "phones",
+          "emails",
+          "addresses",
+          "website",
+          "notes",
+        ])
+          if (!target![field] && old[field])
+            db.prepare(`UPDATE Contact SET ${field}=? WHERE id=?`).run(
+              old[field],
+              replacement,
+            );
+        db.prepare(
+          "UPDATE Contact SET revision=revision+1,updatedAt=? WHERE id=?",
+        ).run(now, replacement);
+      }
+      db.prepare("DELETE FROM Contact WHERE id=?").run(id);
+    }
   }
 }
 function linkTasks(db: Database.Database, user: SessionUser, data: Row) {
@@ -683,6 +782,9 @@ function promote(db: Database.Database, user: SessionUser, data: Row) {
   }
 }
 export function productSnapshot(db: Database.Database, user: SessionUser) {
+  const contactTopics = db
+    .prepare("SELECT contactId,projectId FROM ContactProject ORDER BY rowid")
+    .all() as Row[];
   const projects = db
     .prepare(
       "SELECT id,name,color,description,archived,revision FROM Project ORDER BY createdAt,rowid",
@@ -690,7 +792,7 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
     .all() as Row[];
   const contacts = db
     .prepare(
-      "SELECT id,name,type,responsible,archived,revision FROM Contact ORDER BY name",
+      "SELECT id,name,type,responsible,archived,revision,company,position,phones,emails,addresses,website,notes FROM Contact ORDER BY name",
     )
     .all() as Row[];
   const tags = db
@@ -894,6 +996,30 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
   const meta = (key: string) =>
     (db.prepare("SELECT value FROM WorkspaceMeta WHERE key=?").get(key) as Row)
       ?.value;
+  for (const c of contacts) {
+    c.manualTopics = contactTopics
+      .filter((t) => t.contactId === c.id)
+      .map((t) => t.projectId);
+    c.topics = [
+      ...new Set([
+        ...c.manualTopics,
+        ...items
+          .filter(
+            (i) =>
+              i.counterparties.includes(c.id) ||
+              i.executors.includes(c.id) ||
+              i.responsible === c.id,
+          )
+          .flatMap((i) =>
+            i.kind === "event"
+              ? i.topics
+              : i.project
+                ? [i.project]
+                : items.find((e) => e.id === i.activityId)?.topics || [],
+          ),
+      ]),
+    ];
+  }
   return {
     instanceId: meta("instance"),
     revision: Number(meta("revision") || 0),
@@ -907,7 +1033,19 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
       archived: !!p.archived,
     })),
     contacts: contacts.map((c) => ({
-      ...c,
+      id: String(c.id),
+      name: String(c.name),
+      type: String(c.type),
+      revision: Number(c.revision),
+      company: String(c.company),
+      position: String(c.position),
+      phones: String(c.phones),
+      emails: String(c.emails),
+      addresses: String(c.addresses),
+      website: String(c.website),
+      notes: String(c.notes),
+      manualTopics: c.manualTopics as string[],
+      topics: c.topics as string[],
       archived: !!c.archived,
       responsible: !!c.responsible,
     })),
