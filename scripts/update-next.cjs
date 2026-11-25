@@ -7,6 +7,7 @@ const { createHash, randomBytes } = require("node:crypto"),
   { parseEnv } = require("node:util"),
   { execFileSync } = require("node:child_process");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
+const version = "0.4.2";
 async function portBusy(port) {
   return new Promise((resolve) => {
     const socket = net.connect({ port, host: "127.0.0.1" });
@@ -70,7 +71,7 @@ async function updateNext({
   );
   if (
     manifest.format !== "task-gantt-update/v1" ||
-    manifest.version !== "0.4.1" ||
+    manifest.version !== version ||
     !manifest.files ||
     Object.keys(manifest.files).length < 10
   )
@@ -94,7 +95,7 @@ async function updateNext({
     config = parseEnv(envBytes.toString());
   if (
     config.DATABASE_URL !== "file:./dev.db" ||
-    config.APP_URL !== "http://127.0.0.1:3003"
+    !/^http:\/\/(127\.0\.0\.1|localhost):3003$/.test(config.APP_URL || "")
   )
     throw Error(
       "The update requires the existing next-model app on port 3003.",
@@ -114,7 +115,10 @@ async function updateNext({
   const backup = path.join(target, "_updates", stamp),
     dbFile = path.join(target, "prisma", "dev.db");
   let touched = false,
-    oldBuild = false,
+    databaseMayChange = false,
+    buildMoved = false,
+    buildStarted = false,
+    rollbackComplete = true,
     readyBytes = null;
   const existing = [];
   const run =
@@ -151,7 +155,7 @@ async function updateNext({
     }
     fs.writeFileSync(
       path.join(backup, "manifest.json"),
-      JSON.stringify({ version: "0.4.1", files, existing }, null, 2),
+      JSON.stringify({ version, files, existing }, null, 2),
     );
     const ready = path.join(target, ".next-setup-ready");
     if (fs.existsSync(ready)) readyBytes = fs.readFileSync(ready);
@@ -162,7 +166,7 @@ async function updateNext({
         path.join(target, ".next"),
         path.join(backup, "previous-build"),
       );
-      oldBuild = true;
+      buildMoved = true;
     }
     for (const name of files) {
       const to = path.join(target, name);
@@ -176,17 +180,24 @@ async function updateNext({
       APP_URL: config.APP_URL,
       NEXT_TELEMETRY_DISABLED: "1",
     };
+    databaseMayChange = true;
     run(["--import", "tsx", path.join(target, "scripts", "init-db.ts")], {
       cwd: target,
       env,
       stdio: "inherit",
     });
-    if (build)
+    if (build) {
+      buildStarted = true;
       run([requireApp.resolve("next/dist/bin/next"), "build"], {
         cwd: target,
         env,
         stdio: "inherit",
       });
+      if (
+        !fs.readFileSync(path.join(target, ".next", "BUILD_ID"), "utf8").trim()
+      )
+        throw Error("Updated build is incomplete.");
+    }
     const check = new Database(dbFile, { readonly: true, fileMustExist: true });
     try {
       if (
@@ -194,18 +205,16 @@ async function updateNext({
         check.pragma("quick_check", { simple: true }) !== "ok"
       )
         throw Error("Updated database integrity check failed.");
-      if (
-        !check
-          .prepare(
-            "SELECT 1 FROM WorkspaceMeta WHERE key='contact-profiles' AND value='1'",
-          )
-          .get()
-      )
-        throw Error("Contact profile migration missing.");
+      const migration = check.prepare(
+        "SELECT 1 FROM WorkspaceMeta WHERE key=? AND value='1'",
+      );
+      for (const key of ["contact-profiles", "event-workflows"])
+        if (!migration.get(key))
+          throw Error("Required migration missing: " + key);
     } finally {
       check.close();
     }
-    if (build) fs.writeFileSync(ready, "0.4.1\n");
+    if (build) fs.writeFileSync(ready, version + "\n");
     console.log(
       "Update complete. Existing tasks, events, contacts, notes and files retained.",
     );
@@ -214,34 +223,47 @@ async function updateNext({
     return { backup, database: dbFile };
   } catch (error) {
     if (touched) {
-      // Server is stopped; all child commands have completed before rollback.
-      for (const suffix of ["-wal", "-shm"])
-        fs.rmSync(dbFile + suffix, { force: true });
-      fs.copyFileSync(path.join(backup, "database-before.db"), dbFile);
-      const old = new Set(existing);
-      for (const name of files) {
-        const file = path.join(target, name);
-        if (old.has(name)) {
-          fs.mkdirSync(path.dirname(file), { recursive: true });
-          fs.copyFileSync(path.join(backup, "files", name), file);
-        } else fs.rmSync(file, { force: true });
-      }
-      fs.rmSync(path.join(target, ".next"), { recursive: true, force: true });
-      if (oldBuild)
-        fs.renameSync(
-          path.join(backup, "previous-build"),
-          path.join(target, ".next"),
+      try {
+        // The server is stopped and all child commands have completed.
+        if (databaseMayChange) {
+          for (const suffix of ["-wal", "-shm"])
+            fs.rmSync(dbFile + suffix, { force: true });
+          fs.copyFileSync(path.join(backup, "database-before.db"), dbFile);
+        }
+        const old = new Set(existing);
+        for (const name of files) {
+          const file = path.join(target, name);
+          if (old.has(name)) {
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.copyFileSync(path.join(backup, "files", name), file);
+          } else fs.rmSync(file, { force: true });
+        }
+        if (buildMoved || buildStarted)
+          fs.rmSync(path.join(target, ".next"), {
+            recursive: true,
+            force: true,
+          });
+        if (buildMoved)
+          fs.renameSync(
+            path.join(backup, "previous-build"),
+            path.join(target, ".next"),
+          );
+        if (readyBytes)
+          fs.writeFileSync(path.join(target, ".next-setup-ready"), readyBytes);
+        else fs.rmSync(path.join(target, ".next-setup-ready"), { force: true });
+        console.error(
+          "Update rolled back. Previous database, source files and build restored.",
         );
-      if (readyBytes)
-        fs.writeFileSync(path.join(target, ".next-setup-ready"), readyBytes);
-      else fs.rmSync(path.join(target, ".next-setup-ready"), { force: true });
-      console.error(
-        "Update rolled back. Previous database, source files and build restored.",
-      );
+      } catch (rollbackError) {
+        rollbackComplete = false;
+        throw Error(
+          `Rollback incomplete. Backup: ${backup}\n${rollbackError.message}\nUpdate error: ${error.message}`,
+        );
+      }
     }
     throw error;
   } finally {
-    fs.rmSync(lock, { force: true });
+    if (rollbackComplete) fs.rmSync(lock, { force: true });
   }
 }
 module.exports = { updateNext, allowed };

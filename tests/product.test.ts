@@ -380,6 +380,121 @@ test("linking a branch retains the working subtask structure inside the agenda w
   }
 });
 
+test("publishing outcomes preserves source and task content, validates the whole batch and is replayable", () => {
+  const db = fixture();
+  try {
+    for (const id of ["alpha", "beta"])
+      act(db, "saveDirectory", { id, mode: "projects", name: id });
+    act(db, "saveDirectory", {
+      id: "participant",
+      mode: "contacts",
+      name: "Участник",
+    });
+    create(db, "root", { project: "alpha" });
+    create(db, "child", {
+      parent: "root",
+      participantIds: ["participant"],
+      description: "Исходное описание",
+    });
+    create(db, "other", { project: "beta" });
+    create(db, "event", {
+      kind: "event",
+      eventType: "meeting",
+      originItemId: "child",
+      outcome: "Принято решение",
+    });
+    create(db, "question", {
+      kind: "question",
+      activityId: "event",
+      outcome: "Ответ на вопрос",
+    });
+    for (const requestId of ["first", "second"])
+      act(db, "linkTasks", {
+        activityId: "event",
+        taskIds: ["root", "child", "other"],
+        requestId,
+      });
+    const publish = (data: Record<string, unknown>) =>
+      act(db, "addOutcomeToTasks", { sourceId: "event", revision: 0, ...data });
+    assert.throws(
+      () => publish({ mode: "existing", taskIds: ["child", "question"] }),
+      /рабочие задачи/,
+    );
+    assert.equal(
+      db.prepare("SELECT count(*) AS n FROM EventOutcomeTask").pluck().get(),
+      0,
+    );
+    assert.throws(
+      () =>
+        publish({
+          mode: "new",
+          task: {
+            id: "new",
+            title: "Новое дело",
+            project: "alpha",
+            parent: "other",
+          },
+        }),
+      /ветку/,
+    );
+    for (let replay = 0; replay < 2; replay++) {
+      publish({ mode: "existing", taskIds: ["child", "other"] });
+      publish({
+        mode: "new",
+        task: {
+          id: "new",
+          title: "Новое дело",
+          project: "beta",
+          parent: "other",
+        },
+      });
+    }
+    act(db, "addOutcomeToTasks", {
+      mode: "existing",
+      sourceId: "question",
+      revision: 0,
+      taskIds: ["new"],
+    });
+    const model = productSnapshot(db, user);
+    const get = (id: string) => model.tasks.find((t) => t.id === id)!;
+    assert.equal(get("event").eventType, "meeting");
+    assert.deepEqual(get("event").outcomeTaskIds, ["child", "other", "new"]);
+    assert.deepEqual(
+      get("new").eventOutcomes.map((o) => o.text),
+      ["Принято решение", "Ответ на вопрос"],
+    );
+    assert.equal(get("new").sourceParent, "other");
+    assert.equal(get("new").project, "beta");
+    assert.equal(get("child").description, "Исходное описание");
+    assert.deepEqual(get("child").participantIds, ["participant"]);
+    assert.deepEqual(get("child").relatedEvents, ["event"]);
+    assert.equal(
+      model.tasks.filter(
+        (t) => t.activityId === "event" && t.linkedTaskId === "child",
+      ).length,
+      1,
+    );
+    assert.deepEqual(
+      model.tasks.find((t) => t.linkedTaskId === "child")!.participantIds,
+      ["participant"],
+    );
+    act(db, "deleteTask", { id: "event", revision: 0 });
+    const remaining = productSnapshot(db, user).tasks.find(
+      (t) => t.id === "new",
+    )!;
+    assert.deepEqual(
+      remaining.eventOutcomes.map((o) => [o.eventId, o.text]),
+      [
+        [null, "Принято решение"],
+        [null, "Ответ на вопрос"],
+      ],
+    );
+    assert.deepEqual(db.pragma("foreign_key_check"), []);
+  } finally {
+    db.close();
+  }
+});
+
 test("contact profiles retain fields across old-style updates, derive topics and merge links transactionally", () => {
   const db = fixture();
   try {

@@ -17,6 +17,12 @@ window.createCardTools = function (ctx) {
     decisionResolve = null;
   const acknowledged = new Map();
   const modalFrames = [];
+  const editorRanges = new WeakMap();
+  const formats = [
+    ["bold", "Жирный", "Ctrl+B", "<strong>Ж</strong>"],
+    ["italic", "Курсив", "Ctrl+I", "<em>К</em>"],
+    ["underline", "Подчёркнутый", "Ctrl+U", "<u>П</u>"],
+  ];
   function holdModal() {
     if (fullField) expand();
     const root = $("#modal-root");
@@ -109,6 +115,17 @@ window.createCardTools = function (ctx) {
           textarea.id,
         )
       ) {
+        toolbar.insertAdjacentHTML(
+          "afterbegin",
+          '<div class="editor-format-buttons" role="group" aria-label="Формат текста">' +
+            formats
+              .map(
+                ([command, label, shortcut, content]) =>
+                  `<button type="button" class="btn" data-format-editor="${command}" aria-label="${label}" title="${label} (${shortcut})" aria-keyshortcuts="${shortcut}" aria-pressed="false">${content}</button>`,
+              )
+              .join("") +
+            "</div>",
+        );
         const id = textarea.id,
           editor = document.createElement("div");
         editor.id = id;
@@ -156,6 +173,7 @@ window.createCardTools = function (ctx) {
     const related = model().tasks.filter(
       (t) =>
         t.counterparties.includes(id) ||
+        t.participantIds.includes(id) ||
         t.executors.includes(id) ||
         t.responsible === id,
     );
@@ -173,9 +191,11 @@ window.createCardTools = function (ctx) {
     );
   }
   function profileEdit(c, mode) {
+    const isResponsible =
+      ctx.directoryContext()?.inlineContact?.role === "responsible";
     ctx.modal(
       c ? "Контакт: " + c.name : "Новый контакт",
-      `<div class="field"><label for="directory-name">Имя / название</label><input id="directory-name" maxlength="200" value="${E(c?.name || "")}"></div><div class="twocol"><div class="field"><label for="contact-type">Тип</label><select id="contact-type">${["Человек", "Организация", "Группа"].map((type) => `<option ${c?.type === type ? "selected" : ""}>${type}</option>`).join("")}</select></div><label class="contact-role"><input type="checkbox" id="contact-responsible" ${c?.responsible || mode === "responsibles" ? "checked" : ""}>Доступен в ответственных</label></div><div class="profile-fields">${fields.map(([key, label]) => `<div class="field"><label for="contact-${key}">${label}</label>${["phones", "emails", "addresses", "notes"].includes(key) ? `<textarea id="contact-${key}" rows="${key === "notes" ? 5 : 2}">${E(c?.[key] || "")}</textarea>` : `<input id="contact-${key}" value="${E(c?.[key] || "")}">`}</div>`).join("")}</div><div class="field"><span class="field-label">Связанные темы — можно выбрать несколько</span><div class="multi">${
+      `<div class="field"><label for="directory-name">Имя / название</label><input id="directory-name" maxlength="200" value="${E(c?.name || "")}"></div><div class="twocol"><div class="field"><label for="contact-type">Тип</label><select id="contact-type">${["Человек", "Организация", "Группа"].map((type) => `<option ${c?.type === type ? "selected" : ""}>${type}</option>`).join("")}</select></div><label class="contact-role"><input type="checkbox" id="contact-responsible" ${c?.responsible || mode === "responsibles" || isResponsible ? "checked" : ""} ${isResponsible ? "disabled" : ""}>Доступен в ответственных</label></div><div class="profile-fields">${fields.map(([key, label]) => `<div class="field"><label for="contact-${key}">${label}</label>${["phones", "emails", "addresses", "notes"].includes(key) ? `<textarea id="contact-${key}" rows="${key === "notes" ? 5 : 2}">${E(c?.[key] || "")}</textarea>` : `<input id="contact-${key}" value="${E(c?.[key] || "")}">`}</div>`).join("")}</div><div class="field"><span class="field-label">Связанные темы — можно выбрать несколько</span><div class="multi">${
         model()
           .projects.filter(
             (p) => !p.archived || c?.manualTopics?.includes(p.id),
@@ -413,6 +433,7 @@ window.createCardTools = function (ctx) {
       old = new Set(
         [
           ...(original?.counterparties || []),
+          ...(original?.participantIds || []),
           ...(original?.executors || []),
           original?.responsible,
         ].filter(Boolean),
@@ -421,7 +442,7 @@ window.createCardTools = function (ctx) {
       ...new Set(
         [
           ...$$(
-            '#task-form input[name="counterparties"]:checked,#task-form input[name="executors"]:checked',
+            '#task-form :is(input[name="counterparties"],input[name="participantIds"],input[name="executors"]):checked',
           ).map((n) => n.value),
           $("#task-responsible")?.value,
         ].filter(Boolean),
@@ -458,7 +479,7 @@ window.createCardTools = function (ctx) {
       text = ($("#people-search")?.value || "").toLocaleLowerCase("ru"),
       topics = currentTopics();
     for (const label of $$(
-      "#counterparties-choices label,#executors-choices label",
+      "#counterparties-choices label,#participantIds-choices label,#executors-choices label",
     )) {
       const input = label.querySelector("input"),
         c = person(input.value);
@@ -507,15 +528,67 @@ window.createCardTools = function (ctx) {
   });
   document.addEventListener("paste", (event) => {
     const editor = event.target.closest?.("[data-rich-editor]");
-    if (editor) {
-      event.preventDefault();
+    if (!editor) return;
+    event.preventDefault();
+    const html = event.clipboardData.getData("text/html");
+    if (html && window.DOMPurify) {
+      const template = document.createElement("template");
+      template.innerHTML = window.DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+          "p",
+          "div",
+          "br",
+          "b",
+          "strong",
+          "em",
+          "i",
+          "u",
+          "span",
+          "ul",
+          "ol",
+          "li",
+        ],
+        ALLOWED_ATTR: ["style"],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_ARIA_ATTR: false,
+      });
+      for (const node of template.content.querySelectorAll("[style]")) {
+        const { fontWeight, fontStyle, textDecorationLine, textDecoration } =
+          node.style;
+        node.removeAttribute("style");
+        if (/^(bold|[6-9]00)$/.test(fontWeight)) node.style.fontWeight = "bold";
+        if (/^(italic|oblique)$/.test(fontStyle))
+          node.style.fontStyle = "italic";
+        if (/\bunderline\b/.test(textDecorationLine || textDecoration))
+          node.style.textDecoration = "underline";
+      }
+      document.execCommand("insertHTML", false, template.innerHTML);
+    } else
       document.execCommand(
         "insertText",
         false,
         event.clipboardData.getData("text/plain"),
       );
-      syncEditor(editor);
-    }
+    syncEditor(editor);
+  });
+  document.addEventListener("selectionchange", () => {
+    const editor = document.activeElement?.closest("[data-rich-editor]");
+    const selection = getSelection();
+    if (
+      !editor ||
+      !selection.rangeCount ||
+      !editor.contains(selection.anchorNode) ||
+      !editor.contains(selection.focusNode)
+    )
+      return;
+    editorRanges.set(editor, selection.getRangeAt(0).cloneRange());
+    for (const button of editor
+      .closest(".field")
+      .querySelectorAll("[data-format-editor]"))
+      button.setAttribute(
+        "aria-pressed",
+        String(document.queryCommandState(button.dataset.formatEditor)),
+      );
   });
   document.addEventListener(
     "keydown",
@@ -557,9 +630,33 @@ window.createCardTools = function (ctx) {
     true,
   );
   document.addEventListener("mousedown", (event) => {
-    if (event.target.closest("#mention-picker")) event.preventDefault();
+    if (event.target.closest("#mention-picker,[data-format-editor]"))
+      event.preventDefault();
   });
   document.addEventListener("click", (event) => {
+    const format = event.target.closest("[data-format-editor]");
+    if (format) {
+      const editor = format
+        .closest(".field")
+        .querySelector("[data-rich-editor]");
+      const range = editorRanges.get(editor);
+      if (document.activeElement !== editor) {
+        editor.focus();
+        if (range && editor.contains(range.commonAncestorContainer)) {
+          const selection = getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+      document.execCommand(format.dataset.formatEditor, false);
+      syncEditor(editor);
+      format.setAttribute(
+        "aria-pressed",
+        String(document.queryCommandState(format.dataset.formatEditor)),
+      );
+      closePicker();
+      return;
+    }
     const mention = event.target.closest(".mention-link");
     if (mention) {
       if (mention.dataset.mentionKind === "contact")
@@ -588,7 +685,8 @@ window.createCardTools = function (ctx) {
       id = b.dataset.id;
     if (action === "expand-editor") expand(b.closest(".field"));
     if (action === "profile-edit-cancel") {
-      if (!restoreModal()) ctx.manage(ui().manager);
+      if (ctx.directoryContext()?.inlineContact) ctx.closeModal();
+      else if (!restoreModal()) ctx.manage(ui().manager);
     }
     if (action === "profile-view") profileView(id);
     if (action === "profile-edit") ctx.editContact(id);
@@ -617,7 +715,7 @@ window.createCardTools = function (ctx) {
       askContactData(
         [
           ...$$(
-            '#task-form input[name="counterparties"]:checked,#task-form input[name="executors"]:checked',
+            '#task-form :is(input[name="counterparties"],input[name="participantIds"],input[name="executors"]):checked',
           ).map((n) => n.value),
           $("#task-responsible")?.value,
         ].filter(Boolean),

@@ -44,7 +44,7 @@ function fixture() {
     "CREATE TABLE _prisma_migrations(id TEXT PRIMARY KEY,checksum TEXT NOT NULL,finished_at DATETIME,migration_name TEXT NOT NULL,logs TEXT,rolled_back_at DATETIME,started_at DATETIME NOT NULL,applied_steps_count INTEGER NOT NULL)",
   );
   for (const name of fs.readdirSync("prisma/migrations").sort()) {
-    if (name === "20261103000100_contact_profiles") continue;
+    if (name >= "20261103000100_contact_profiles") continue;
     const file = path.join("prisma/migrations", name, "migration.sql");
     if (!fs.existsSync(file)) continue;
     const sql = fs.readFileSync(file, "utf8");
@@ -104,7 +104,7 @@ function fixture() {
     path.join(source, "update-manifest.json"),
     JSON.stringify({
       format: "task-gantt-update/v1",
-      version: "0.4.1",
+      version: "0.4.2",
       files: Object.fromEntries(
         [...payload].map(([name, b]) => [name, sha(b)]),
       ),
@@ -144,7 +144,7 @@ function checkData(target: string) {
     );
     assert.deepEqual(db.pragma("foreign_key_check"), []);
     return db
-      .prepare("SELECT 1 FROM WorkspaceMeta WHERE key='contact-profiles'")
+      .prepare("SELECT 1 FROM WorkspaceMeta WHERE key='event-workflows'")
       .get();
   } finally {
     db.close();

@@ -153,13 +153,13 @@ test("new task persists multiple people, draft questions and files; validation c
   });
   await expect(page.locator("#drawer-files")).toContainText("план.txt");
   await page.locator("#task-end").fill("2026-01-01");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-error")).toContainText(
     "Дата окончания раньше даты начала",
   );
-  await expect(page.locator('[form="task-form"]')).toBeEnabled();
+  await expect(page.locator('[form="task-form"][value="exit"]')).toBeEnabled();
   await page.locator("#task-end").fill("2026-11-10");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#sync-status")).toContainText(
     /Сохранено|Файл сохранён/,
   );
@@ -214,12 +214,12 @@ test("two tabs cannot overwrite a newer edit and retain the rejected draft", asy
   const other = await context.newPage();
   await open(other, id);
   await page.locator("#task-title").fill("Изменено первым окном");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect
     .poll(async () => (await current(page.request, id)).title)
     .toBe("Изменено первым окном");
   await other.locator("#task-title").fill("Мой черновик второго окна");
-  await other.locator('[form="task-form"]').click();
+  await other.locator('[form="task-form"][value="exit"]').click();
   await expect(other.locator("#task-error")).toContainText(
     "изменена в другом окне",
   );
@@ -422,6 +422,9 @@ test("local Word and Excel previews show persisted files without external reques
       external.push(r.url());
   });
   await open(page, id);
+  await page.locator("#task-title").fill("Несохранённое название Office");
+  await page.locator("#task-description").fill("Черновик под просмотром");
+  await page.locator("#comment-text").fill("Непубликовавшийся комментарий");
   await page
     .locator('#drawer-files [data-action="preview-file"]')
     .filter({ hasText: "встреча.docx" })
@@ -429,7 +432,16 @@ test("local Word and Excel previews show persisted files without external reques
   await expect(page.locator("#office-body")).toContainText(
     "Документ встречи — кириллица",
   );
-  await page.locator('#modal-root [data-action="close-modal"]').first().click();
+  expect(
+    await page.locator(".preview-modal").evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width === innerWidth && rect.height === innerHeight;
+    }),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Вернуться в карточку" }).click();
+  await expect(page.locator("#task-title")).toHaveValue(
+    "Несохранённое название Office",
+  );
   await page
     .locator('#drawer-files [data-action="preview-file"]')
     .filter({ hasText: "смета.xlsx" })
@@ -437,6 +449,14 @@ test("local Word and Excel previews show persisted files without external reques
   await expect(page.locator("#office-body")).toContainText("1250");
   await page.locator('[data-action="office-sheet"][data-id="1"]').click();
   await expect(page.locator("#office-body")).toContainText("Что обсудить?");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#task-description")).toHaveText(
+    "Черновик под просмотром",
+  );
+  await expect(page.locator("#comment-text")).toHaveValue(
+    "Непубликовавшийся комментарий",
+  );
+  expect((await current(page.request, id)).title).toBe("Проверка Office");
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
 });
@@ -497,14 +517,14 @@ test("event validation, legacy redirects and Gantt render the working workspace"
   await page.locator("#task-end").fill("2026-11-05");
   await page.locator("#event-start-time").fill("15:00");
   await page.locator("#event-end-time").fill("14:00");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-error")).toContainText(
     "Время окончания раньше времени начала",
   );
   await page.locator("#event-end-time").fill("16:00");
   await page.locator("#event-location").fill("Офис");
   await page.locator("#task-timezone").selectOption("Europe/Bratislava");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   const saved = (await snapshot(page.request)).tasks.find(
     (t: any) => t.title === "Мероприятие со временем",
@@ -552,7 +572,7 @@ test("a failed file upload retains the saved task and retries without duplicatin
     }
     return route.continue();
   });
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-error")).toContainText(
     "Сбой загрузки для проверки",
   );
@@ -562,7 +582,7 @@ test("a failed file upload retains the saved task and retries without duplicatin
   );
   expect(matches).toHaveLength(1);
   expect(matches[0].attachments).toHaveLength(0);
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   matches = (await snapshot(page.request)).tasks.filter(
     (t: any) => t.title === title,
@@ -791,7 +811,7 @@ test("a card creates an event across topics with independent questions, preparat
   await page.locator("#task-start").fill("2026-11-01");
   await page.locator("#task-end").fill("2026-11-11");
   await page.locator("#task-description").fill("Повестка и материалы");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   let model = await snapshot(page.request),
     event = model.tasks.find((t: any) => t.title === title);
@@ -827,7 +847,7 @@ test("a card creates an event across topics with independent questions, preparat
   await page
     .locator('#drawer-root input[type="file"]')
     .setInputFiles({ name: "график.png", mimeType: "image/png", buffer: png });
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   model = await snapshot(page.request);
   const question = model.tasks.find(
@@ -844,7 +864,7 @@ test("a card creates an event across topics with independent questions, preparat
     .click();
   await page.locator("#task-title").fill("Купить билеты для поездки");
   await page.locator("#task-end").fill("2026-11-03");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   model = await snapshot(page.request);
   expect(model.tasks.find((t: any) => t.id === event.id).topics.sort()).toEqual(
@@ -1261,7 +1281,7 @@ test("contact profiles, topic search, @ references and optional contact snapshot
   await expect(editor.locator(".mention-link")).toHaveText("@" + name);
   expect((await current(page.request, id)).executors).toEqual([]);
   await page.locator('input[name="executors"][value="' + c.id + '"]').check();
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#modal-root h2")).toContainText(
     "Добавить контактные данные",
   );
@@ -1289,7 +1309,7 @@ test("contact profiles, topic search, @ references and optional contact snapshot
   await page.locator('[data-contact-insert-field="addresses"]').check();
   await page.locator('[data-card="contact-insert-apply"]').click();
   await expect(page.locator("#task-description")).toContainText("+421 555 999");
-  await page.locator('[form="task-form"]').click();
+  await page.locator('[form="task-form"][value="exit"]').click();
   await expect(page.locator("#task-form")).toHaveCount(0);
   saved = await current(page.request, id);
   expect(saved.description.split(":::contact " + c.id + "\n")).toHaveLength(2);
@@ -1368,4 +1388,359 @@ test("large topic editor retains multiline text on fullscreen transitions and sc
   expect(description).toContain("(contact:" + cid + ")");
   await page.locator('[data-action="directory-edit"][data-id="vnz"]').click();
   await expect(page.locator("#directory-description")).toContainText(name);
+});
+
+test("inline contacts select each role and saving keeps the same draft card open", async ({
+  page,
+}) => {
+  await login(page);
+  await page.locator('.head-actions [data-action="create-event"]').click();
+  const title = "Приглашение с контактами " + randomUUID();
+  await page.locator("#task-title").fill(title);
+  await page
+    .locator("#task-description")
+    .fill("Сохранить черновик при выборе контакта");
+  await page.locator("#event-location").fill("Переговорная");
+  await page
+    .locator('[data-product="new-contact"][data-role="participantIds"]')
+    .click();
+  await page.locator("#directory-name").fill("Отменённая карточка контакта");
+  await page
+    .getByRole("button", { name: "Отмена", exact: true })
+    .last()
+    .click();
+  await expect(page.locator("#directory-name")).toHaveCount(0);
+  const people: Record<string, string> = {};
+  for (const role of [
+    "counterparties",
+    "participantIds",
+    "executors",
+    "responsible",
+  ]) {
+    const name = role + " " + randomUUID();
+    await page
+      .locator('[data-product="new-contact"][data-role="' + role + '"]')
+      .click();
+    await page.locator("#directory-name").fill(name);
+    if (role === "responsible") {
+      await expect(page.locator("#contact-responsible")).toBeChecked();
+      await page.locator("#contact-phones").fill("+972 555 0101");
+    }
+    await page.locator('[data-action="directory-save"]').click();
+    await expect(page.locator("#directory-name")).toHaveCount(0);
+    const c = (await snapshot(page.request)).contacts.find(
+      (entry: any) => entry.name === name,
+    );
+    people[role] = c.id;
+    if (role === "responsible") {
+      expect(c.responsible).toBe(true);
+      await expect(page.locator("#task-responsible")).toHaveValue(c.id);
+    } else {
+      await expect(
+        page.locator('input[name="' + role + '"][value="' + c.id + '"]'),
+      ).toBeChecked();
+    }
+    await expect(page.locator("#task-title")).toHaveValue(title);
+    await expect(page.locator("#task-description")).toHaveText(
+      "Сохранить черновик при выборе контакта",
+    );
+    await expect(page.locator("#event-location")).toHaveValue("Переговорная");
+  }
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await page.getByRole("button", { name: "Только связать" }).click();
+  await expect(page).toHaveURL(/task=/);
+  await expect(page.locator("#task-title")).toHaveValue(title);
+  const id = new URL(page.url()).searchParams.get("task")!;
+  const saved = await current(page.request, id);
+  expect(saved.counterparties).toEqual([people.counterparties]);
+  expect(saved.participantIds).toEqual([people.participantIds]);
+  expect(saved.executors).toEqual([people.executors]);
+  expect(saved.responsible).toBe(people.responsible);
+  await page.locator("#event-location").fill("Новая переговорная");
+  await page.getByRole("button", { name: "Сохранить и выйти" }).click();
+  await expect(page.locator("#task-form")).toHaveCount(0);
+  expect((await current(page.request, id)).location).toBe("Новая переговорная");
+});
+
+test("event outcomes link both ways, search all branches, and combine event filters", async ({
+  page,
+}) => {
+  await login(page);
+  const branch = await create(page.request, {
+    title: "Ветка встреч",
+    project: "sp",
+  });
+  const child = await create(page.request, {
+    title: "Исходная подзадача встреч",
+    parent: branch,
+    description: "Описание исходной задачи",
+  });
+  const across = await create(page.request, {
+    title: "Другая тема для обсуждения",
+    project: "vnz",
+  });
+  const outside = await create(page.request, {
+    title: "Дерево для новой задачи",
+    project: "web",
+  });
+  const leaf = await create(page.request, {
+    title: "Вложенная ветка новой задачи",
+    parent: outside,
+  });
+  await open(page, child);
+  await page.locator('[data-product="child"][data-kind="event"]').click();
+  const title = "Рабочая встреча " + randomUUID();
+  await page.locator("#task-title").fill(title);
+  await page.locator("#event-type").selectOption("meeting");
+  await page.locator("#task-start").fill("2026-11-20");
+  await page.locator("#task-end").fill("2026-11-23");
+  await page.locator('[data-product="link-tasks"]').click();
+  await page.locator('[data-link-choice="' + across + '"]').check();
+  await page.locator('[data-product="link-apply"]').click();
+  await expect(page.locator("#card-children")).toContainText(
+    "Другая тема для обсуждения",
+  );
+  const event = new URL(page.url()).searchParams.get("task")!;
+  await create(page.request, {
+    title: "Вопрос по бюджету",
+    kind: "question",
+    activityId: event,
+    description: "Точная сумма лимита",
+    participantIds: ["juraj"],
+    start: "",
+    end: "",
+  });
+  await create(page.request, {
+    title: "Другое мероприятие",
+    kind: "event",
+    eventType: "trip",
+    start: "2026-11-20",
+    end: "2026-11-23",
+    participantIds: ["juraj"],
+  });
+  await page.locator("#item-outcome").fill("Итог встречи по бюджетному лимиту");
+  await page.locator('[data-product="add-outcome"]').click();
+  await expect(page.locator("#outcome-choices")).toContainText(
+    "Связанные задачи и ветки",
+  );
+  await page.locator('[data-outcome-task="' + child + '"]').check();
+  await page.locator('[data-outcome-task="' + across + '"]').check();
+  await page.locator('[data-outcome="apply"]').click();
+  await expect(page.locator("#card-related-records")).toContainText(
+    "Итог добавлен в задачи",
+  );
+  await page.locator('[data-product="add-outcome"]').click();
+  await page.locator("#outcome-mode").selectOption("new");
+  await page.locator("#outcome-title").fill("Новая задача из итога встречи");
+  await page.locator("#outcome-search").fill("дерево вложенная");
+  await page.locator('[data-outcome="branch"][data-id="' + leaf + '"]').click();
+  await expect(page.locator("#outcome-project")).toHaveValue("web");
+  await page.locator('[data-outcome="apply"]').click();
+  await expect(page.locator("#card-related-records")).toContainText(
+    "Новая задача из итога встречи",
+  );
+  const model = await snapshot(page.request);
+  const added = model.tasks.find(
+    (t: any) => t.title === "Новая задача из итога встречи",
+  );
+  expect([added.sourceParent, added.project]).toEqual([leaf, "web"]);
+  expect(added.eventOutcomes[0].text).toBe("Итог встречи по бюджетному лимиту");
+  await page.locator('#card-related-records [data-id="' + child + '"]').click();
+  await expect(page.locator("#task-description")).toHaveText(
+    "Описание исходной задачи",
+  );
+  await expect(page.locator("#card-related-records")).toContainText(
+    "Итог встречи по бюджетному лимиту",
+  );
+  await page.locator('#card-related-records [data-id="' + event + '"]').click();
+  await expect(page.locator("#task-title")).toHaveValue(title);
+  await page.locator('[data-tree="size"]').click();
+  await expect(page.locator("#card-tree-items")).toBeHidden();
+  await page.locator('[data-tree="size"]').click();
+  await expect(page.locator("#card-tree-items")).toContainText(
+    "Вопрос по бюджету",
+  );
+  await closeCard(page);
+  await page.goto("/activities");
+  const card = page.locator('[data-event="' + event + '"]');
+  await expect(card.locator("summary")).toContainText("Вопросы (1)");
+  await expect(card.locator("summary")).toContainText("Вопрос по бюджету");
+  await card.locator("summary").click();
+  await expect(card.locator("li")).toContainText("Точная сумма лимита");
+  await page.locator("#search").fill("точная бюджетному");
+  await expect(card).toBeVisible();
+  await expect(page.locator(".event-card")).toHaveCount(1);
+  await page.locator("#search").fill("");
+  await page.locator("#query-eventType").selectOption("meeting");
+  await page.locator("#query-eventPerson").selectOption("juraj");
+  await page.locator("#status-filter").selectOption("PLANNED");
+  await page.locator("#filter-from").fill("2026-11-21");
+  await page.locator("#filter-to").fill("2026-11-21");
+  await page.locator(".query-theme-picker summary").click();
+  await page.locator('[data-query-theme="sp"]').check();
+  await page.locator(".task-picker summary").click();
+  await page.locator('.task-picker [data-action="tasks-none"]').click();
+  await page.locator('[data-task-choice="' + branch + '"]').check();
+  await page.locator('.task-picker [data-action="query-apply"]').click();
+  await expect(page.locator(".event-card")).toHaveCount(1);
+  await expect(card).toBeVisible();
+  await page.locator('.events-view-switch [data-id="calendar"]').click();
+  await page.locator('.events-view-switch [data-id="events"]').click();
+  await expect(card).toBeVisible();
+  await page.reload();
+  await expect(page.locator("#query-eventType")).toHaveValue("meeting");
+  await expect(card).toBeVisible();
+  await page.locator(".task-picker summary").click();
+  await page
+    .locator('[data-action="only-linked-task"][data-id="' + branch + '"]')
+    .click();
+  await expect(card).toHaveCount(0);
+  await page.locator(".task-picker summary").click();
+  await page
+    .locator(
+      '.task-picker [data-action="only-task-branch"][data-id="' + branch + '"]',
+    )
+    .click();
+  await expect(card).toBeVisible();
+  await page.locator("#filter-from").fill("2026-11-24");
+  await page.locator("#filter-to").fill("2026-11-24");
+  await page.locator('.query-buttons [data-action="query-apply"]').click();
+  await expect(card).toHaveCount(0);
+});
+
+test("text emphasis survives save, reopen and actual print markup", async ({
+  page,
+}) => {
+  await login(page);
+  const id = await create(page.request, {
+    kind: "event",
+    title: "Формат встречи",
+  });
+  await open(page, id);
+  const editor = page.locator("#task-description");
+  await editor.fill("Жирный текст; курсивный текст; подчёркнутый текст");
+  for (const [phrase, button] of [
+    ["Жирный текст", "Жирный"],
+    ["курсивный текст", "Курсив"],
+    ["подчёркнутый текст", "Подчёркнутый"],
+  ]) {
+    await editor.evaluate((element, phrase) => {
+      element.focus();
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const start = node.textContent!.indexOf(phrase);
+        if (start < 0) continue;
+        const range = new Range();
+        range.setStart(node, start);
+        range.setEnd(node, start + phrase.length);
+        const selection = getSelection()!;
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return;
+      }
+      throw new Error("Не найдена фраза для выделения");
+    }, phrase);
+    await page
+      .locator(".field")
+      .filter({ has: editor })
+      .getByRole("button", { name: button, exact: true })
+      .click();
+  }
+  await page.locator("#item-outcome").evaluate((el) => {
+    el.focus();
+    const transfer = new DataTransfer();
+    transfer.setData("text/plain", "Готовый итог");
+    transfer.setData("text/html", "<b><i><u>Готовый итог</u></i></b>");
+    el.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: transfer,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  });
+  await page.getByRole("button", { name: "Сохранить и выйти" }).click();
+  await expect(page.locator("#task-form")).toHaveCount(0);
+  await open(page, id);
+  for (const [tag, text] of [
+    ["strong", "Жирный текст"],
+    ["em", "курсивный текст"],
+    ["u", "подчёркнутый текст"],
+  ])
+    await expect(editor.locator(tag)).toHaveText(text);
+  const result = page.locator("#item-outcome");
+  for (const tag of ["strong", "em", "u"])
+    await expect(result.locator(tag)).toHaveText("Готовый итог");
+  await page.locator('.drawer-footer [data-action="meeting-open"]').click();
+  await page.evaluate(() => {
+    window.print = () => {};
+  });
+  await page.locator('[data-action="meeting-print"]').click();
+  const print = page.locator("#print-output");
+  await page.emulateMedia({ media: "print" });
+  for (const [tag, text] of [
+    ["strong", "Жирный текст"],
+    ["em", "курсивный текст"],
+    ["u", "подчёркнутый текст"],
+  ])
+    await expect(print.locator(".description " + tag)).toHaveText(text);
+  for (const tag of ["strong", "em", "u"])
+    await expect(
+      print
+        .locator(".comment > span " + tag)
+        .filter({ hasText: "Готовый итог" }),
+    ).toHaveCount(1);
+  const styles = await print.locator(".description").evaluate((element) => {
+    const style = (tag: string) =>
+      getComputedStyle(element.querySelector(tag)!);
+    return {
+      weight: Number(style("strong").fontWeight),
+      italic: style("em").fontStyle,
+      underline: style("u").textDecorationLine,
+    };
+  });
+  expect(styles.weight).toBeGreaterThanOrEqual(600);
+  expect(styles.italic).toBe("italic");
+  expect(styles.underline).toContain("underline");
+  expect((await page.pdf()).subarray(0, 5).toString()).toBe("%PDF-");
+});
+
+test("Google Calendar opens a prefilled draft with local times and exclusive all-day end", async ({
+  page,
+}) => {
+  await login(page);
+  await page.locator('.head-actions [data-action="create-event"]').click();
+  await page.locator("#task-title").fill("Встреча & документы");
+  await page.locator("#task-start").fill("2026-12-10");
+  await page.locator("#task-end").fill("2026-12-11");
+  await page.locator("#event-start-time").fill("09:15");
+  await page.locator("#event-end-time").fill("10:05");
+  await page.locator("#event-location").fill("Хайфа, переговорная");
+  await page.locator("#task-description").fill("Повестка: сроки & материалы");
+  const urls: URL[] = [];
+  await page
+    .context()
+    .route("https://calendar.google.com/calendar/render?**", async (route) => {
+      urls.push(new URL(route.request().url()));
+      await route.fulfill({ body: "Calendar draft fixture" });
+    });
+  async function openCalendar() {
+    const tab = page.waitForEvent("popup");
+    await page.getByRole("button", { name: "Google Calendar" }).click();
+    await (await tab).close();
+    return Object.fromEntries(urls.at(-1)!.searchParams);
+  }
+  expect(await openCalendar()).toEqual({
+    action: "TEMPLATE",
+    text: "Встреча & документы",
+    dates: "20261210T091500/20261211T100500",
+    ctz: "Asia/Jerusalem",
+    location: "Хайфа, переговорная",
+    details: "Повестка: сроки & материалы",
+  });
+  await page.locator("#event-start-time").fill("");
+  await page.locator("#event-end-time").fill("");
+  expect((await openCalendar()).dates).toBe("20261210/20261212");
+  await expect(page.locator("#task-title")).toHaveValue("Встреча & документы");
 });

@@ -243,6 +243,7 @@
       percent: Number(values.get("percent") || 0),
       status: String(values.get("status") || ""),
       kind: String(values.get("kind") || "task"),
+      eventType: values.get("eventType") ?? undefined,
       startTime: String(values.get("startTime") || ""),
       endTime: String(values.get("endTime") || ""),
       location: String(values.get("location") || "").trim(),
@@ -251,6 +252,7 @@
       ),
       revision: ui.drawer.data.revision || 0,
       counterparties: values.getAll("counterparties").map(String),
+      participantIds: values.getAll("participantIds").map(String),
       tags: [
         ...new Set(
           [
@@ -290,7 +292,7 @@
     );
   }
   function closeDrawer(force = false) {
-    if (!force && (requests || ui.uploads)) {
+    if (!force && (requests || ui.uploads || ui.drawer?.saving)) {
       toast("Дождитесь завершения сохранения или загрузки");
       return;
     }
@@ -314,59 +316,66 @@
     url.searchParams.delete("new");
     history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
-  async function saveTask(form) {
-    if (form.dataset.busy === "true" || ui.uploads) return;
-    if (!(await productUI.beforeSaveContacts())) return false;
-    const button = $('#drawer-root [form="task-form"]'),
-      data = captureTaskForm(form),
-      wasNew = !ui.drawer.id;
-    if (!data.title) {
-      errorIn("#task-error", new Error("Введите название"));
-      return;
-    }
-    if (data.start && data.end && data.end < data.start) {
-      errorIn("#task-error", new Error("Дата окончания раньше даты начала"));
-      return;
-    }
-    form.dataset.busy = "true";
-    form.inert = true;
-    form.setAttribute("aria-busy", "true");
-    busyButton(button, true);
+  async function saveTask(form, { exit = false } = {}) {
+    const drawer = ui.drawer;
+    if (!form || !drawer || drawer.saving || ui.uploads) return false;
+    drawer.saving = true;
+    const buttons = $$('#drawer-root [form="task-form"]'),
+      wasNew = !drawer.id,
+      id = drawer.data.id;
     try {
-      await mutate(wasNew ? "createTask" : "saveTask", data);
-      ui.drawer.id = data.id;
-      ui.drawer.data.revision = task(data.id).revision;
-      for (const entry of [...pendingFiles.values()].filter(
-        (f) => f.taskId === data.id,
-      ))
-        await uploadOne(data.id, entry);
-      if (allFiles(data.id).some((f) => f.pending))
-        throw new Error(
-          "Остались незагруженные файлы. Нажмите «Сохранить» для повторной попытки.",
-        );
-      acceptModel(await getWorkspace());
-      closeDrawer(true);
-      render();
+      const initial = captureTaskForm(form);
+      if (!initial.title) throw new Error("Введите название");
+      if (initial.start && initial.end && initial.end < initial.start)
+        throw new Error("Дата окончания раньше даты начала");
+      if (!(await productUI.beforeSaveContacts()) || ui.drawer !== drawer)
+        return false;
+      const data = captureTaskForm(form);
+      $("#task-error").replaceChildren();
+      form.inert = true;
+      form.setAttribute("aria-busy", "true");
+      for (const button of buttons) busyButton(button, true);
+      const changed = wasNew || drawer.baseline !== JSON.stringify(data);
+      if (changed) {
+        await mutate(wasNew ? "createTask" : "saveTask", data);
+        productUI.cardSaved(task(id));
+      }
+      const files = [...pendingFiles.values()].filter((f) => f.taskId === id);
+      if (files.length) {
+        try {
+          for (const entry of files) await uploadOne(id, entry);
+        } finally {
+          acceptModel(await getWorkspace());
+        }
+      }
+      if (exit) closeDrawer(true);
+      else {
+        renderActivityFields(id);
+        productUI.renderChildren();
+        productUI.refreshTree();
+      }
+      if (changed || files.length || exit) render();
       toast("Запись сохранена");
       return true;
     } catch (error) {
-      if (error.status === 409 && wasNew) {
+      if (error.status === 409 && wasNew && !drawer.id) {
         try {
           acceptModel(await getWorkspace());
-          if (task(data.id)) {
-            ui.drawer.id = data.id;
-            ui.drawer.data.revision = task(data.id).revision;
+          if (task(id)) {
+            drawer.id = id;
+            drawer.data.revision = task(id).revision;
           }
         } catch {}
       }
       errorIn("#task-error", error);
-      refreshActivity(data.id);
+      renderActivityFields(id);
       return false;
     } finally {
-      form.dataset.busy = "false";
+      drawer.saving = false;
       form.inert = false;
       form.removeAttribute("aria-busy");
-      busyButton(button, false);
+      for (const button of $$('#drawer-root [form="task-form"]'))
+        busyButton(button, false);
     }
   }
   async function postNote(composer) {
@@ -439,7 +448,7 @@
   async function saveDirectory() {
     const button = $('#modal-root [data-action="directory-save"]');
     if (button?.dataset.busy === "true") return;
-    const { mode, id, revision } = directoryContext,
+    const { mode, id, revision, newId, inlineContact } = directoryContext,
       existing = $("#existing-contact")?.value;
     busyButton(button, true);
     const body = $("#modal-root .modal-body");
@@ -452,7 +461,7 @@
         const name = $("#directory-name").value.trim();
         if (!name) throw new Error("Введите название");
         await mutate("saveDirectory", {
-          id: id || directoryContext.newId,
+          id: id || newId,
           mode,
           name,
           description: productUI.editorRaw($("#directory-description")),
@@ -462,7 +471,8 @@
               ? "Человек"
               : $("#contact-type").value,
           responsible:
-            mode === "responsibles" && !id
+            (mode === "responsibles" && !id) ||
+            inlineContact?.role === "responsible"
               ? true
               : !!$("#contact-responsible")?.checked,
           revision,
@@ -470,7 +480,10 @@
         });
       }
       render();
-      if (!productUI.restoreModal()) manage(mode);
+      if (inlineContact) {
+        closeModal();
+        productUI.selectContact(inlineContact, newId);
+      } else if (!productUI.restoreModal()) manage(mode);
       toast("Справочник сохранён");
     } catch (error) {
       errorIn("#directory-error", error);
@@ -620,24 +633,29 @@
   function urlForState() {
     const u = new URL(location.href);
     u.pathname = "/tasks";
-    for (const key of [
-      "view",
-      "projects",
+    const filterKeys = [
+      "counterparty",
       "executor",
       "responsible",
+      "eventPerson",
+      "eventType",
       "status",
       "from",
       "to",
+    ];
+    for (const key of [
+      "view",
+      "projects",
       "dateMode",
       "done",
       "q",
+      ...filterKeys,
     ])
       u.searchParams.delete(key);
     if (ui.view !== "table") u.searchParams.set("view", ui.view);
     if (ui.projects.length)
       u.searchParams.set("projects", ui.projects.join(","));
-    for (const key of ["executor", "responsible", "status", "from", "to"])
-      if (ui[key]) u.searchParams.set(key, ui[key]);
+    for (const key of filterKeys) if (ui[key]) u.searchParams.set(key, ui[key]);
     if (ui.dateMode !== "overlap") u.searchParams.set("dateMode", ui.dateMode);
     if (ui.done) u.searchParams.set("done", "1");
     if (ui.q) u.searchParams.set("q", ui.q);
@@ -673,9 +691,19 @@
       .split(",")
       .filter((id) => id === "none" || model.projects.some((p) => p.id === id));
     ui.project = ui.projects.length === 1 ? ui.projects[0] : "all";
-    for (const key of ["executor", "responsible"])
+    for (const key of [
+      "counterparty",
+      "executor",
+      "responsible",
+      "eventPerson",
+    ])
       ui[key] = model.contacts.some((c) => c.id === u.searchParams.get(key))
         ? u.searchParams.get(key)
+        : "";
+    const eventType = u.searchParams.get("eventType");
+    ui.eventType =
+      eventType === "untyped" || Object.hasOwn(productUI.eventTypes, eventType)
+        ? eventType
         : "";
     ui.status = statuses[u.searchParams.get("status")]
       ? u.searchParams.get("status")
@@ -711,16 +739,11 @@
     }
     $("#search").value = ui.q;
   }
-  async function previewOffice(file, blob, id) {
-    closeModal();
-    const context = { fileId: file.id, book: null, sheet: 0, row: 0, col: 0 };
+  async function previewOffice(file, blob, viewer) {
+    const context = { book: null, sheet: 0, row: 0, col: 0 };
     officeView = context;
-    modal(
-      file.name,
-      `<div class="preview-meta">${fileSize(file.size)} · Вложение задачи</div><div id="office-body"><p class="activity-empty">Подготовка документа к просмотру…</p></div>`,
-      `<button class="btn" data-action="close-modal">Закрыть</button><button class="btn primary" data-action="download-file" data-id="${E(id)}" data-file="${E(file.id)}">${icon("download", true)}Скачать оригинал</button>`,
-    );
-    $("#modal-root .modal").classList.add("preview-modal");
+    viewer.body.innerHTML =
+      '<div id="office-body"><p class="activity-empty">Подготовка документа к просмотру…</p></div>';
     try {
       const buffer = await blob.arrayBuffer();
       if (officeView !== context) return;
@@ -855,6 +878,8 @@
     taskExclude: [],
     taskPickerCollapsed: new Set(),
     counterparty: "",
+    eventType: "",
+    eventPerson: "",
     includeTags: [],
     excludeTags: [],
     tagMode: "any",
@@ -928,6 +953,8 @@
       taskExclude: [],
       scope: "work",
       counterparty: "",
+      eventType: "",
+      eventPerson: "",
       includeTags: [],
       excludeTags: [],
       tagMode: "any",
@@ -952,17 +979,16 @@
     excludeTags: [...(q.excludeTags || [])],
   });
   function queryFromUi() {
+    const eventView = ["events", "calendar"].includes(ui.view);
     return {
       projects: [...ui.projects],
       taskAll: ui.taskAll,
       taskInclude: [...ui.taskInclude],
       taskExclude: [...ui.taskExclude],
-      scope: ui.searchEverywhere
-        ? "all"
-        : ["events", "calendar"].includes(ui.view)
-          ? "events"
-          : "work",
+      scope: ui.searchEverywhere ? "all" : eventView ? "events" : "work",
       counterparty: ui.counterparty,
+      eventType: eventView ? ui.eventType : "",
+      eventPerson: eventView ? ui.eventPerson : "",
       includeTags: [...ui.includeTags],
       excludeTags: [...ui.excludeTags],
       tagMode: ui.tagMode,
@@ -996,6 +1022,12 @@
     )
       return false;
     const roles = t.kind === "event" ? t.rolePeople : null;
+    if (t.kind === "event") {
+      if (q.eventType && (t.eventType || "untyped") !== q.eventType)
+        return false;
+      if (q.eventPerson && !t.participants.includes(q.eventPerson))
+        return false;
+    }
     if (
       q.counterparty &&
       !(roles?.counterparty || t.counterparties || []).includes(q.counterparty)
@@ -1018,19 +1050,25 @@
     )
       return false;
     if (q.excludeTags?.some((id) => tags.includes(id))) return false;
-    if (
-      q.text &&
-      !searchKey(
-        `${t.title} ${t.description} ${productUI.extraSearch(t)}`,
-      ).includes(searchKey(q.text))
-    )
-      return false;
-    if (
-      hasTaskSelection(q) &&
-      t.kind === "task" &&
-      !taskSelection(q).selected.has(t.id)
-    )
-      return false;
+    if (q.text) {
+      const text = searchKey(productUI.extraSearch(t));
+      const wanted = searchKey(q.text);
+      if (
+        t.kind === "event"
+          ? !wanted.split(/\s+/).every((word) => text.includes(word))
+          : !text.includes(wanted)
+      )
+        return false;
+    }
+    if (hasTaskSelection(q)) {
+      const selection = taskSelection(q).selected;
+      if (t.kind === "task" && !selection.has(t.id)) return false;
+      if (
+        t.kind === "event" &&
+        !t.linkedTaskIds.some((id) => selection.has(id))
+      )
+        return false;
+    }
     if (q.from || q.to) {
       if (q.dateMode === "overlap") {
         const first = t.start || t.end,
@@ -1038,7 +1076,10 @@
         if (!first || (q.from && last < q.from) || (q.to && first > q.to))
           return false;
       } else {
-        const date = q.dateMode === "start" ? t.start : t.end;
+        const date =
+          q.dateMode === "start"
+            ? t.start || (t.kind === "event" ? t.end : "")
+            : t.end || (t.kind === "event" ? t.start : "");
         if (!date || (q.from && date < q.from) || (q.to && date > q.to))
           return false;
       }
@@ -1173,13 +1214,13 @@
             children = index.children.has(t.id),
             full = count.selected === count.total,
             partial = count.selected > 0 && !full;
-          return `<div class="task-option-row" data-task-option="${E(t.id)}" style="--task-depth:${Math.min(entry.level, 6)}">${children ? `<button type="button" class="task-tree-toggle" data-action="task-picker-toggle" data-id="${E(t.id)}" aria-label="${ui.taskPickerCollapsed.has(t.id) && !words.length ? "Раскрыть" : "Свернуть"} подзадачи: ${E(t.title)}" aria-expanded="${!ui.taskPickerCollapsed.has(t.id) || !!words.length}">${icon("chevron", true)}</button>` : '<span class="task-tree-spacer"></span>'}<label><input type="checkbox" data-task-choice="${E(t.id)}" aria-label="Выбрать задачу: ${E(taskPath(t.id))}" ${full ? "checked" : ""} data-partial="${partial}"><span><strong>${E(t.title)}</strong><small>${E(taskPath(t.id))}</small></span></label>${children ? `<button type="button" class="textbtn only-task-branch" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Только эта ветка: ${E(t.title)}">Только ветка</button>` : ""}</div>`;
+          return `<div class="task-option-row" data-task-option="${E(t.id)}" style="--task-depth:${Math.min(entry.level, 6)}">${children ? `<button type="button" class="task-tree-toggle" data-action="task-picker-toggle" data-id="${E(t.id)}" aria-label="${ui.taskPickerCollapsed.has(t.id) && !words.length ? "Раскрыть" : "Свернуть"} подзадачи: ${E(t.title)}" aria-expanded="${!ui.taskPickerCollapsed.has(t.id) || !!words.length}">${icon("chevron", true)}</button>` : '<span class="task-tree-spacer"></span>'}<label><input type="checkbox" data-task-choice="${E(t.id)}" aria-label="Выбрать задачу: ${E(taskPath(t.id))}" ${full ? "checked" : ""} data-partial="${partial}"><span><strong>${E(t.title)}</strong><small>${E(taskPath(t.id))}</small></span></label>${children ? `<button type="button" class="textbtn only-task-branch" data-action="only-task-branch" data-id="${E(t.id)}" aria-label="Только эта ветка: ${E(t.title)}">Только ветка</button>${eventFilterView(q, "main") ? `<button type="button" class="textbtn only-task-branch" data-action="only-linked-task" data-id="${E(t.id)}" aria-label="Только эта задача: ${E(t.title)}">Только задача</button>` : ""}` : ""}</div>`;
         })
         .join("")
     );
   }
-  function taskPicker(q) {
-    return `<div class="query-field query-task-field"><label>Задачи <span class="task-field-hint">· дерево и галочки</span></label><details class="task-picker"><summary aria-label="Выбрать задачи темы"><span class="task-summary-label">${E(taskSelectionLabel(q))}</span>${icon("chevron", true)}</summary><div class="task-picker-body"><label>Поиск по названию или пути<input class="task-picker-search" aria-label="Найти задачу в дереве" placeholder="Например: выруб, посадка…" maxlength="1000"></label><p>Галочка у родителя выбирает все подзадачи. Ненужные подзадачи можно снять отдельно.</p><div class="task-picker-tools"><button type="button" class="textbtn" data-action="tasks-all">Все задачи</button><button type="button" class="textbtn" data-action="tasks-none">Снять все</button></div><div class="task-options" role="group" aria-label="Дерево задач выбранных тем">${taskPickerRows(q)}</div><div class="task-picker-footer"><span>После выбора нажмите «Применить»</span><button class="btn primary" type="button" data-action="query-apply" data-scope="main">Применить</button></div></div></details></div>`;
+  function taskPicker(q, eventView) {
+    return `<div class="query-field query-task-field"><label>${eventView ? "Связанные задачи / ветки" : 'Задачи <span class="task-field-hint">· дерево и галочки</span>'}</label><details class="task-picker"><summary aria-label="Выбрать задачи темы"><span class="task-summary-label">${E(taskSelectionLabel(q))}</span>${icon("chevron", true)}</summary><div class="task-picker-body"><label>Поиск по названию или пути<input class="task-picker-search" aria-label="Найти задачу в дереве" placeholder="Например: выруб, посадка…" maxlength="1000"></label><p>Галочка у родителя выбирает все подзадачи. Ненужные подзадачи можно снять отдельно.</p><div class="task-picker-tools"><button type="button" class="textbtn" data-action="tasks-all">Все задачи</button><button type="button" class="textbtn" data-action="tasks-none">Снять все</button></div><div class="task-options" role="group" aria-label="Дерево задач выбранных тем">${taskPickerRows(q)}</div><div class="task-picker-footer"><span>После выбора нажмите «Применить»</span><button class="btn primary" type="button" data-action="query-apply" data-scope="main">Применить</button></div></div></details></div>`;
   }
   function placeTaskPicker() {
     const picker = $("#filters .task-picker[open]");
@@ -1296,6 +1337,8 @@
       q.projects.length ||
       hasTaskSelection(q) ||
       q.counterparty ||
+      q.eventType ||
+      q.eventPerson ||
       q.includeTags?.length ||
       q.excludeTags?.length ||
       q.executor ||
@@ -1321,6 +1364,10 @@
       parts.push(
         "Контрагент: " + (person(q.counterparty)?.name || "не найден"),
       );
+    if (q.eventPerson)
+      parts.push("Участник: " + (person(q.eventPerson)?.name || "не найден"));
+    if (q.eventType)
+      parts.push("Тип: " + (productUI.eventTypes[q.eventType] || "Без типа"));
     for (const [key, label] of [
       ["includeTags", "Теги"],
       ["excludeTags", "Без тегов"],
@@ -1343,8 +1390,8 @@
       );
     if (q.status) parts.push("Статус: " + statuses[q.status]);
     const dateLabel = {
-      overlap: "Задачи в периоде",
-      deadline: "Дедлайн",
+      overlap: q.scope === "events" ? "Даты мероприятий" : "Задачи в периоде",
+      deadline: q.scope === "events" ? "Окончание" : "Дедлайн",
       start: "Начало",
     }[q.dateMode];
     const format = (d) =>
@@ -1370,9 +1417,37 @@
     ];
     return `<details class="query-theme-picker"><summary aria-label="Выбрать темы"><span class="theme-summary-label">${E(q.projects.length ? q.projects.map(themeName).join(", ") : "Все темы")}</span>${icon("chevron", true)}</summary><div class="theme-picker-body"><p>Отметьте одну или несколько тем. Без отметок — все темы.</p><input class="theme-search" placeholder="Найти тему…" aria-label="Поиск темы"><div class="theme-choices">${themes.map((p) => `<label data-theme-name="${E(p.name.toLowerCase())}"><input type="checkbox" data-query-theme="${E(p.id)}" ${q.projects.includes(p.id) ? "checked" : ""}><span>${E(p.name)}</span></label>`).join("")}</div><div class="theme-picker-foot"><button class="textbtn" data-action="query-all-themes" data-scope="${scope}">Все темы</button><button class="btn" data-action="query-themes-done">Готово</button></div></div></details>`;
   }
+  function eventFilterView(q, scope) {
+    return (
+      q.scope === "events" ||
+      (scope === "main" && ["events", "calendar"].includes(ui.view))
+    );
+  }
+  function dateHint(q, events) {
+    if (events)
+      return {
+        overlap:
+          "Мероприятие попадёт в выборку, если его даты пересекаются с периодом.",
+        start:
+          "В выборку попадут мероприятия, начинающиеся в выбранном периоде.",
+        deadline:
+          "В выборку попадут мероприятия, заканчивающиеся в выбранном периоде.",
+      }[q.dateMode];
+    return {
+      overlap:
+        "Задача попадёт в выборку, если хотя бы часть её срока пересекается с периодом.",
+      deadline: "В выборку попадут задачи с дедлайном в выбранном диапазоне.",
+      start: "В выборку попадут задачи, начинающиеся в выбранном диапазоне.",
+    }[q.dateMode];
+  }
   function queryControls(q, scope) {
+    const eventView = eventFilterView(q, scope);
     const contacts = model.contacts.filter(
-      (c) => !c.archived || q.executor === c.id || q.responsible === c.id,
+      (c) =>
+        !c.archived ||
+        [q.executor, q.responsible, q.counterparty, q.eventPerson].includes(
+          c.id,
+        ),
     );
     const id = (key) =>
       scope === "main"
@@ -1389,8 +1464,30 @@
     const field = (key, label, inner) =>
       `<div class="query-field"><label for="${id(key)}">${label}</label>${inner}</div>`;
     const select = (key, items, first) =>
-      `<select id="${id(key)}" data-query-key="${key}" aria-label="${E({ executor: "Исполнитель", responsible: "Ответственный", status: "Статус", counterparty: "Контрагент" }[key] || key)}">${options(items, q[key], first)}</select>`;
-    return `<section class="query-panel ${scope === "output" ? "query-output" : ""}" data-query-scope="${scope}"><div class="query-main-row ${scope === "main" ? "with-task-picker" : ""}"><div class="query-field"><label>Темы / проекты <span style="font-weight:400;color:#95a2b5">· выбор галочками</span></label>${themePicker(q, scope)}</div>${scope === "main" && !["events", "calendar"].includes(ui.view) ? taskPicker(q) : ""}${field("counterparty", "Контрагент", select("counterparty", contacts, "Все контрагенты"))}${field("executor", "Исполнитель", select("executor", contacts, "Все исполнители"))}${field(
+      `<select id="${id(key)}" data-query-key="${key}" aria-label="${E({ executor: "Исполнитель", responsible: "Ответственный", status: "Статус", counterparty: "Контрагент", eventPerson: "Участник мероприятия", eventType: "Тип мероприятия" }[key] || key)}">${options(items, q[key], first)}</select>`;
+    const eventControls = eventView
+      ? field(
+          "eventPerson",
+          "Участник мероприятия",
+          select("eventPerson", contacts, "Все люди"),
+        ) +
+        field(
+          "eventType",
+          "Тип мероприятия",
+          select(
+            "eventType",
+            [
+              ...Object.entries(productUI.eventTypes).map(([id, name]) => ({
+                id,
+                name,
+              })),
+              { id: "untyped", name: "Без типа" },
+            ],
+            "Все типы",
+          ),
+        )
+      : "";
+    return `<section class="query-panel ${scope === "output" ? "query-output" : ""}" data-query-scope="${scope}"><div class="query-main-row ${scope === "main" ? "with-task-picker" : ""}"><div class="query-field"><label>Темы / проекты <span style="font-weight:400;color:#95a2b5">· выбор галочками</span></label>${themePicker(q, scope)}</div>${scope === "main" ? taskPicker(q, eventView) : ""}${field("counterparty", "Контрагент", select("counterparty", contacts, "Все контрагенты"))}${field("executor", "Исполнитель", select("executor", contacts, "Все исполнители"))}${field(
       "responsible",
       "Ответственный",
       select(
@@ -1411,7 +1508,7 @@
         Object.entries(statuses).map(([id, name]) => ({ id, name })),
         "Все статусы",
       ),
-    )}</div><details class="tag-filter-details"><summary>Теги ${q.includeTags.length || q.excludeTags.length ? "· выбраны" : ""}</summary><div class="tag-filter-grid"><div><span>Включить теги</span>${
+    )}${eventControls}</div><details class="tag-filter-details"><summary>Теги ${q.includeTags.length || q.excludeTags.length ? "· выбраны" : ""}</summary><div class="tag-filter-grid"><div><span>Включить теги</span>${
       model.tags
         .filter((t) => !t.archived || q.includeTags.includes(t.id))
         .map(
@@ -1427,7 +1524,7 @@
       )
       .join(
         "",
-      )}</div></div></details><div class="query-period-row">${field("dateMode", "Период — по какой дате", `<select id="${id("dateMode")}" data-query-key="dateMode" ${scope === "main" && ui.view === "deadlines" ? "disabled" : ""}><option value="overlap" ${q.dateMode === "overlap" ? "selected" : ""}>Задачи в периоде</option><option value="deadline" ${q.dateMode === "deadline" ? "selected" : ""}>Дедлайн</option><option value="start" ${q.dateMode === "start" ? "selected" : ""}>Начало задачи</option></select>`)}${field("from", "С", `<input id="${id("from")}" data-query-key="from" type="date" value="${E(q.from)}">`)}${field("to", "По включительно", `<input id="${id("to")}" data-query-key="to" type="date" value="${E(q.to)}">`)}<div class="query-buttons"><button class="btn primary" data-action="query-apply" data-scope="${scope}">Применить</button><button class="btn" data-action="query-reset" data-scope="${scope}">Сбросить</button></div></div><div class="query-date-hint">${q.dateMode === "overlap" ? "Задача попадёт в выборку, если хотя бы часть её срока пересекается с периодом." : q.dateMode === "deadline" ? "В выборку попадут задачи с дедлайном в выбранном диапазоне." : "В выборку попадут задачи, начинающиеся в выбранном диапазоне."}</div><div class="query-presets"><span>Быстрый период:</span>${[
+      )}</div></div></details><div class="query-period-row">${field("dateMode", "Период — по какой дате", `<select id="${id("dateMode")}" data-query-key="dateMode" ${scope === "main" && ui.view === "deadlines" ? "disabled" : ""}><option value="overlap" ${q.dateMode === "overlap" ? "selected" : ""}>${eventView ? "Даты мероприятия" : "Задачи в периоде"}</option><option value="deadline" ${q.dateMode === "deadline" ? "selected" : ""}>${eventView ? "Окончание мероприятия" : "Дедлайн"}</option><option value="start" ${q.dateMode === "start" ? "selected" : ""}>${eventView ? "Начало мероприятия" : "Начало задачи"}</option></select>`)}${field("from", "С", `<input id="${id("from")}" data-query-key="from" type="date" value="${E(q.from)}">`)}${field("to", "По включительно", `<input id="${id("to")}" data-query-key="to" type="date" value="${E(q.to)}">`)}<div class="query-buttons"><button class="btn primary" data-action="query-apply" data-scope="${scope}">Применить</button><button class="btn" data-action="query-reset" data-scope="${scope}">Сбросить</button></div></div><div class="query-date-hint">${dateHint(q, eventView)}</div><div class="query-presets"><span>Быстрый период:</span>${[
       ["today", "Сегодня"],
       ["week", "7 дней"],
       ["month", "30 дней"],
@@ -1488,6 +1585,8 @@
       for (const key of [
         "executor",
         "responsible",
+        "eventPerson",
+        "eventType",
         "status",
         "from",
         "to",
@@ -1591,12 +1690,10 @@
     feedback.classList.toggle("error", !!queryError(q));
     markQueryButtons(scope);
     if (target.dataset.queryKey === "dateMode")
-      panel.querySelector(".query-date-hint").textContent =
-        q.dateMode === "overlap"
-          ? "Задачи, чей срок пересекается с выбранным периодом."
-          : q.dateMode === "deadline"
-            ? "Задачи с дедлайном в диапазоне."
-            : "Задачи, начинающиеся в диапазоне.";
+      panel.querySelector(".query-date-hint").textContent = dateHint(
+        q,
+        eventFilterView(q, scope),
+      );
   }
   document.addEventListener("input", queryInput);
   document.addEventListener("change", (event) => {
@@ -1781,21 +1878,38 @@
       input?.setSelectionRange(restore.start, restore.end);
     }
 
+    renderActivityFields(id);
+  }
+  function renderActivityFields(id) {
     if (ui.drawer?.data.id === id) {
       const t = record(id);
       if ($("#drawer-files")) $("#drawer-files").innerHTML = attachmentList(t);
       if ($("#comment-list")) $("#comment-list").innerHTML = notesHtml(t);
     }
   }
-  async function previewFile(id, fileId, download = false) {
+  let fileViewer = null;
+  function openFileViewer(id, file, trigger) {
+    if ($("#modal-root").children.length || ui.drawer?.saving) return null;
+    const drawer = $("#drawer-root .drawer");
+    modal(
+      file.name,
+      `<div class="preview-meta">${fileSize(file.size)}</div><div id="file-preview-content" aria-live="polite"><p class="activity-empty">Загрузка файла…</p></div>`,
+      `<button class="btn" data-action="close-modal">${drawer ? "Вернуться в карточку" : "Закрыть просмотр"}</button><button class="btn primary" data-action="download-file" data-id="${E(id)}" data-file="${E(file.id)}">${icon("download", true)}Скачать оригинал</button>`,
+    );
+    $("#modal-root .modal-backdrop").classList.add("preview-backdrop");
+    $("#modal-root .modal").classList.add("preview-modal");
+    if (drawer) drawer.inert = true;
+    $("#modal-root .modal-foot [data-action=close-modal]").focus();
+    fileViewer = { drawer, trigger, body: $("#file-preview-content") };
+    return fileViewer;
+  }
+  async function previewFile(id, fileId, download = false, trigger = null) {
     const file = allFiles(id).find((f) => f.id === fileId);
     if (!file) return;
+    const viewer = download ? null : openFileViewer(id, file, trigger);
+    if (!download && !viewer) return;
     try {
       const blob = await attachmentBlob(file);
-      if (!blob) {
-        toast("Файл недоступен в этом браузере. Прикрепите его заново.");
-        return;
-      }
       if (download) {
         const url = URL.createObjectURL(blob),
           link = document.createElement("a");
@@ -1805,20 +1919,21 @@
         setTimeout(() => URL.revokeObjectURL(url), 30000);
         return;
       }
+      if (fileViewer !== viewer) return;
       if (/\.(docx|xlsx|xls|xlsb|xlsm|ods)$/i.test(file.name)) {
-        await previewOffice(file, blob, id);
+        await previewOffice(file, blob, viewer);
         return;
       }
-      closeModal();
-      const url = URL.createObjectURL(blob);
-      previewUrls.add(url);
       let body;
-      if (/^image\/(png|jpeg|gif|webp|bmp|avif|svg\+xml)$/.test(blob.type))
+      if (/^image\/(png|jpeg|gif|webp|bmp|avif|svg\+xml)$/.test(blob.type)) {
+        const url = URL.createObjectURL(blob);
+        previewUrls.add(url);
         body = `<img class="file-image" src="${url}" alt="${E(file.name)}">`;
-      else if (
+      } else if (
         (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) &&
         (await blob.slice(0, 5).text()) === "%PDF-"
       ) {
+        if (fileViewer !== viewer) return;
         const pdfUrl = URL.createObjectURL(
           new Blob([blob], { type: "application/pdf" }),
         );
@@ -1832,14 +1947,11 @@
       else
         body =
           '<div class="file-unavailable">Для этого формата встроенный просмотр недоступен.<br>Скачайте файл и откройте его в установленной программе.</div>';
-      modal(
-        file.name,
-        `<div class="preview-meta">${fileSize(file.size)} · Вложение задачи</div>${body}`,
-        `<button class="btn" data-action="close-modal">Закрыть</button><button class="btn primary" data-action="download-file" data-id="${E(id)}" data-file="${E(file.id)}">${icon("download", true)}Скачать файл</button>`,
-      );
-      $("#modal-root .modal").classList.add("preview-modal");
-    } catch {
-      toast("Не удалось открыть файл. Попробуйте прикрепить его заново.");
+      if (fileViewer === viewer) viewer.body.innerHTML = body;
+    } catch (error) {
+      if (download) toast(error.message);
+      else if (fileViewer === viewer)
+        viewer.body.innerHTML = `<p class="file-unavailable">${E(error.message)}</p>`;
     }
   }
   let officeView = null;
@@ -2058,7 +2170,7 @@
     renderContent();
   }
   function closeModal() {
-    if (requests && $("#modal-root").children.length) {
+    if (requests && !fileViewer && $("#modal-root").children.length) {
       toast("Дождитесь завершения сохранения");
       return;
     }
@@ -2066,6 +2178,12 @@
     officeView?.cancel?.();
     officeView = null;
     $("#modal-root").innerHTML = "";
+    if (fileViewer) {
+      if (fileViewer.drawer) fileViewer.drawer.inert = false;
+      fileViewer.trigger?.focus();
+      fileViewer = null;
+      return;
+    }
     if (productUI?.restoreModal()) return;
     const url = new URL(location.href);
     url.searchParams.delete("manage");
@@ -2152,8 +2270,16 @@
     productUI.decorateDirectory();
   }
   let directoryContext = null;
-  function directoryEdit(id = null, forceProject = false) {
-    const mode = forceProject ? "projects" : ui.manager,
+  function directoryEdit(
+    id = null,
+    forceProject = false,
+    inlineContact = null,
+  ) {
+    const mode = inlineContact
+        ? "contacts"
+        : forceProject
+          ? "projects"
+          : ui.manager,
       item = id
         ? mode === "projects"
           ? proj(id)
@@ -2161,7 +2287,13 @@
             ? model.tags.find((t) => t.id === id)
             : person(id)
         : null;
-    directoryContext = { mode, id, revision: item?.revision, newId: uid() };
+    directoryContext = {
+      mode,
+      id,
+      revision: item?.revision,
+      newId: uid(),
+      inlineContact,
+    };
     if (
       ["contacts", "responsibles"].includes(mode) &&
       !(mode === "responsibles" && !id)
@@ -2216,7 +2348,8 @@
               ? t.tagIds.includes(id)
               : t.executors.includes(id) ||
                 t.responsible === id ||
-                t.counterparties.includes(id),
+                t.counterparties.includes(id) ||
+                t.participantIds.includes(id),
       );
     deleteContext = { mode, id, revision: item.revision };
     const choices =
@@ -2442,6 +2575,14 @@
       previewZoom: "page",
     };
     if (id && printTask(id)?.kind === "event") {
+      const event = printTask(id);
+      meeting.date = event.start || event.end;
+      meeting.participants = [
+        ...event.participants.map((id) => person(id)?.name).filter(Boolean),
+        event.location,
+      ]
+        .filter(Boolean)
+        .join(" · ");
       meeting.description = true;
       meeting.files = true;
       meeting.images = true;
@@ -2710,6 +2851,14 @@
             " · Ответственный: " +
             (person(t.responsible)?.name || "не назначен"),
         );
+      if (!context && meeting.people && t.participantIds.length)
+        metadata.push(
+          "Участники: " +
+            t.participantIds
+              .map((id) => person(id)?.name)
+              .filter(Boolean)
+              .join(", "),
+        );
       if (!context && meeting.dates)
         metadata.push(
           "Срок: " +
@@ -2768,7 +2917,7 @@
       node = document.createElement("article");
     node.className = "meeting-entry ordinary-row";
     node.dataset.sheetTask = block.id;
-    node.innerHTML = `<div class="sheet-table-cells">${meeting.columns.map((key) => `<div class="${key === "title" ? "list-task-title" : ""}">${E(outputCell(t, key))}${key === "title" && continued ? " · продолжение" : ""}${key === "title" && t.parent ? `<div class="list-task-parent">Внутри: ${E(printTask(t.parent)?.title || "")}</div>` : ""}</div>`).join("")}</div>${parts.length ? `<div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${p.image ? `<figure class="print-image"><img src="${E(p.image)}" alt="${E(p.text)}"><figcaption>${E(p.text)}</figcaption></figure>` : E(p.text)}</div>`).join("")}</div>` : ""}`;
+    node.innerHTML = `<div class="sheet-table-cells">${meeting.columns.map((key) => `<div class="${key === "title" ? "list-task-title" : ""}">${E(outputCell(t, key))}${key === "title" && continued ? " · продолжение" : ""}${key === "title" && t.parent ? `<div class="list-task-parent">Внутри: ${E(printTask(t.parent)?.title || "")}</div>` : ""}</div>`).join("")}</div>${parts.length ? `<div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${printPart(p)}</div>`).join("")}</div>` : ""}`;
     return node;
   }
   function meetingEntry(
@@ -3059,21 +3208,28 @@
   }
   function meetingParts(t) {
     const parts = [];
+    const M = window.WorkspaceMentions;
+    const rich = (type, raw, label) => {
+      const runs = M.printRuns(raw);
+      parts.push({
+        type,
+        label,
+        runs,
+        text: runs.map((run) => run.text).join(""),
+      });
+    };
     if (meeting.description && t.description)
-      parts.push({
-        type: "description",
-        text: window.WorkspaceMentions.plain(
-          meeting.contactData
-            ? t.description
-            : window.WorkspaceMentions.withoutContacts(t.description),
-        ),
-      });
-    if (t.outcome)
-      parts.push({
-        type: "comment",
-        label: "Итоги / договорённости",
-        text: window.WorkspaceMentions.plain(t.outcome),
-      });
+      rich(
+        "description",
+        meeting.contactData ? t.description : M.withoutContacts(t.description),
+      );
+    if (t.outcome) rich("comment", t.outcome, "Итоги / договорённости");
+    for (const outcome of t.eventOutcomes || [])
+      rich(
+        "comment",
+        outcome.text,
+        "Итоги мероприятия · " + outcome.eventTitle,
+      );
     const questions = t.comments.filter(
       (c) =>
         c.kind === "question" &&
@@ -3081,22 +3237,18 @@
           (meeting.questions === "open" && !c.resolved)),
     );
     for (const c of questions)
-      parts.push({
-        type: "question",
-        label: c.resolved ? "Вопрос · решён" : "Вопрос к обсуждению",
-        text: window.WorkspaceMentions.plain(c.text),
-      });
+      rich(
+        "question",
+        c.text,
+        c.resolved ? "Вопрос · решён" : "Вопрос к обсуждению",
+      );
     const comments = t.comments.filter((c) => c.kind !== "question");
     for (const c of meeting.comments === "all"
       ? comments
       : meeting.comments === "last"
         ? comments.slice(-1)
         : [])
-      parts.push({
-        type: "comment",
-        label: "Комментарий",
-        text: window.WorkspaceMentions.plain(c.text),
-      });
+      rich("comment", c.text, "Комментарий");
     if (meeting.images)
       for (const file of t.attachments.filter(imageMaterial)) {
         const url = printImageUrls.get(file.id);
@@ -3122,6 +3274,13 @@
       });
     return parts;
   }
+  function printPart(part) {
+    if (part.image)
+      return `<figure class="print-image"><img src="${E(part.image)}" alt="${E(part.text)}"><figcaption>${E(part.text)}</figcaption></figure>`;
+    return part.runs
+      ? `<span>${window.WorkspaceMentions.renderRuns(part.runs, E)}</span>`
+      : E(part.text);
+  }
   function writeLines(lines, label = "Решение / ответственный / срок") {
     return lines
       ? `<div class="sheet-writing"><div class="sheet-write-title">${E(label)}</div>${'<div class="sheet-write-line"></div>'.repeat(lines)}</div>`
@@ -3139,7 +3298,7 @@
     const title = continued
       ? block.title.slice(0, 120) + " · продолжение"
       : block.title;
-    node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${p.image ? `<figure class="print-image"><img src="${E(p.image)}" alt="${E(p.text)}"><figcaption>${E(p.text)}</figcaption></figure>` : E(p.text)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
+    node.innerHTML = `${block.path ? `<div class="sheet-path">${E(block.path)}</div>` : ""}<h2>${block.number ? `<span class="sheet-check"></span><span class="sheet-item-number">${E(block.number)}.</span>` : ""}<span>${E(title)}</span></h2>${block.metadata ? `<div class="sheet-item-meta">${E(block.metadata)}</div>` : ""}<div class="sheet-entry-grid ${meeting.noteLayout === "right" && !block.summary ? "notes-right" : ""}"><div class="sheet-materials">${parts.map((p) => `<div class="sheet-part ${p.type}">${p.label ? `<strong>${E(p.label)}</strong>` : ""}${printPart(p)}</div>`).join("")}</div>${notes ? writeLines(block.summary ? 3 : meeting.lines, block.summary ? "Решения, договорённости и следующие шаги" : "Решение / ответственный / срок") : ""}</div>`;
     return node;
   }
   function shortMeetingParts(parts) {
@@ -3149,37 +3308,35 @@
         out.push(part);
         continue;
       }
-      const tokens = part.text.match(/\S+\s*|\s+/g) || [part.text];
-      let chunk = "",
+      let chunk = [],
+        length = 0,
         continuation = false;
-      for (const token of tokens) {
-        const chars = Array.from(token);
-        for (let offset = 0; offset < chars.length; offset += 420) {
-          const piece = chars.slice(offset, offset + 420).join("");
-          if (chunk.length + piece.length > 420 && chunk) {
-            out.push({
-              ...part,
-              label:
-                continuation && part.label
-                  ? part.label + " · продолжение"
-                  : part.label,
-              text: chunk,
-            });
-            continuation = true;
-            chunk = "";
-          }
-          chunk += piece;
-        }
-      }
-      if (chunk)
+      const flush = () => {
         out.push({
           ...part,
           label:
             continuation && part.label
               ? part.label + " · продолжение"
               : part.label,
-          text: chunk,
+          text: chunk.map((run) => run.text).join(""),
+          runs: part.runs ? chunk : undefined,
         });
+        chunk = [];
+        length = 0;
+        continuation = true;
+      };
+      for (const run of part.runs || [{ text: part.text, marks: [] }]) {
+        for (const token of run.text.match(/\S+\s*|\s+/g) || []) {
+          const chars = Array.from(token);
+          for (let offset = 0; offset < chars.length; offset += 420) {
+            const piece = chars.slice(offset, offset + 420).join("");
+            if (length + piece.length > 420 && length) flush();
+            chunk.push({ text: piece, marks: run.marks });
+            length += piece.length;
+          }
+        }
+      }
+      if (length) flush();
     }
     return out;
   }
@@ -3307,7 +3464,7 @@
   function popup(t, button) {
     const r = button.getBoundingClientRect();
     $("#popup-root").innerHTML =
-      `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 180)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button data-action="meeting-open" data-id="${E(t.id)}">Печать / экспорт</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
+      `<div class="popup" style="top:${Math.min(r.bottom + 3, innerHeight - 180)}px;left:${Math.min(r.left - 165, innerWidth - 210)}px"><button data-action="edit-task" data-id="${E(t.id)}">Открыть карточку</button><button data-action="add-child" data-id="${E(t.id)}">Добавить подзадачу</button><button data-action="event-from-task" data-id="${E(t.id)}">Создать мероприятие</button><button data-action="meeting-open" data-id="${E(t.id)}">Печать / экспорт</button><button class="danger" data-action="delete-task" data-id="${E(t.id)}">Удалить задачу</button></div>`;
   }
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-action]");
@@ -3341,6 +3498,14 @@
         ui.expand = true;
         ui.collapsed.clear();
         if (task(id)) ui.closedProjects.delete(task(id).project || "");
+        applyQuery("main");
+        break;
+      case "only-linked-task":
+        setTaskSelection(queryDraft("main"), {
+          all: false,
+          include: [id],
+          exclude: hierarchy().children.get(id) || [],
+        });
         applyQuery("main");
         break;
       case "output-branch-select":
@@ -3392,7 +3557,11 @@
         exportOutput("xlsx");
         break;
       case "meeting-open":
-        openMeeting(id);
+        if (button.closest("#drawer-root") && drawerDirty())
+          void saveTask($("#task-form")).then((saved) => {
+            if (saved) openMeeting(id);
+          });
+        else openMeeting(id);
         break;
       case "meeting-close":
         closeMeeting();
@@ -3441,8 +3610,10 @@
       case "view":
         ui.searchEverywhere = false;
         $("#search-everywhere").checked = false;
-        if (["events", "calendar"].includes(id))
-          setTaskSelection(ui, { all: true });
+        if (["events", "calendar"].includes(id) && ui.view === "deadlines") {
+          ui.dateMode = "overlap";
+          ui.due = "";
+        }
         ui.filterDraft = null;
         if (id === "deadlines") {
           ui.dateMode = "deadline";
@@ -3469,6 +3640,7 @@
         ui.q = "";
         $("#search").value = "";
         ui.responsible = ui.executor = ui.status = ui.due = "";
+        ui.counterparty = ui.eventPerson = ui.eventType = "";
         render();
         break;
       case "all-with-filters":
@@ -3493,6 +3665,9 @@
         break;
       case "create-event":
         openTask(null, null, null, "event");
+        break;
+      case "event-from-task":
+        openTask(null, null, null, "event", { originItemId: id });
         break;
       case "add-to-project":
         openTask(null, null, id);
@@ -3592,7 +3767,7 @@
         }
         break;
       case "preview-file":
-        void previewFile(id, button.dataset.file);
+        void previewFile(id, button.dataset.file, false, button);
         break;
       case "download-file":
         void previewFile(id, button.dataset.file, true);
@@ -3744,7 +3919,7 @@
   document.addEventListener("submit", (event) => {
     if (event.target.id === "task-form") {
       event.preventDefault();
-      saveTask(event.target);
+      void saveTask(event.target, { exit: event.submitter?.value === "exit" });
     }
   });
   document.addEventListener("keydown", (event) => {
@@ -3792,7 +3967,9 @@
         $("#drawer-root .drawer");
       if (container) {
         const inputs = [
-          ...container.querySelectorAll("button,input,select,textarea"),
+          ...container.querySelectorAll(
+            "button,input,select,textarea,[contenteditable=true],a[href],summary",
+          ),
         ].filter((e) => !e.disabled && e.offsetParent !== null);
         const first = inputs[0],
           last = inputs.at(-1);
@@ -3828,6 +4005,7 @@
     dirty: drawerDirty,
     closeDrawer,
     signature: taskFormSignature,
+    captureTask: captureTaskForm,
     saveTask,
     openTask,
     today: () => TODAY,

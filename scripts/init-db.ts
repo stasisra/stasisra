@@ -204,7 +204,8 @@ try {
       if (
         name === "20261031000200_workspace" ||
         name === "20261101000100_product" ||
-        name === "20261103000100_contact_profiles"
+        name === "20261103000100_contact_profiles" ||
+        name === "20261125000100_event_workflows"
       )
         db.transaction(() => {
           db.exec(sql);

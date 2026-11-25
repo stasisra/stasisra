@@ -1,4 +1,4 @@
-/* Stable inline references. No HTML from descriptions is trusted. */
+/* Stable inline references and supported formatting in existing text fields. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
@@ -26,12 +26,56 @@
       /:::contact [a-zA-Z0-9_-]+\n[\s\S]*?\n:::(?:\n\n)?/g,
       "",
     );
-  const plain = (s) =>
-    String(s || "")
+  const formatToken = /\uE000(\/?[biu]|!)\uE001/g;
+  const tag = { b: "strong", i: "em", u: "u" };
+  const control = (code) => "\uE000" + code + "\uE001";
+  function runs(raw) {
+    const result = [],
+      active = [];
+    let start = 0;
+    const add = (text) => {
+      if (text) result.push({ text, marks: [...new Set(active)] });
+    };
+    for (const match of raw.matchAll(formatToken)) {
+      add(raw.slice(start, match.index));
+      const code = match[1];
+      if (code === "!") add("\uE000");
+      else if (code.startsWith("/")) {
+        const index = active.lastIndexOf(code[1]);
+        if (index !== -1) active.splice(index, 1);
+      } else active.push(code);
+      start = match.index + match[0].length;
+    }
+    add(raw.slice(start));
+    return result;
+  }
+  function printRuns(raw) {
+    const text = String(raw || "")
       .replace(/^:::contact [a-zA-Z0-9_-]+\n/gm, "")
-      .replace(/^:::$/gm, "")
-      .replace(pattern, (_, label) => "@" + decode(label));
-  function tokensHtml(raw, E) {
+      .replace(/^:::$/gm, "");
+    return runs(text).map((run) => ({
+      ...run,
+      text: run.text.replace(pattern, (_, label) => "@" + decode(label)),
+    }));
+  }
+  const plain = (s) =>
+    printRuns(s)
+      .map((run) => run.text)
+      .join("");
+  function renderRuns(list, render) {
+    return list
+      .map(({ text, marks }) =>
+        marks.reduceRight(
+          (html, mark) =>
+            tag[mark]
+              ? "<" + tag[mark] + ">" + html + "</" + tag[mark] + ">"
+              : html,
+          render(text),
+        ),
+      )
+      .join("");
+  }
+  function mentionHtml(raw, E) {
     let result = "",
       last = 0;
     for (const match of String(raw || "").matchAll(pattern)) {
@@ -51,6 +95,8 @@
     }
     return result + E(String(raw || "").slice(last)).replace(/\n/g, "<br>");
   }
+  const tokensHtml = (raw, E) =>
+    renderRuns(runs(raw), (s) => mentionHtml(s, E));
   function html(raw, E) {
     raw = String(raw || "");
     let result = "",
@@ -84,7 +130,8 @@
       return out;
     };
     const walk = (node) => {
-      if (node.nodeType === 3) return node.textContent;
+      if (node.nodeType === 3)
+        return node.textContent.replace(/\uE000/g, control("!"));
       if (node.nodeType !== 1) return "";
       if (node.dataset?.mentionId)
         return token(
@@ -93,7 +140,7 @@
           node.dataset.mentionLabel,
         );
       if (node.tagName === "BR") return "\n";
-      const text = children(node);
+      let text = children(node);
       if (node.dataset?.contactBlock)
         return (
           ":::contact " +
@@ -102,6 +149,28 @@
           text.replace(/\n$/, "") +
           "\n:::"
         );
+      const style = node.style;
+      const marks = [];
+      if (
+        ["B", "STRONG"].includes(node.tagName) ||
+        /^(bold|[6-9]00)$/.test(style?.fontWeight || "")
+      )
+        marks.push("b");
+      if (
+        ["I", "EM"].includes(node.tagName) ||
+        /^(italic|oblique)$/.test(style?.fontStyle || "")
+      )
+        marks.push("i");
+      if (
+        node.tagName === "U" ||
+        /\bunderline\b/.test(
+          style?.textDecorationLine || style?.textDecoration || "",
+        )
+      )
+        marks.push("u");
+      if (text.trim())
+        for (const mark of marks)
+          text = control(mark) + text + control("/" + mark);
       return (
         text +
         (["DIV", "P", "LI"].includes(node.tagName) && node.nextSibling
@@ -111,5 +180,13 @@
     };
     return children(editor).replace(/\u00a0/g, " ");
   }
-  return { token, plain, html, serialize, withoutContacts };
+  return {
+    token,
+    plain,
+    html,
+    serialize,
+    withoutContacts,
+    printRuns,
+    renderRuns,
+  };
 });

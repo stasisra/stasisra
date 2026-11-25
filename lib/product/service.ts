@@ -37,6 +37,7 @@ const input = z.object({
   description: z.string().max(100000).default(""),
   outcome: z.string().max(100000).default(""),
   kind: kinds.default("task"),
+  eventType: z.enum(["", "meeting", "trip", "call", "other"]).optional(),
   project: z.string().max(100).default(""),
   parent: z.string().max(100).nullable().default(null),
   activityId: z.string().max(100).nullable().default(null),
@@ -44,6 +45,7 @@ const input = z.object({
   originItemId: z.string().max(100).nullable().default(null),
   topics: z.array(ID).max(100).default([]),
   counterparties: z.array(ID).max(200).default([]),
+  participantIds: z.array(ID).max(200).optional(),
   executors: z.array(ID).max(200).default([]),
   responsible: z.string().max(100).default(""),
   tags: z
@@ -151,6 +153,24 @@ function setPeople(db: Database.Database, id: string, data: Row) {
       db.prepare(
         "INSERT INTO ItemContact(itemId,contactId,role) VALUES(?,?,?)",
       ).run(id, contactId, role);
+  // Older callers omit this field when editing an existing card.
+  if (data.participantIds !== undefined) {
+    const ids = new Set<string>(data.participantIds);
+    const current = db.prepare(
+      "SELECT 1 FROM ItemParticipant WHERE itemId=? AND contactId=?",
+    );
+    for (const contactId of ids)
+      if (
+        need(db, "Contact", contactId).archived &&
+        !current.get(id, contactId)
+      )
+        throw new WorkspaceError("Контакт скрыт");
+    db.prepare("DELETE FROM ItemParticipant WHERE itemId=?").run(id);
+    const insert = db.prepare(
+      "INSERT INTO ItemParticipant(itemId,contactId) VALUES(?,?)",
+    );
+    for (const contactId of ids) insert.run(id, contactId);
+  }
 }
 export function setTags(db: Database.Database, id: string, names: string[]) {
   const ids: string[] = [];
@@ -337,6 +357,11 @@ function saveItem(
     db.prepare(
       "UPDATE ContentItem SET kind=?,title=?,description=?,outcome=?,projectId=?,parentId=?,activityId=?,linkedTaskId=?,originItemId=?,startDate=?,endDate=?,startTime=?,endTime=?,location=?,timeZone=?,status=?,percent=?,updatedAt=?,revision=revision+1 WHERE id=?",
     ).run(...values, data.id);
+  if (data.kind === "event" && data.eventType !== undefined)
+    db.prepare("UPDATE ContentItem SET eventType=? WHERE id=?").run(
+      data.eventType,
+      data.id,
+    );
   setPeople(db, data.id, data);
   if (create)
     db.prepare(
@@ -365,7 +390,9 @@ function saveItem(
         activityId: data.id,
         taskIds: [taskId],
         copyPeople: true,
-        requestId: data.id + "-origin",
+        requestId: createHash("sha256")
+          .update(data.id + "-origin")
+          .digest("hex"),
       });
   }
 
@@ -599,6 +626,9 @@ function removeDirectory(db: Database.Database, data: Row) {
         "UPDATE Contact SET responsible=0,revision=revision+1,updatedAt=? WHERE id=?",
       ).run(now, id);
     else {
+      db.prepare(
+        "UPDATE ContentItem SET revision=revision+1,updatedAt=? WHERE id IN (SELECT itemId FROM ItemParticipant WHERE contactId=?)",
+      ).run(now, id);
       if (replacement) {
         // A merged identity keeps every selected mention pointing to the survivor.
         for (const [table, columns] of [
@@ -619,6 +649,14 @@ function removeDirectory(db: Database.Database, data: Row) {
         db.prepare(
           "INSERT OR IGNORE INTO ContactProject(contactId,projectId) SELECT ?,projectId FROM ContactProject WHERE contactId=?",
         ).run(replacement, id);
+        db.prepare(
+          "INSERT OR IGNORE INTO ItemParticipant(itemId,contactId) SELECT itemId,? FROM ItemParticipant WHERE contactId=?",
+        ).run(replacement, id);
+        const from = "](contact:" + id + ")",
+          to = "](contact:" + replacement + ")";
+        db.prepare(
+          "UPDATE EventOutcomeTask SET body=replace(body,?,?),updatedAt=? WHERE instr(body,?)>0",
+        ).run(from, to, now, from);
         for (const field of [
           "company",
           "position",
@@ -662,21 +700,30 @@ function linkTasks(db: Database.Database, user: SessionUser, data: Row) {
     createHash("sha256")
       .update(parsed.requestId + "\0" + taskId)
       .digest("hex");
-  const createdReferences: { id: string; parent: string | null }[] = [];
+  const references = new Map<string, string>();
+  const createdReferences: { id: string; taskParent: string | null }[] = [];
+  const findReference = db.prepare(
+    "SELECT id FROM ContentItem WHERE activityId=? AND linkedTaskId=? AND kind='reference' ORDER BY position,createdAt,id LIMIT 1",
+  );
   for (const taskId of ids) {
     const t = need(db, "ContentItem", taskId);
     if (t.kind !== "task") throw new WorkspaceError("Выберите рабочие задачи");
     const id = referenceId(taskId);
     const existing = getRow(db, "ContentItem", id);
-    if (existing) {
-      if (
-        existing.activityId !== parsed.activityId ||
-        existing.linkedTaskId !== taskId
-      )
-        throw new WorkspaceError(
-          "Этот запрос уже использован для другого мероприятия",
-          409,
-        );
+    if (
+      existing &&
+      (existing.activityId !== parsed.activityId ||
+        existing.linkedTaskId !== taskId)
+    )
+      throw new WorkspaceError(
+        "Этот запрос уже использован для другого мероприятия",
+        409,
+      );
+    const placed =
+      existing ||
+      (findReference.get(parsed.activityId, taskId) as Row | undefined);
+    if (placed) {
+      references.set(taskId, placed.id);
       continue;
     }
     saveItem(
@@ -691,22 +738,94 @@ function linkTasks(db: Database.Database, user: SessionUser, data: Row) {
       },
       true,
     );
-    createdReferences.push({
-      id,
-      parent: ids.has(t.parentId) ? referenceId(t.parentId) : null,
-    });
-    if (parsed.copyPeople)
+    references.set(taskId, id);
+    createdReferences.push({ id, taskParent: t.parentId });
+    if (parsed.copyPeople) {
       db.prepare(
         "INSERT INTO ItemContact(itemId,contactId,role) SELECT ?,contactId,role FROM ItemContact WHERE itemId=?",
       ).run(id, taskId);
+      db.prepare(
+        "INSERT INTO ItemParticipant(itemId,contactId) SELECT ?,contactId FROM ItemParticipant WHERE itemId=?",
+      ).run(id, taskId);
+    }
   }
   // All placements now exist, regardless of the order of selected branches.
-  for (const r of createdReferences)
-    if (r.parent)
+  for (const r of createdReferences) {
+    const parent = r.taskParent && references.get(r.taskParent);
+    if (parent)
       db.prepare("UPDATE ContentItem SET parentId=? WHERE id=?").run(
-        r.parent,
+        parent,
         r.id,
       );
+  }
+}
+function addOutcomeToTasks(
+  db: Database.Database,
+  user: SessionUser,
+  data: Row,
+) {
+  const request = z
+    .discriminatedUnion("mode", [
+      z.object({
+        mode: z.literal("existing"),
+        sourceId: ID,
+        revision: z.number().int().min(0),
+        taskIds: z.array(ID).min(1).max(200),
+      }),
+      z.object({
+        mode: z.literal("new"),
+        sourceId: ID,
+        revision: z.number().int().min(0),
+        task: z.object({
+          id: ID,
+          title: z.string().trim().min(1).max(1000),
+          project: z.union([ID, z.literal("")]),
+          parent: ID.nullable(),
+        }),
+      }),
+    ])
+    .parse(data);
+  const source = need(db, "ContentItem", request.sourceId);
+  checkRevision(source, request.revision);
+  if (source.kind === "task" || !source.outcome.trim())
+    throw new WorkspaceError("Заполните итог мероприятия или пункта повестки");
+  const event =
+    source.kind === "event"
+      ? source
+      : need(db, "ContentItem", source.activityId);
+  let taskIds: string[];
+  if (request.mode === "new") {
+    const { task } = request;
+    if (task.parent) {
+      const parent = need(db, "ContentItem", task.parent);
+      if (parent.kind !== "task" || (parent.projectId || "") !== task.project)
+        throw new WorkspaceError("Выберите ветку в указанной рабочей теме");
+    }
+    saveItem(db, user, { ...task, originItemId: source.id }, true);
+    taskIds = [task.id];
+  } else {
+    taskIds = [...new Set(request.taskIds)];
+  }
+  const now = Date.now();
+  const insert = db.prepare(
+    "INSERT INTO EventOutcomeTask(id,sourceItemId,taskId,body,sourceTitle,eventTitle,createdAt,updatedAt) VALUES(?,?,?,?,?,?,?,?) " +
+      "ON CONFLICT(sourceItemId,taskId) DO UPDATE SET body=excluded.body,sourceTitle=excluded.sourceTitle,eventTitle=excluded.eventTitle,updatedAt=excluded.updatedAt " +
+      "WHERE body<>excluded.body OR sourceTitle<>excluded.sourceTitle OR eventTitle<>excluded.eventTitle",
+  );
+  for (const id of taskIds) {
+    if (need(db, "ContentItem", id).kind !== "task")
+      throw new WorkspaceError("Выберите рабочие задачи");
+    insert.run(
+      randomUUID(),
+      source.id,
+      id,
+      source.outcome,
+      source.title,
+      event.title,
+      now,
+      now,
+    );
+  }
 }
 function promote(db: Database.Database, user: SessionUser, data: Row) {
   const root = need(db, "ContentItem", ID.parse(data.id));
@@ -755,19 +874,20 @@ function promote(db: Database.Database, user: SessionUser, data: Row) {
       },
       true,
     );
-    for (const table of ["ItemContact", "ItemTag", "ItemFile", "ItemNote"]) {
-      const column =
-        table === "ItemContact"
-          ? "contactId,role"
-          : table === "ItemTag"
-            ? "tagId"
-            : table === "ItemFile"
-              ? "fileId"
-              : "noteId";
+    for (const [table, column] of [
+      ["ItemContact", "contactId,role"],
+      ["ItemParticipant", "contactId"],
+      ["ItemTag", "tagId"],
+      ["ItemFile", "fileId"],
+      ["ItemNote", "noteId"],
+    ]) {
       db.prepare(
         `INSERT INTO ${table}(itemId,${column}) SELECT ?,${column} FROM ${table} WHERE itemId=?`,
       ).run(referenceId, item.id);
     }
+    db.prepare(
+      "UPDATE EventOutcomeTask SET sourceItemId=? WHERE sourceItemId=?",
+    ).run(referenceId, item.id);
   }
   for (const item of all) {
     const ref = refIds.get(item.id)!;
@@ -800,7 +920,7 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
     .all() as Row[];
   const rows = db
     .prepare(
-      "SELECT id,kind,title,description,outcome,projectId,parentId,activityId,linkedTaskId,originItemId,startDate,endDate,startTime,endTime,location,timeZone,status,percent,position,revision,sourceMeta,createdAt,updatedAt FROM ContentItem ORDER BY position,createdAt,id",
+      "SELECT id,kind,eventType,title,description,outcome,projectId,parentId,activityId,linkedTaskId,originItemId,startDate,endDate,startTime,endTime,location,timeZone,status,percent,position,revision,sourceMeta,createdAt,updatedAt FROM ContentItem ORDER BY position,createdAt,id",
     )
     .all() as Row[];
   const people = db
@@ -825,12 +945,18 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
       .prepare("SELECT itemId,projectId FROM EventProject ORDER BY rowid")
       .all() as Row[],
     byId = new Map(rows.map((r) => [r.id, r]));
-  const group = (list: Row[]) => {
-    const map = new Map<string, Row[]>();
+  const participants = db
+    .prepare("SELECT itemId,contactId FROM ItemParticipant ORDER BY rowid")
+    .all() as Row[];
+  const outcomes = db
+    .prepare("SELECT * FROM EventOutcomeTask ORDER BY createdAt,rowid")
+    .all() as Row[];
+  const group = <T extends Row>(list: T[], key = "itemId") => {
+    const map = new Map<string, T[]>();
     for (const r of list) {
-      const values = map.get(r.itemId) || [];
+      const values = map.get(r[key]) || [];
       values.push(r);
-      map.set(r.itemId, values);
+      map.set(r[key], values);
     }
     return map;
   };
@@ -838,23 +964,10 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
     ts = group(itemTags),
     ns = group(notes),
     fs = group(files),
-    ep = group(topics);
-  const topicsOf = (id: string, seen = new Set<string>()): string[] => {
-    if (seen.has(id)) return [];
-    seen.add(id);
-    const r = byId.get(id);
-    if (!r) return [];
-    const own = (ep.get(id) || []).map((p) => p.projectId);
-    for (const item of rows) {
-      if (item.activityId === id && item.linkedTaskId) {
-        const topic = byId.get(item.linkedTaskId)?.projectId;
-        if (topic) own.push(topic);
-      }
-      if (item.kind === "event" && item.parentId === id)
-        own.push(...topicsOf(item.id, seen));
-    }
-    return [...new Set(own)];
-  };
+    ep = group(topics),
+    ip = group(participants),
+    outcomeSources = group(outcomes, "sourceItemId"),
+    outcomeTasks = group(outcomes, "taskId");
   const items = rows.map((r) => {
     const linked = r.linkedTaskId ? byId.get(r.linkedTaskId) : null,
       assigned = ps.get(r.id) || [],
@@ -862,6 +975,7 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
     return {
       id: r.id,
       kind: r.kind,
+      eventType: r.eventType,
       title: r.title,
       workingTitle: linked?.title || "",
       description: r.description,
@@ -873,11 +987,30 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
       activityId: r.activityId || null,
       linkedTaskId: r.linkedTaskId || null,
       originItemId: r.originItemId || null,
-      topics: r.kind === "event" ? topicsOf(r.id) : [],
+      topics: [] as string[],
       manualTopics: (ep.get(r.id) || []).map((p) => p.projectId),
+      linkedTaskIds: [] as string[],
+      relatedEvents: [] as string[],
+      outcomeTaskIds: (outcomeSources.get(r.id) || []).map(
+        (o) => o.taskId as string,
+      ),
+      eventOutcomes: (outcomeTasks.get(r.id) || []).map((o) => {
+        const source = byId.get(o.sourceItemId);
+        const event =
+          source?.kind === "event" ? source : byId.get(source?.activityId);
+        return {
+          id: o.id as string,
+          text: o.body as string,
+          sourceId: source?.id || null,
+          sourceTitle: source?.title || o.sourceTitle,
+          eventId: event?.id || null,
+          eventTitle: event?.title || o.eventTitle,
+        };
+      }),
       counterparties: assigned
         .filter((p) => p.role === "counterparty")
         .map((p) => p.contactId),
+      participantIds: (ip.get(r.id) || []).map((p) => p.contactId),
       executors: assigned
         .filter((p) => p.role === "executor")
         .map((p) => p.contactId),
@@ -919,22 +1052,50 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
   const eventById = new Map(
     items.filter((i) => i.kind === "event").map((i) => [i.id, i]),
   );
-  const aggregated = new Set<string>();
-  const aggregate = (id: string, seen = new Set<string>()) => {
-    const event = eventById.get(id);
-    if (!event || aggregated.has(id) || seen.has(id)) return;
-    seen.add(id);
-    const members = items.filter((i) => i.activityId === id),
-      children = items.filter(
-        (i) => i.kind === "event" && i.sourceParent === id,
-      );
-    for (const child of children) aggregate(child.id, seen);
+  const itemsById = new Map(items.map((i) => [i.id, i]));
+  const agenda = group(
+    items.filter((i) => i.activityId),
+    "activityId",
+  );
+  const nestedEvents = group([...eventById.values()], "sourceParent");
+  const visited = new Set<string>();
+  const aggregate = (event: (typeof items)[number]) => {
+    if (visited.has(event.id)) return;
+    visited.add(event.id);
+    const members = agenda.get(event.id) || [],
+      children = nestedEvents.get(event.id) || [];
+    for (const child of children) aggregate(child);
     const own = [event, ...members];
+    const origin = byId.get(event.originItemId);
+    event.linkedTaskIds = [
+      ...new Set([
+        ...(origin?.kind === "task" ? [origin.id] : []),
+        ...own
+          .flatMap((item) => [item.linkedTaskId, ...item.outcomeTaskIds])
+          .filter(Boolean),
+        ...children.flatMap((child) => child.linkedTaskIds),
+      ]),
+    ];
+    event.topics = [
+      ...new Set([
+        ...event.manualTopics,
+        ...event.linkedTaskIds
+          .map((id) => byId.get(id)?.projectId)
+          .filter(Boolean),
+        ...children.flatMap((child) => child.topics),
+      ]),
+    ];
     const roles = {
       counterparty: [
         ...new Set([
           ...own.flatMap((i) => i.counterparties),
           ...children.flatMap((i) => (i as Row).rolePeople?.counterparty || []),
+        ]),
+      ],
+      participant: [
+        ...new Set([
+          ...own.flatMap((i) => i.participantIds),
+          ...children.flatMap((i) => (i as Row).rolePeople?.participant || []),
         ]),
       ],
       executor: [
@@ -956,6 +1117,7 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
         ...roles.counterparty,
         ...roles.executor,
         ...roles.responsible,
+        ...roles.participant,
       ]),
     ];
     (event as Row).allTagIds = [
@@ -964,35 +1126,11 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
         ...children.flatMap((i) => (i as Row).allTagIds || []),
       ]),
     ];
-    aggregated.add(id);
   };
-  for (const id of eventById.keys()) aggregate(id);
-  for (const work of items.filter((i) => i.kind === "task")) {
-    const ids = new Set<string>(
-      items
-        .filter(
-          (i) =>
-            i.kind === "reference" &&
-            i.linkedTaskId === work.id &&
-            i.activityId,
-        )
-        .map((i) => i.activityId),
-    );
-    for (const event of items.filter(
-      (i) => i.kind === "event" && i.originItemId === work.id,
-    ))
-      ids.add(event.id);
-    for (const id of [...ids]) {
-      let event = byId.get(id);
-      const seen = new Set<string>();
-      while (event?.parentId && !seen.has(event.parentId)) {
-        seen.add(event.parentId);
-        ids.add(event.parentId);
-        event = byId.get(event.parentId);
-      }
-    }
-    (work as Row).relatedEvents = [...ids];
-  }
+  for (const event of eventById.values()) aggregate(event);
+  for (const event of eventById.values())
+    for (const id of event.linkedTaskIds)
+      itemsById.get(id)?.relatedEvents.push(event.id);
   const meta = (key: string) =>
     (db.prepare("SELECT value FROM WorkspaceMeta WHERE key=?").get(key) as Row)
       ?.value;
@@ -1008,6 +1146,7 @@ export function productSnapshot(db: Database.Database, user: SessionUser) {
             (i) =>
               i.counterparties.includes(c.id) ||
               i.executors.includes(c.id) ||
+              i.participantIds.includes(c.id) ||
               i.responsible === c.id,
           )
           .flatMap((i) =>
@@ -1193,6 +1332,9 @@ export function productAction(
         }
         case "linkTasks":
           linkTasks(db, user, d);
+          break;
+        case "addOutcomeToTasks":
+          addOutcomeToTasks(db, user, d);
           break;
         case "promoteItem":
           promote(db, user, d);

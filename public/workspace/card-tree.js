@@ -14,10 +14,12 @@ window.createCardTree = function (ctx) {
     selected = new Set(),
     group = "manual",
     search = "",
-    who = "";
+    who = "",
+    collapsed = false;
   const people = (t) => [
     ...new Set([
       ...(t.counterparties || []),
+      ...t.participantIds,
       ...t.executors,
       ...(t.responsible ? [t.responsible] : []),
     ]),
@@ -190,10 +192,12 @@ window.createCardTree = function (ctx) {
       group = "manual";
       search = "";
       who = "";
+      collapsed = false;
     }
     const drawer = $("#drawer-root .drawer"),
       form = $("#task-form");
     drawer.classList.add("wide-card");
+    drawer.classList.toggle("hide-tree", collapsed);
     const grid = document.createElement("div");
     grid.className = "card-layout";
     const nav = document.createElement("aside");
@@ -202,6 +206,10 @@ window.createCardTree = function (ctx) {
     nav.innerHTML = `<div class="card-nav-heading"><strong>${E(item(rootId)?.title || data.title || "Новая запись")}</strong><button type="button" class="textbtn" data-tree="size">Свернуть дерево</button></div><input id="card-tree-search" aria-label="Поиск в дереве карточки" placeholder="Найти вопрос или подзадачу…" value="${E(search)}"><div class="card-nav-options"><label>Группировать<select id="card-tree-group"><option value="manual">По иерархии / вручную</option><option value="topics">По темам</option><option value="counterparty">По контрагентам</option><option value="executor">По исполнителям</option><option value="responsible">По ответственным</option></select></label><label>Участник<select id="card-tree-person">${ctx.options(model().contacts, who, "Все участники")}</select></label></div><div class="tree-selection-tools"><button type="button" class="textbtn" data-tree="select-visible">Выбрать найденное</button><button type="button" class="textbtn" data-tree="select-none">Снять всё</button></div><div id="card-tree-items"></div><div class="card-tree-footer"><span id="card-selection-count"></span><button id="card-print-selected" type="button" class="btn primary" data-tree="print-selected">Вывести выбранное</button></div>`;
     form.before(grid);
     grid.append(nav, form);
+    const toggle = nav.querySelector('[data-tree="size"]');
+    toggle.textContent = collapsed ? "Показать дерево" : "Свернуть дерево";
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-controls", "card-tree-items");
     $("#card-tree-group").value = group;
     render();
     const title = $("#drawer-root .drawer-head h2");
@@ -288,7 +296,7 @@ window.createCardTree = function (ctx) {
           ...t,
           revision: ui().moveContext.revision,
           parent: $("#move-parent").value || null,
-          project: $("#move-project")?.value || t.project,
+          project: $("#move-project")?.value ?? t.project,
           activityId: $("#move-event")?.value || t.activityId,
           topics: t.manualTopics || [],
           comments: [],
@@ -312,9 +320,7 @@ window.createCardTree = function (ctx) {
   }
   async function output(ids) {
     if (ctx.dirty()) {
-      const current = ui().drawer.data.id;
       if (!(await ctx.saveTask($("#task-form")))) return;
-      ctx.openCard(current);
     }
     ctx.printSelection(rootId, ids, group, groupTitle);
   }
@@ -400,10 +406,9 @@ window.createCardTree = function (ctx) {
     if (a === "child") void createFrom(id, b.dataset.kind);
     if (a === "up" || a === "down") void reorder(id, a === "up" ? -1 : 1);
     if (a === "size") {
-      $("#drawer-root .drawer").classList.toggle("hide-tree");
-      b.textContent = $("#drawer-root .drawer").classList.contains("hide-tree")
-        ? "Показать дерево"
-        : "Свернуть дерево";
+      collapsed = $("#drawer-root .drawer").classList.toggle("hide-tree");
+      b.textContent = collapsed ? "Показать дерево" : "Свернуть дерево";
+      b.setAttribute("aria-expanded", String(!collapsed));
     }
     if (a === "move") move(id);
     if (a === "move-apply") void applyMove(id, b);

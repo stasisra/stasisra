@@ -18,13 +18,16 @@ window.createProductUI = function (ctx) {
     note: "Заметка / материал",
     reference: "Вопрос по рабочей задаче",
   };
+  const events = window.createEventTools(ctx);
+  const expandedQuestions = new Set();
   async function navigate(id) {
+    if (ui().drawer?.saving) return;
     if (!item(id)) {
       ctx.toast("Запись удалена или недоступна; текст упоминания сохранён");
       return;
     }
     if (ui().drawer && ctx.dirty()) {
-      if (!(await ctx.saveTask($("#task-form")))) return;
+      if (!(await ctx.saveTask($("#task-form"), { exit: true }))) return;
     } else if (ui().drawer) ctx.closeDrawer(true);
     openCard(id);
   }
@@ -76,7 +79,7 @@ window.createProductUI = function (ctx) {
       ? `${t.start} — ${t.end}`
       : t.start || t.end || "Дата не назначена";
   const kindBadge = (t) =>
-    `<span class="badge">${labels[t.kind] || "Запись"}</span>`;
+    `<span class="badge">${(t.kind === "event" && events.types[t.eventType]) || labels[t.kind] || "Запись"}</span>`;
   function renderTags() {
     const data = ui().drawer?.data;
     if (!data || !$("#task-tags")) return;
@@ -121,17 +124,19 @@ window.createProductUI = function (ctx) {
     );
   }
   function peopleFields(data) {
-    return `<div class="field"><span class="field-label">Контрагенты / участники</span>${choices("counterparties", data.counterparties)}</div><div class="field"><span class="field-label" id="executor-label">Исполнители</span>${choices("executors", data.executors)}</div>${field(
-      "Ответственный",
-      "task-responsible",
-      `<select id="task-responsible" name="responsible">${ctx.options(
+    const heading = (label, role, button, control = null) =>
+      `<div class="people-field-heading">${control ? `<label for="${control}">${label}</label>` : `<span class="field-label">${label}</span>`}<button type="button" class="textbtn" data-product="new-contact" data-role="${role}">${button}</button></div>`;
+    return `<div class="field">${heading("Контрагенты", "counterparties", "Новый контрагент")}${choices("counterparties", data.counterparties)}</div>
+      <div class="field">${heading("Участники", "participantIds", "Новый участник")}${choices("participantIds", data.participantIds)}</div>
+      <div class="field">${heading("Исполнители", "executors", "Новый исполнитель")}${choices("executors", data.executors)}</div>
+      <div class="field">${heading("Ответственный", "responsible", "Новый ответственный", "task-responsible")}
+      <select id="task-responsible" name="responsible">${ctx.options(
         model().contacts.filter(
           (c) => (c.responsible && !c.archived) || c.id === data.responsible,
         ),
         data.responsible,
         "Не назначен",
-      )}</select>`,
-    )}<button type="button" class="textbtn" data-product="contacts">Добавить / изменить контакты</button>`;
+      )}</select></div><button type="button" class="textbtn" data-product="contacts">Справочник контактов</button>`;
   }
   function newData(id, parent, projectId, kind, extra) {
     const source = parent ? item(parent) : null,
@@ -165,6 +170,7 @@ window.createProductUI = function (ctx) {
       topics: [],
       manualTopics: extra.topics || [],
       counterparties: [],
+      participantIds: [],
       executors: [],
       responsible: "",
       tags: [],
@@ -174,12 +180,32 @@ window.createProductUI = function (ctx) {
       endTime: "",
       location: "",
       timeZone: model().timeZone,
+      eventType: "",
       status: "PLANNED",
       percent: 0,
       revision: 0,
       comments: [],
       attachments: [],
     };
+  }
+  function savedActions(id, kind) {
+    if (!id) return "";
+    const remove =
+      {
+        reference: "Убрать из мероприятия",
+        event: "Удалить мероприятие",
+        task: "Удалить задачу",
+      }[kind] || "Удалить пункт";
+    return `<button class="btn" type="button" data-action="meeting-open" data-id="${E(id)}">Вывод</button>
+      ${["preparation", "question", "note"].includes(kind) ? '<button class="btn" type="button" data-product="promote">Добавить в тему</button>' : ""}
+      <button class="btn danger" type="button" data-action="delete-task" data-id="${E(id)}">${remove}</button>`;
+  }
+  function cardLocation(id, kind) {
+    const url = new URL(location.href);
+    url.searchParams.delete("new");
+    if (id) url.searchParams.set("task", id);
+    else url.searchParams.set("new", kind);
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
   function openCard(
     id = null,
@@ -199,6 +225,7 @@ window.createProductUI = function (ctx) {
       : newData(id, parent, projectId, kind, extra);
     data.tags ||= [];
     data.counterparties ||= [];
+    data.participantIds ||= [];
     data.manualTopics ||= [];
     ui().drawer = { id, parent, project: projectId, kind: data.kind, data };
     const isEvent = data.kind === "event",
@@ -238,8 +265,24 @@ window.createProductUI = function (ctx) {
       data.kind === "reference"
         ? `<div class="info-box">${data.linkedTaskId ? `Рабочая задача: <button type="button" class="textbtn" data-product="open" data-id="${E(data.linkedTaskId)}">${E(data.workingTitle || item(data.linkedTaskId)?.title || data.title)} ↗</button><br>Здесь — вопросы и назначения на это мероприятие. Рабочая карточка сохраняет свои назначения.` : "Связанная рабочая задача удалена. Содержание обсуждения сохранено."}</div>`
         : "";
+    const typeField = isEvent
+      ? field(
+          "Тип мероприятия",
+          "event-type",
+          `<select id="event-type" name="eventType">${ctx.options(
+            Object.entries(events.types).map(([id, name]) => ({ id, name })),
+            data.eventType,
+            "Без типа",
+          )}</select>`,
+        )
+      : "";
+    const outcomeField = field(
+      "Итоги / договорённости",
+      "item-outcome",
+      `<textarea id="item-outcome" name="outcome" placeholder="Что решили, какие следующие действия">${E(data.outcome)}</textarea>`,
+    );
     $("#drawer-root").innerHTML =
-      `<div class="backdrop" data-action="close-drawer"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="${E(labels[data.kind])}"><div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${E(labels[data.kind])}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : labels[data.kind])}</h2>${context}</div><form id="task-form" class="drawer-body"><div id="task-error"></div><input type="hidden" name="kind" value="${E(data.kind)}">${ref}${field("Название", "task-title", `<input id="task-title" name="title" maxlength="1000" required placeholder="Короткое название" value="${E(data.title)}">`)}${scope}${topics}${field(isEvent ? "Родительское мероприятие" : "Родительская запись", "task-parent", `<select id="task-parent" name="parent">${parentOptions(data)}</select>`)}${field(isEvent ? "Содержание и цель" : data.kind === "reference" ? "Что обсудить" : "Описание / проблематика", "task-description", `<textarea id="task-description" name="description" placeholder="Свободное описание">${E(data.description)}</textarea>`)}<div class="field"><span class="field-label">Теги</span><div class="tag-chips" id="task-tags"></div><div class="tag-add"><input id="task-tag-input" list="tag-suggestions" placeholder="Выбрать или создать тег" maxlength="200"><button class="btn" type="button" data-product="add-tag">Добавить тег</button></div><datalist id="tag-suggestions">${model()
+      `<div class="backdrop" data-action="close-drawer"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="${E(labels[data.kind])}"><div class="drawer-head"><div class="eyebrow"><span>${id ? "КАРТОЧКА" : "СОЗДАНИЕ"} · ${E(labels[data.kind])}</span><button class="tinybtn" data-action="close-drawer" aria-label="Закрыть карточку">${icon("close")}</button></div><h2>${E(id ? data.title : labels[data.kind])}</h2>${context}</div><form id="task-form" class="drawer-body"><div id="task-error"></div><input type="hidden" name="kind" value="${E(data.kind)}">${ref}${field("Название", "task-title", `<input id="task-title" name="title" maxlength="1000" required placeholder="Короткое название" value="${E(data.title)}">`)}${scope}${typeField}${topics}${field(isEvent ? "Родительское мероприятие" : "Родительская запись", "task-parent", `<select id="task-parent" name="parent">${parentOptions(data)}</select>`)}${field(isEvent ? "Содержание и цель" : data.kind === "reference" ? "Что обсудить" : "Описание / проблематика", "task-description", `<textarea id="task-description" name="description" placeholder="Свободное описание">${E(data.description)}</textarea>`)}<div class="field"><span class="field-label">Теги</span><div class="tag-chips" id="task-tags"></div><div class="tag-add"><input id="task-tag-input" list="tag-suggestions" placeholder="Выбрать или создать тег" maxlength="200"><button class="btn" type="button" data-product="add-tag">Добавить тег</button></div><datalist id="tag-suggestions">${model()
         .tags.filter((t) => !t.archived)
         .map((t) => `<option value="${E(t.name)}"></option>`)
         .join(
@@ -248,24 +291,36 @@ window.createProductUI = function (ctx) {
         "Статус",
         "task-status",
         `<select id="task-status" name="status">${Object.entries(ctx.statuses)
-          .filter(([key]) => isEvent || key !== "CANCELLED")
+          .filter(
+            ([key]) => isEvent || key !== "CANCELLED" || data.status === key,
+          )
           .map(
             ([id, name]) =>
               `<option value="${id}" ${id === data.status ? "selected" : ""}>${E(name)}</option>`,
           )
           .join("")}</select>`,
-      )}${work ? field("Выполнение, %", "task-percent", `<input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}">`) : ""}</div>${isEvent || agenda ? field("Итоги / договорённости", "item-outcome", `<textarea id="item-outcome" name="outcome" placeholder="Что решили, какие следующие действия">${E(data.outcome)}</textarea>`) : ""}<section class="activity-section"><div class="activity-heading">${isEvent ? "Содержание, вопросы и подготовка" : "Подзадачи и мероприятия"}</div><div class="card-child-actions"><button class="btn" type="button" data-product="child" data-kind="${work ? "task" : "preparation"}">＋ Подзадача</button>${isEvent || agenda ? '<button class="btn" type="button" data-product="child" data-kind="question">＋ Вопрос</button><button class="btn" type="button" data-product="child" data-kind="note">＋ Заметка / материал</button>' : ""}<button class="btn" type="button" data-product="child" data-kind="event">＋ Мероприятие</button>${isEvent ? '<button class="btn" type="button" data-product="link-tasks">Добавить задачи из тем</button>' : ""}</div><small>${id ? "Новые записи можно добавлять прямо из карточки." : "При добавлении дочерней записи сначала сохранится эта карточка."}</small>${isEvent ? `<div class="agenda-filter"><input id="agenda-search" placeholder="Поиск по повестке" aria-label="Поиск по повестке"><select id="agenda-counterparty" aria-label="Контрагент в повестке">${ctx.options(model().contacts, "", "Все контрагенты")}</select></div>` : ""}<div id="card-children"></div></section><section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы и графики</div><div id="drawer-files">${ctx.attachmentList(original || data)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>DOCX, Excel, PDF, изображения и текст — просмотр здесь. Оригиналы сохраняются.</small></section><section class="activity-section"><div class="activity-heading">Комментарии и вопросы</div><div id="comment-list">${ctx.notesHtml(original || data)}</div>${ctx.noteComposer(original || data, "drawer")}</section>${data.legacyTags ? `<details><summary>Исходные теги</summary><p>${E(data.legacyTags)}</p></details>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form">Сохранить</button><button class="btn" data-action="close-drawer">Отмена</button>${id ? `<button class="btn" type="button" data-action="meeting-open" data-id="${E(id)}">Вывод</button>${agenda && data.kind !== "reference" ? '<button class="btn" type="button" data-product="promote">Добавить в тему</button>' : ""}<button class="btn danger" data-action="delete-task" data-id="${E(id)}">${data.kind === "reference" ? "Убрать из мероприятия" : isEvent ? "Удалить мероприятие" : work ? "Удалить задачу" : "Удалить пункт"}</button>` : ""}</div></section>`;
+      )}${work ? field("Выполнение, %", "task-percent", `<input id="task-percent" name="percent" type="number" min="0" max="100" value="${data.percent}">`) : ""}</div>${outcomeField}${work ? "" : '<button class="btn" type="button" data-product="add-outcome">Добавить итог в задачи</button>'}<div id="card-related-records"></div><section class="activity-section"><div class="activity-heading">${isEvent ? "Содержание, вопросы и подготовка" : "Подзадачи и мероприятия"}</div><div class="card-child-actions"><button class="btn" type="button" data-product="child" data-kind="${work ? "task" : "preparation"}">${work ? "＋ Подзадача" : "＋ Дело по подготовке"}</button>${isEvent || agenda ? '<button class="btn" type="button" data-product="child" data-kind="question">＋ Вопрос</button><button class="btn" type="button" data-product="child" data-kind="note">＋ Заметка / материал</button>' : ""}<button class="btn" type="button" data-product="child" data-kind="event">＋ Мероприятие</button>${isEvent ? '<button class="btn" type="button" data-product="link-tasks">Добавить задачи из тем</button>' : ""}</div><small>${id ? "Новые записи можно добавлять прямо из карточки." : "При добавлении дочерней записи сначала сохранится эта карточка."}</small>${isEvent ? `<div class="agenda-filter"><input id="agenda-search" placeholder="Поиск по повестке" aria-label="Поиск по повестке"><select id="agenda-counterparty" aria-label="Контрагент в повестке">${ctx.options(model().contacts, "", "Все контрагенты")}</select></div>` : ""}<div id="card-children"></div></section><section class="activity-section"><div class="activity-heading">${icon("paperclip", true)} Файлы и графики</div><div id="drawer-files">${ctx.attachmentList(original || data)}</div><label class="upload-zone">${icon("plus", true)} Прикрепить файлы<input type="file" multiple data-upload-task="${E(data.id)}" aria-label="Прикрепить файлы" hidden></label><small>DOCX, Excel, PDF, изображения и текст — просмотр здесь. Оригиналы сохраняются.</small></section><section class="activity-section"><div class="activity-heading">Комментарии и вопросы</div><div id="comment-list">${ctx.notesHtml(original || data)}</div>${ctx.noteComposer(original || data, "drawer")}</section>${data.legacyTags ? `<details><summary>Исходные теги</summary><p>${E(data.legacyTags)}</p></details>` : ""}</form><div class="drawer-footer"><button class="btn primary" type="submit" form="task-form" value="stay">Сохранить</button><button class="btn" type="submit" form="task-form" value="exit">Сохранить и выйти</button><button class="btn" data-action="close-drawer">Отмена</button>${isEvent ? '<button class="btn" type="button" data-product="google-calendar">Google Calendar</button>' : ""}<div id="card-saved-actions">${savedActions(id, data.kind)}</div></div></section>`;
     renderTags();
     renderChildren();
     tree.attach(data);
     tools.attachCard();
     ui().drawer.baseline = ctx.signature();
     $("#task-title").focus();
-    const url = new URL(location.href);
-    url.searchParams.delete("new");
-    if (id) url.searchParams.set("task", id);
-    else url.searchParams.set("new", data.kind);
-    history.replaceState(null, "", url.pathname + url.search + url.hash);
+    cardLocation(id, data.kind);
+  }
+  function cardSaved(saved) {
+    const drawer = ui().drawer;
+    drawer.id = saved.id;
+    drawer.data = structuredClone(saved);
+    $("#drawer-root .drawer-head h2").textContent = saved.title;
+    $("#drawer-root .drawer-head .eyebrow span").textContent =
+      "КАРТОЧКА · " + labels[saved.kind];
+    if (!$("#card-saved-actions").children.length)
+      $("#card-saved-actions").innerHTML = savedActions(saved.id, saved.kind);
+    $("#task-tag-input").value = "";
+    renderTags();
+    drawer.baseline = ctx.signature();
+    cardLocation(saved.id, saved.kind);
   }
   function renderChildren() {
     if (!$("#card-children") || !ui().drawer) return;
@@ -280,6 +335,7 @@ window.createProductUI = function (ctx) {
               ((current.relatedEvents || []).includes(t.id) ||
                 t.originItemId === current.id)),
       );
+    $("#card-related-records").innerHTML = events.relatedRecords(current);
     const seen = new Set();
     const rows = children.filter((t) => !seen.has(t.id) && seen.add(t.id));
     $("#card-children").innerHTML = rows.length
@@ -306,10 +362,9 @@ window.createProductUI = function (ctx) {
         .split(/\s+/)
         .filter(Boolean),
       who = $("#agenda-counterparty")?.value || "";
-    const text =
-      `${t.title} ${t.description} ${t.outcome || ""} ${extraSearch(t)} ${ctx.path(t.id)}`.toLocaleLowerCase(
-        "ru",
-      );
+    const text = window.WorkspaceMentions.plain(
+      `${extraSearch(t)} ${ctx.path(t.id)}`,
+    ).toLocaleLowerCase("ru");
     const own =
       words.every((word) => text.includes(word)) &&
       (!who ||
@@ -346,13 +401,14 @@ window.createProductUI = function (ctx) {
             : !["task", "event"].includes(c.kind)),
       ),
       index = siblings.findIndex((c) => c.id === t.id);
-    return `<article class="agenda-row" data-agenda-item="${E(t.id)}" style="--agenda-level:${Math.min(4, level)}"><div class="agenda-row-title">${kindBadge(t)}<span class="agenda-order"><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="-1" aria-label="Выше: ${E(t.title)}" ${index <= 0 ? "disabled" : ""}>↑</button><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="1" aria-label="Ниже: ${E(t.title)}" ${index >= siblings.length - 1 ? "disabled" : ""}>↓</button></span><button class="task-title" type="button" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span>${tree.actionMenu(t)}</div>${t.kind === "reference" && t.linkedTaskId ? `<button class="textbtn" type="button" data-product="open" data-id="${E(t.linkedTaskId)}">Открыть рабочую задачу ↗</button>` : ""}${t.description ? `<p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p>` : ""}${t.outcome ? `<p class="agenda-outcome"><strong>Итоги:</strong> ${window.WorkspaceMentions.html(t.outcome, E)}</p>` : ""}<div class="agenda-people">${t.counterparties.length ? `Контрагенты: ${E(names(t.counterparties))} · ` : ""}${t.executors.length ? `Исполнители: ${E(names(t.executors))} · ` : ""}${t.responsible ? `Ответственный: ${E(names([t.responsible]))}` : ""}</div>${t.tags.length ? `<div class="tag-chips">${t.tags.map((tag) => `<span class="tag-chip">${E(tag)}</span>`).join("")}</div>` : ""}${ctx.activitySummary(t)}${children.map((c) => agendaRow(c, level + 1)).join("")}</article>`;
+    return `<article class="agenda-row" data-agenda-item="${E(t.id)}" style="--agenda-level:${Math.min(4, level)}"><div class="agenda-row-title">${kindBadge(t)}<span class="agenda-order"><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="-1" aria-label="Выше: ${E(t.title)}" ${index <= 0 ? "disabled" : ""}>↑</button><button type="button" class="tinybtn" data-product="move-item" data-id="${E(t.id)}" data-direction="1" aria-label="Ниже: ${E(t.title)}" ${index >= siblings.length - 1 ? "disabled" : ""}>↓</button></span><button class="task-title" type="button" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span>${tree.actionMenu(t)}</div>${t.kind === "reference" && t.linkedTaskId ? `<button class="textbtn" type="button" data-product="open" data-id="${E(t.linkedTaskId)}">Открыть рабочую задачу ↗</button>` : ""}${t.description ? `<p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p>` : ""}${t.outcome ? `<p class="agenda-outcome"><strong>Итоги:</strong> ${window.WorkspaceMentions.html(t.outcome, E)}</p>` : ""}<div class="agenda-people">${t.counterparties.length ? `Контрагенты: ${E(names(t.counterparties))} · ` : ""}${t.participantIds.length ? `Участники: ${E(names(t.participantIds))} · ` : ""}${t.executors.length ? `Исполнители: ${E(names(t.executors))} · ` : ""}${t.responsible ? `Ответственный: ${E(names([t.responsible]))}` : ""}</div>${t.tags.length ? `<div class="tag-chips">${t.tags.map((tag) => `<span class="tag-chip">${E(tag)}</span>`).join("")}</div>` : ""}${ctx.activitySummary(t)}${children.map((c) => agendaRow(c, level + 1)).join("")}</article>`;
   }
   async function addFromCard(kind) {
-    let sourceId = ui().drawer?.data.id;
+    if (ui().drawer?.saving) return;
+    const sourceId = ui().drawer?.data.id;
     if (!sourceId) return;
     if (!ui().drawer.id || ctx.dirty()) {
-      if (!(await ctx.saveTask($("#task-form")))) return;
+      if (!(await ctx.saveTask($("#task-form"), { exit: true }))) return;
     } else ctx.closeDrawer(true);
     const source = item(sourceId);
     if (!source) return;
@@ -368,7 +424,7 @@ window.createProductUI = function (ctx) {
   }
   function refreshLookups() {
     if (!ui().drawer || !$("#task-form") || $("#task-form").inert) return;
-    for (const name of ["counterparties", "executors"]) {
+    for (const name of ["counterparties", "participantIds", "executors"]) {
       const box = $("#" + name + "-choices");
       if (!box) continue;
       const ids = [...box.querySelectorAll("input:checked")].map(
@@ -389,9 +445,26 @@ window.createProductUI = function (ctx) {
     }
     tools.filterPeople();
     renderChildren();
+    tree.render();
+  }
+  function selectContact({ role, drawerId }, id) {
+    if (ui().drawer?.data.id !== drawerId) return;
+    refreshLookups();
+    if (role === "responsible") {
+      $("#task-responsible").value = id;
+      $("#task-responsible").focus();
+    } else {
+      const checkbox = document
+        .getElementById(role + "-choices")
+        ?.querySelector('input[value="' + CSS.escape(id) + '"]');
+      if (!checkbox) return;
+      checkbox.checked = true;
+      tools.filterPeople();
+      checkbox.focus();
+    }
   }
   function eventCard(t) {
-    return `<article class="event-card" data-event="${E(t.id)}"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span></div><p>${E(byDate(t))}${t.startTime ? " · " + E(t.startTime) : ""}${t.location ? " · " + E(t.location) : ""}</p><p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p><div class="tag-chips">${t.topics.map((id) => `<span class="tag-chip">${E(project(id)?.name || "")}</span>`).join("")}</div><p class="agenda-people">${E(names(t.participants || []))}</p><div class="card-child-actions"><button class="textbtn" data-product="open" data-id="${E(t.id)}">Открыть повестку</button><button class="textbtn" data-action="meeting-open" data-id="${E(t.id)}">Печать / PDF</button></div></article>`;
+    return `<article class="event-card" data-event="${E(t.id)}"><div class="agenda-row-title">${kindBadge(t)}<button class="task-title" data-product="open" data-id="${E(t.id)}">${E(t.title)}</button><span class="status ${t.status}">${E(ctx.statuses[t.status])}</span></div><p>${E(byDate(t))}${t.startTime ? " · " + E(t.startTime) : ""}${t.location ? " · " + E(t.location) : ""}</p><p class="agenda-description">${window.WorkspaceMentions.html(t.description, E)}</p><div class="tag-chips">${t.topics.map((id) => `<span class="tag-chip">${E(project(id)?.name || "")}</span>`).join("")}</div><p class="agenda-people">${E(names(t.participants || []))}</p>${events.questions(t, expandedQuestions.has(t.id))}<div class="card-child-actions"><button class="textbtn" data-product="open" data-id="${E(t.id)}">Открыть повестку</button><button class="textbtn" data-action="meeting-open" data-id="${E(t.id)}">Печать / PDF</button></div></article>`;
   }
   function renderView() {
     const view = ui().view;
@@ -468,9 +541,12 @@ window.createProductUI = function (ctx) {
     $("#task-content").innerHTML = html;
     return true;
   }
-  function linkTasks() {
-    const data = ui().drawer?.data;
-    if (!data) return;
+  async function linkTasks() {
+    const drawer = ui().drawer;
+    if (!drawer || drawer.saving) return;
+    if ((!drawer.id || ctx.dirty()) && !(await ctx.saveTask($("#task-form"))))
+      return;
+    const data = drawer.data;
     linkContext = {
       activityId: data.kind === "event" ? data.id : data.activityId,
       selected: new Set(),
@@ -530,7 +606,9 @@ window.createProductUI = function (ctx) {
       ctx.busy(button, false);
     }
   }
-  function promote() {
+  async function promote() {
+    if (ui().drawer?.saving) return;
+    if (ctx.dirty() && !(await ctx.saveTask($("#task-form")))) return;
     promoteContext = {
       id: ui().drawer.id,
       revision: ui().drawer.data.revision,
@@ -645,32 +723,11 @@ window.createProductUI = function (ctx) {
         : t.kind === "task";
   }
   function extraSearch(t) {
-    const included = [t];
-    if (t.kind === "event") {
-      const events = new Set([t.id]);
-      let added = true;
-      while (added) {
-        added = false;
-        for (const e of model().tasks)
-          if (
-            e.kind === "event" &&
-            events.has(e.sourceParent) &&
-            !events.has(e.id)
-          ) {
-            events.add(e.id);
-            added = true;
-          }
-      }
-      included.push(
-        ...model().tasks.filter(
-          (i) => events.has(i.activityId) || events.has(i.id),
-        ),
-      );
-    }
+    const included = t.kind === "event" ? events.members(t) : [t];
     return included
       .map(
         (value) =>
-          `${value.title} ${value.description} ${value.outcome || ""} ${(value.tags || []).join(" ")} ${names([...(value.counterparties || []), ...value.executors, ...(value.responsible ? [value.responsible] : [])])} ${(value.attachments || []).map((f) => f.name).join(" ")} ${value.workingTitle || ""} ${value.comments.map((n) => n.text).join(" ")}`,
+          `${value.title} ${value.description} ${value.outcome || ""} ${(value.tags || []).join(" ")} ${names([...(value.counterparties || []), ...value.participantIds, ...value.executors, ...(value.responsible ? [value.responsible] : [])])} ${(value.attachments || []).map((f) => f.name).join(" ")} ${value.workingTitle || ""} ${value.comments.map((n) => n.text).join(" ")} ${(value.eventOutcomes || []).map((result) => result.text).join(" ")}`,
       )
       .join(" ");
   }
@@ -744,9 +801,17 @@ window.createProductUI = function (ctx) {
     if (action === "open") void navigate(id);
     if (action === "child") void addFromCard(button.dataset.kind);
     if (action === "contacts") ctx.manage("contacts");
-    if (action === "link-tasks") linkTasks();
+    if (action === "new-contact")
+      ctx.directoryEdit(null, false, {
+        drawerId: ui().drawer.data.id,
+        role: button.dataset.role,
+      });
+    if (action === "add-outcome") void events.chooseOutcome();
+    if (action === "google-calendar")
+      events.calendar(ctx.captureTask($("#task-form")));
+    if (action === "link-tasks") void linkTasks();
     if (action === "link-apply") void applyLinks(button);
-    if (action === "promote") promote();
+    if (action === "promote") void promote();
     if (action === "promote-apply") void applyPromote(button);
     if (action === "move-item") {
       const current = item(id);
@@ -787,6 +852,16 @@ window.createProductUI = function (ctx) {
     if (event.target.id === "link-search") renderLinkChoices();
     if (event.target.id === "agenda-search") renderChildren();
   });
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      const id = event.target.dataset.eventQuestions;
+      if (!id || !event.target.isConnected) return;
+      if (event.target.open) expandedQuestions.add(id);
+      else expandedQuestions.delete(id);
+    },
+    true,
+  );
   document.addEventListener("change", (event) => {
     if (event.target.id === "agenda-counterparty") renderChildren();
     if (event.target.dataset.linkChoice) {
@@ -841,6 +916,7 @@ window.createProductUI = function (ctx) {
   }
   return {
     printItem,
+    eventTypes: events.types,
     profileView: tools.profileView,
     profileEdit: (id, mode) => tools.profileEdit(person(id), mode),
     profileData: tools.profileData,
@@ -851,6 +927,8 @@ window.createProductUI = function (ctx) {
     beforeSaveContacts: tools.beforeSaveContacts,
     refreshTree: tree.render,
     openCard,
+    cardSaved,
+    selectContact,
     renderChildren,
     refreshLookups,
     renderView,
@@ -860,6 +938,7 @@ window.createProductUI = function (ctx) {
     afterFilters,
     renderTags,
     addFromCard,
+    navigate,
     labels,
   };
 };
